@@ -150,7 +150,7 @@ export default function App() {
               ← Vitrine Dön
             </button>
             <span className="text-slate-300">|</span>
-            <a href="/" className="flex items-center" onClick={(e) => { e.preventDefault(); setActiveTab('home'); }}>
+            <a href="https://tampazar.com/" className="flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setActiveTab('home'); }}>
               <img 
                 src="/logo.png" 
                 alt="TamPazar" 

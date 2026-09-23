@@ -183,7 +183,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-6">
           {/* Brand Logo */}
-          <a href="/" className="flex items-center gap-2 py-1 select-none" onClick={(e) => { e.preventDefault(); setSelectedScope('all'); setSelectedTypeFilter('all'); setSearchQuery(''); }}>
+          <a href="https://tampazar.com/" className="flex items-center gap-2 py-1 select-none cursor-pointer group" onClick={(e) => { e.preventDefault(); setSelectedScope('all'); setSelectedTypeFilter('all'); setSearchQuery(''); setActiveModalProduct(null); setIsCartOpen(false); }}>
             <div className="flex items-center gap-2">
               {/* Turuncu TP İkonu */}
               <div className="flex flex-col items-center justify-center">
