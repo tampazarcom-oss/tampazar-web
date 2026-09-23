@@ -1,0 +1,25 @@
+name: Tampazar Otomatik Dagitim
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Sunucuya Baglan ve Canliya Al
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_IP }}
+          username: ${{ secrets.VPS_USERNAME }}
+          password: ${{ secrets.VPS_PASSWORD }}
+          script: |
+            cd /var/www/tampazar
+            git fetch origin main
+            git reset --hard origin/main
+            npm install --legacy-peer-deps
+            npm run build
+            systemctl reload nginx
+            echo "Yeni surum basariyla canliya alindi!"

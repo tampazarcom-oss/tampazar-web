@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, ShoppingBag, ShieldCheck, Zap, 
   Store, Briefcase, ChevronRight, Star, SlidersHorizontal, 
@@ -44,6 +44,18 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [modalSize, setModalSize] = useState('');
   const [modalColor, setModalColor] = useState('');
   const [modalSlot, setModalSlot] = useState('');
+
+  // Body scroll lock when cart drawer or product modal is open
+  useEffect(() => {
+    if (isCartOpen || activeModalProduct) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isCartOpen, activeModalProduct]);
 
   // Featured Stores for the Etsy-Style section
   const featuredStores = tenants.slice(0, 3);
@@ -455,14 +467,17 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           </div>
 
           {filteredProducts.length === 0 && (
-            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 space-y-2">
-              <Search className="w-8 h-8 mx-auto opacity-30 text-slate-600" />
-              <p className="text-sm font-semibold text-slate-600">Aradığınız kriterlere uygun ürün veya hizmet bulunamadı.</p>
+            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 space-y-3 shadow-xs">
+              <Search className="w-10 h-10 mx-auto opacity-40 text-slate-400" />
+              <h3 className="text-base font-bold text-slate-800">Aramanızla eşleşen ürün bulunamadı</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Lütfen arama teriminizi değiştirin veya filtreleri sıfırlayarak tüm ürünleri görüntüleyin.
+              </p>
               <button 
                 onClick={() => { setSearchQuery(''); setSelectedScope('all'); setSelectedTypeFilter('all'); }}
-                className="text-xs text-indigo-600 font-bold underline"
+                className="px-4 py-2 bg-indigo-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-800 transition-colors cursor-pointer"
               >
-                Filtreleri Sıfırla
+                Filtreleri ve Aramayı Sıfırla
               </button>
             </div>
           )}
