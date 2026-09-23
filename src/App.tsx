@@ -4,6 +4,7 @@
  */
 
 import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { initialTenants, Tenant } from './data/mockData';
 import MarketplaceHome from './components/MarketplaceHome';
 import SuperMallHome from './components/SuperMallHome';
@@ -21,19 +22,75 @@ import TampazarSellerDashboard from './components/TampazarSellerDashboard';
 import ProductDetailPage from './components/ProductDetailPage';
 import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard } from 'lucide-react';
 
-export default function App() {
+function StoreProfileRouteWrapper() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  const storeId = slug || 'atolye-zanaat';
+  return (
+    <StoreProfilePage 
+      storeId={storeId}
+      onBackToMarketplace={() => navigate('/')}
+      onOpenSaaSConsole={(tab = 'byopos') => navigate(`/saas-konsol/${tab}`)}
+    />
+  );
+}
+
+function ProductDetailRouteWrapper() {
+  const { slug } = useParams();
+  const navigate = useNavigate();
+  return (
+    <ProductDetailPage 
+      slug={slug || 'minimalist-deri-oxford-ayakkabi'}
+      onBackToMarketplace={() => navigate('/')}
+    />
+  );
+}
+
+function SaaSConsoleRouteWrapper({ activeTenant, handleUpdateTenantPos }: any) {
+  const { subTab } = useParams();
+  const currentTab = subTab || 'byopos';
+
+  return (
+    <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
+      {/* SaaS Nav Sub-tabs */}
+      <nav className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500 overflow-x-auto pb-4 border-b border-slate-200">
+        <Link to="/saas-konsol/architecture" className={`transition-colors whitespace-nowrap ${currentTab === 'architecture' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Mimarî</Link>
+        <Link to="/saas-konsol/byopos" className={`transition-colors whitespace-nowrap ${currentTab === 'byopos' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Sanal POS (BYO)</Link>
+        <Link to="/saas-konsol/logistics" className={`transition-colors whitespace-nowrap ${currentTab === 'logistics' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📦 Kargo (BYO)</Link>
+        <Link to="/saas-konsol/qrmenu" className={`transition-colors whitespace-nowrap ${currentTab === 'qrmenu' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📱 QR Masa</Link>
+        <Link to="/saas-konsol/b2bquotes" className={`transition-colors whitespace-nowrap ${currentTab === 'b2bquotes' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📑 B2B Teklif</Link>
+        <Link to="/saas-konsol/gibdespatch" className={`transition-colors whitespace-nowrap ${currentTab === 'gibdespatch' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>🚚 e-İrsaliye</Link>
+        <Link to="/saas-konsol/catalog" className={`transition-colors whitespace-nowrap ${currentTab === 'catalog' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Ürün & SEO</Link>
+        <Link to="/saas-konsol/accounting" className={`transition-colors whitespace-nowrap ${currentTab === 'accounting' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Ön Muhasebe</Link>
+        <Link to="/saas-konsol/codebase" className={`transition-colors whitespace-nowrap ${currentTab === 'codebase' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>API Kodları</Link>
+      </nav>
+
+      <div className="transition-all duration-300">
+        {currentTab === 'architecture' && <SystemArchitecture />}
+        {currentTab === 'byopos' && <ByoPosConfigurator currentTenant={activeTenant} onUpdateTenantPos={handleUpdateTenantPos} />}
+        {currentTab === 'logistics' && <LogisticsIntegration currentTenant={activeTenant} />}
+        {currentTab === 'qrmenu' && <QrMenuHospitality currentTenant={activeTenant} />}
+        {currentTab === 'b2bquotes' && <B2BQuotationModule currentTenant={activeTenant} />}
+        {currentTab === 'gibdespatch' && <GibDespatchProducerModule currentTenant={activeTenant} />}
+        {currentTab === 'catalog' && <ProductStorefront currentTenant={activeTenant} />}
+        {currentTab === 'accounting' && <AccountingModule currentTenant={activeTenant} />}
+        {currentTab === 'codebase' && <NestjsCodebase />}
+      </div>
+    </main>
+  );
+}
+
+function MainLayout() {
   const [tenants, setTenants] = useState<Tenant[]>(() => {
     const saved = localStorage.getItem('tampazar_tenants');
     return saved ? JSON.parse(saved) : initialTenants;
   });
 
   const [activeTenant, setActiveTenant] = useState<Tenant>(tenants[0]);
-  const [selectedStoreId, setSelectedStoreId] = useState<string>('st-101');
-  const [selectedProductSlug, setSelectedProductSlug] = useState<string>('minimalist-deri-oxford-ayakkabi');
-  const [activeTab, setActiveTab] = useState<'home' | 'supermall' | 'store-profile' | 'product-detail' | 'seller-dashboard' | 'architecture' | 'byopos' | 'logistics' | 'qrmenu' | 'b2bquotes' | 'gibdespatch' | 'catalog' | 'accounting' | 'codebase'>('home');
   const [showTenantDropdown, setShowTenantDropdown] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Callback to update tenant connection state when user links Sanal POS
   const handleUpdateTenantPos = (tenantId: string, connected: boolean, posProvider: string | null) => {
     const updated = tenants.map(t => {
       if (t.id === tenantId) {
@@ -48,30 +105,25 @@ export default function App() {
     setTenants(updated);
     localStorage.setItem('tampazar_tenants', JSON.stringify(updated));
 
-    // Update active context immediately
     const nextActive = updated.find(t => t.id === tenantId);
     if (nextActive) setActiveTenant(nextActive);
   };
 
   const handleNavigateToStoreFromHome = (storeId: string) => {
-    setSelectedStoreId(storeId);
-    setActiveTab('store-profile');
+    navigate(`/dukkan/${storeId}`);
   };
 
   const handleNavigateToProduct = (slug: string) => {
-    setSelectedProductSlug(slug);
-    setActiveTab('product-detail');
+    navigate(`/urun/${slug}`);
   };
 
   const handleOpenSellerDashboard = (tab: string = 'byopos') => {
-    setActiveTab(tab as any);
+    navigate(`/saas-konsol/${tab}`);
   };
 
   return (
     <div className="min-h-screen bg-[#FDFDFD] text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
-
-
       {/* Top Global Ecosystem Switcher Bar */}
       <div className="bg-slate-950 text-white text-[11px] font-medium px-6 py-2 flex items-center justify-between border-b border-slate-800">
         <div className="flex items-center gap-2">
@@ -84,73 +136,72 @@ export default function App() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setActiveTab('home')}
+          <Link
+            to="/"
             className={`px-2.5 py-1 rounded transition-colors ${
-              activeTab === 'home' 
+              location.pathname === '/' 
                 ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
             🏪 Pazaryeri Vitrini
-          </button>
-          <button
-            onClick={() => setActiveTab('supermall')}
+          </Link>
+          <Link
+            to="/sehir-avm"
             className={`px-2.5 py-1 rounded transition-colors ${
-              activeTab === 'supermall' 
+              location.pathname === '/sehir-avm' 
                 ? 'bg-amber-500 text-slate-950 font-bold shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
             🏬 Şehrin Açık Dijital AVM'si
-          </button>
-          <button
-            onClick={() => { setSelectedStoreId('st-101'); setActiveTab('store-profile'); }}
+          </Link>
+          <Link
+            to={`/dukkan/${activeTenant.slug}`}
             className={`px-2.5 py-1 rounded transition-colors ${
-              activeTab === 'store-profile' 
+              location.pathname.startsWith('/dukkan') 
                 ? 'bg-indigo-600 text-white font-bold shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
             🏷️ Dükkân Kimliği
-          </button>
-          <button
-            onClick={() => setActiveTab('seller-dashboard')}
+          </Link>
+          <Link
+            to="/yonetim"
             className={`px-2.5 py-1 rounded transition-colors ${
-              activeTab === 'seller-dashboard' 
+              location.pathname === '/yonetim' 
                 ? 'bg-emerald-500 text-slate-950 font-black shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
             📊 Esnaf Yönetim Paneli
-          </button>
+          </Link>
           <span className="text-slate-700">|</span>
-          <button
-            onClick={() => setActiveTab('byopos')}
+          <Link
+            to="/saas-konsol/byopos"
             className={`px-2.5 py-1 rounded transition-colors ${
-              activeTab !== 'home' && activeTab !== 'supermall' && activeTab !== 'store-profile' && activeTab !== 'seller-dashboard'
+              location.pathname.startsWith('/saas-konsol')
                 ? 'bg-slate-800 text-amber-300 font-semibold border border-slate-700' 
                 : 'text-slate-400 hover:text-white'
             }`}
           >
             ⚙️ SaaS Satıcı & Mimari Konsol
-          </button>
+          </Link>
         </div>
       </div>
 
-      {/* When in SaaS Mode: show the 3-Zone Top Bar & Workspace */}
-      {activeTab !== 'home' && activeTab !== 'supermall' && activeTab !== 'store-profile' && (
+      {/* Header bar for non-home pages */}
+      {location.pathname !== '/' && location.pathname !== '/sehir-avm' && (
         <header className="sticky top-0 z-40 bg-[#FDFDFD]/90 backdrop-blur-md border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-xs">
-          {/* Zone 1: Brand title, single line wordmark */}
           <div className="flex items-center gap-3 shrink-0">
-            <button 
-              onClick={() => setActiveTab('home')}
+            <Link 
+              to="/"
               className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 font-semibold"
             >
               ← Vitrine Dön
-            </button>
+            </Link>
             <span className="text-slate-300">|</span>
-            <a href="https://tampazar.com/" className="flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); setActiveTab('home'); }}>
+            <a href="https://tampazar.com/" className="flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
               <img 
                 src="/logo.png" 
                 alt="TamPazar" 
@@ -159,71 +210,6 @@ export default function App() {
             </a>
           </div>
 
-          {/* Zone 2: Navigation Links */}
-          <nav className="hidden lg:flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500 overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('seller-dashboard')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'seller-dashboard' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}
-            >
-              📊 Esnaf Paneli
-            </button>
-            <button
-              onClick={() => setActiveTab('architecture')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'architecture' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              Mimarî
-            </button>
-            <button
-              onClick={() => setActiveTab('byopos')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'byopos' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              Sanal POS (BYO)
-            </button>
-            <button
-              onClick={() => setActiveTab('logistics')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'logistics' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              📦 Kargo (BYO)
-            </button>
-            <button
-              onClick={() => setActiveTab('qrmenu')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'qrmenu' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              📱 QR Masa
-            </button>
-            <button
-              onClick={() => setActiveTab('b2bquotes')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'b2bquotes' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              📑 B2B Teklif
-            </button>
-            <button
-              onClick={() => setActiveTab('gibdespatch')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'gibdespatch' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              🚚 e-İrsaliye / e-MM
-            </button>
-            <button
-              onClick={() => setActiveTab('catalog')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'catalog' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              Ürün & SEO
-            </button>
-            <button
-              onClick={() => setActiveTab('accounting')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'accounting' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              Ön Muhasebe
-            </button>
-            <button
-              onClick={() => setActiveTab('codebase')}
-              className={`transition-colors whitespace-nowrap ${activeTab === 'codebase' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1' : 'hover:text-slate-900'}`}
-            >
-              API Kodları
-            </button>
-          </nav>
-
-          {/* Zone 3: Primary Action - Dynamic Multi-Tenant Context Switcher */}
           <div className="relative shrink-0">
             <button
               onClick={() => setShowTenantDropdown(!showTenantDropdown)}
@@ -268,59 +254,70 @@ export default function App() {
         </header>
       )}
 
-      {/* Main Viewport Routing */}
-      {activeTab === 'home' ? (
-        <MarketplaceHome 
-          onNavigateToStore={handleNavigateToStoreFromHome}
-          onOpenSellerDashboard={handleOpenSellerDashboard}
-          onNavigateToSuperMall={() => setActiveTab('supermall')}
-        />
-      ) : activeTab === 'supermall' ? (
-        <SuperMallHome 
-          onNavigateToStore={handleNavigateToStoreFromHome}
-          onNavigateToProduct={handleNavigateToProduct}
-          onOpenSaaSConsole={handleOpenSellerDashboard}
-          onBackToMarketplace={() => setActiveTab('home')}
-        />
-      ) : activeTab === 'store-profile' ? (
-        <StoreProfilePage 
-          storeId={selectedStoreId}
-          onBackToMarketplace={() => setActiveTab('home')}
-          onOpenSaaSConsole={handleOpenSellerDashboard}
-        />
-      ) : activeTab === 'product-detail' ? (
-        <ProductDetailPage 
-          slug={selectedProductSlug}
-          onBackToMarketplace={() => setActiveTab('home')}
-        />
-      ) : activeTab === 'seller-dashboard' ? (
-        <TampazarSellerDashboard 
-          onNavigate={(tab) => setActiveTab(tab as any)} 
-          activeStoreName={activeTenant.name} 
-        />
-      ) : (
-        <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
-          <div className="transition-all duration-300">
-            {activeTab === 'architecture' && <SystemArchitecture />}
-            {activeTab === 'byopos' && (
-              <ByoPosConfigurator
-                currentTenant={activeTenant}
-                onUpdateTenantPos={handleUpdateTenantPos}
+      {/* Routes */}
+      <div className="flex-1 flex flex-col">
+        <Routes>
+          <Route 
+            path="/" 
+            element={
+              <MarketplaceHome 
+                onNavigateToStore={handleNavigateToStoreFromHome}
+                onOpenSellerDashboard={handleOpenSellerDashboard}
+                onNavigateToSuperMall={() => navigate('/sehir-avm')}
               />
-            )}
-            {activeTab === 'logistics' && <LogisticsIntegration currentTenant={activeTenant} />}
-            {activeTab === 'qrmenu' && <QrMenuHospitality currentTenant={activeTenant} />}
-            {activeTab === 'b2bquotes' && <B2BQuotationModule currentTenant={activeTenant} />}
-            {activeTab === 'gibdespatch' && <GibDespatchProducerModule currentTenant={activeTenant} />}
-            {activeTab === 'catalog' && <ProductStorefront currentTenant={activeTenant} />}
-            {activeTab === 'accounting' && <AccountingModule currentTenant={activeTenant} />}
-            {activeTab === 'codebase' && <NestjsCodebase />}
-          </div>
-        </main>
-      )}
+            } 
+          />
+          <Route 
+            path="/sehir-avm" 
+            element={
+              <SuperMallHome 
+                onNavigateToStore={handleNavigateToStoreFromHome}
+                onNavigateToProduct={handleNavigateToProduct}
+                onOpenSaaSConsole={handleOpenSellerDashboard}
+                onBackToMarketplace={() => navigate('/')}
+              />
+            } 
+          />
+          <Route 
+            path="/dukkan/:slug" 
+            element={<StoreProfileRouteWrapper />} 
+          />
+          <Route 
+            path="/urun/:slug" 
+            element={<ProductDetailRouteWrapper />} 
+          />
+          <Route 
+            path="/yonetim" 
+            element={
+              <TampazarSellerDashboard 
+                onNavigate={(tab) => navigate(`/saas-konsol/${tab}`)} 
+                activeStoreName={activeTenant.name} 
+              />
+            } 
+          />
+          <Route 
+            path="/saas-konsol/:subTab" 
+            element={
+              <SaaSConsoleRouteWrapper 
+                activeTenant={activeTenant} 
+                handleUpdateTenantPos={handleUpdateTenantPos} 
+              />
+            } 
+          />
+          <Route 
+            path="/saas-konsol" 
+            element={
+              <SaaSConsoleRouteWrapper 
+                activeTenant={activeTenant} 
+                handleUpdateTenantPos={handleUpdateTenantPos} 
+              />
+            } 
+          />
+        </Routes>
+      </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8 px-6 bg-white text-center text-xs text-slate-400 space-y-2">
+      <footer className="border-t border-slate-200 py-8 px-6 bg-white text-center text-xs text-slate-400 space-y-2 mt-auto">
         <p className="font-semibold text-slate-600">tampazar.com · Açık Dijital AVM ve Entegre Ticaret İşletim Sistemi</p>
         <p className="max-w-2xl mx-auto text-[11px] text-slate-400 leading-relaxed">
           Fiziksel bir çarşı ve AVM'nin dijital dünyadaki bağımsız karşılığı. Sabit aidat modeli, %0 komisyon, esnafın doğrudan kendi Sanal POS'u ile tahsilat ve GİB UBL-TR 2.1 yerleşik ön muhasebe altyapısı.
@@ -337,5 +334,13 @@ export default function App() {
       </footer>
 
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <BrowserRouter>
+      <MainLayout />
+    </BrowserRouter>
   );
 }
