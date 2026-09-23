@@ -3,24 +3,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { initialTenants, Tenant } from './data/mockData';
-import MarketplaceHome from './components/MarketplaceHome';
-import SuperMallHome from './components/SuperMallHome';
-import StoreProfilePage from './components/StoreProfilePage';
-import SystemArchitecture from './components/SystemArchitecture';
-import ByoPosConfigurator from './components/ByoPosConfigurator';
-import LogisticsIntegration from './components/LogisticsIntegration';
-import QrMenuHospitality from './components/QrMenuHospitality';
-import B2BQuotationModule from './components/B2BQuotationModule';
-import GibDespatchProducerModule from './components/GibDespatchProducerModule';
-import ProductStorefront from './components/ProductStorefront';
-import AccountingModule from './components/AccountingModule';
-import NestjsCodebase from './components/NestjsCodebase';
-import TampazarSellerDashboard from './components/TampazarSellerDashboard';
-import ProductDetailPage from './components/ProductDetailPage';
+import { updatePageSEO } from './utils/seo';
+import { injectJsonLd } from './utils/jsonLd';
 import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard } from 'lucide-react';
+
+const MarketplaceHome = lazy(() => import('./components/MarketplaceHome'));
+const SuperMallHome = lazy(() => import('./components/SuperMallHome'));
+const StoreProfilePage = lazy(() => import('./components/StoreProfilePage'));
+const ProductDetailPage = lazy(() => import('./components/ProductDetailPage'));
+const LegalPages = lazy(() => import('./components/LegalPages'));
+const TampazarSellerDashboard = lazy(() => import('./components/TampazarSellerDashboard'));
+
+const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
+const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
+const LogisticsIntegration = lazy(() => import('./components/LogisticsIntegration'));
+const QrMenuHospitality = lazy(() => import('./components/QrMenuHospitality'));
+const B2BQuotationModule = lazy(() => import('./components/B2BQuotationModule'));
+const GibDespatchProducerModule = lazy(() => import('./components/GibDespatchProducerModule'));
+const ProductStorefront = lazy(() => import('./components/ProductStorefront'));
+const AccountingModule = lazy(() => import('./components/AccountingModule'));
+const NestjsCodebase = lazy(() => import('./components/NestjsCodebase'));
 
 function StoreProfileRouteWrapper() {
   const { slug } = useParams();
@@ -46,6 +51,11 @@ function ProductDetailRouteWrapper() {
   );
 }
 
+function LegalRouteWrapper({ type }: { type: 'mesafeli-satis' | 'gizlilik' | 'kvkk' | 'cerez-politikasi' | 'iade-ve-degisim' }) {
+  const navigate = useNavigate();
+  return <LegalPages type={type} onBack={() => navigate('/')} />;
+}
+
 function SaaSConsoleRouteWrapper({ activeTenant, handleUpdateTenantPos }: any) {
   const { subTab } = useParams();
   const currentTab = subTab || 'byopos';
@@ -53,7 +63,7 @@ function SaaSConsoleRouteWrapper({ activeTenant, handleUpdateTenantPos }: any) {
   return (
     <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
       {/* SaaS Nav Sub-tabs */}
-      <nav className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500 overflow-x-auto pb-4 border-b border-slate-200">
+      <nav aria-label="SaaS Konsol Menüsü" className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500 overflow-x-auto pb-4 border-b border-slate-200">
         <Link to="/saas-konsol/architecture" className={`transition-colors whitespace-nowrap ${currentTab === 'architecture' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Mimarî</Link>
         <Link to="/saas-konsol/byopos" className={`transition-colors whitespace-nowrap ${currentTab === 'byopos' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Sanal POS (BYO)</Link>
         <Link to="/saas-konsol/logistics" className={`transition-colors whitespace-nowrap ${currentTab === 'logistics' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📦 Kargo (BYO)</Link>
@@ -90,6 +100,51 @@ function MainLayout() {
   const [showTenantDropdown, setShowTenantDropdown] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+
+  // Dynamic SEO & Schema.org JSON-LD injection on location change
+  useEffect(() => {
+    updatePageSEO(location.pathname);
+
+    // Inject appropriate JSON-LD structured data
+    if (location.pathname === '/') {
+      injectJsonLd({
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "TamPazar",
+        "url": "https://tampazar.com/",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://tampazar.com/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      });
+    } else if (location.pathname === '/sehir-avm') {
+      injectJsonLd({
+        "@context": "https://schema.org",
+        "@type": "ShoppingCenter",
+        "name": "Şehrin Açık Dijital AVM'si - TamPazar",
+        "url": "https://tampazar.com/sehir-avm"
+      });
+    } else if (location.pathname.startsWith('/dukkan/')) {
+      injectJsonLd({
+        "@context": "https://schema.org",
+        "@type": "LocalBusiness",
+        "name": "TamPazar Esnaf Mağazası",
+        "url": `https://tampazar.com${location.pathname}`
+      });
+    } else if (location.pathname.startsWith('/urun/')) {
+      injectJsonLd({
+        "@context": "https://schema.org",
+        "@type": "Product",
+        "name": "TamPazar Ürünü",
+        "offers": {
+          "@type": "Offer",
+          "priceCurrency": "TRY",
+          "availability": "https://schema.org/InStock"
+        }
+      });
+    }
+  }, [location.pathname]);
 
   const handleUpdateTenantPos = (tenantId: string, connected: boolean, posProvider: string | null) => {
     const updated = tenants.map(t => {
@@ -150,33 +205,12 @@ function MainLayout() {
             to="/sehir-avm"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/sehir-avm' 
-                ? 'bg-amber-500 text-slate-950 font-bold shadow-xs' 
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
-            🏬 Şehrin Açık Dijital AVM'si
+            🏛️ Şehrin Açık AVM'si
           </Link>
-          <Link
-            to={`/dukkan/${activeTenant.slug}`}
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname.startsWith('/dukkan') 
-                ? 'bg-indigo-600 text-white font-bold shadow-xs' 
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            🏷️ Dükkân Kimliği
-          </Link>
-          <Link
-            to="/yonetim"
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname === '/yonetim' 
-                ? 'bg-emerald-500 text-slate-950 font-black shadow-xs' 
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            📊 Esnaf Yönetim Paneli
-          </Link>
-          <span className="text-slate-700">|</span>
           <Link
             to="/saas-konsol/byopos"
             className={`px-2.5 py-1 rounded transition-colors ${
@@ -212,6 +246,7 @@ function MainLayout() {
 
           <div className="relative shrink-0">
             <button
+              aria-label="Kiracı / Esnaf Seçim Menüsü"
               onClick={() => setShowTenantDropdown(!showTenantDropdown)}
               className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white shadow-xs transition-colors cursor-pointer"
             >
@@ -254,75 +289,99 @@ function MainLayout() {
         </header>
       )}
 
-      {/* Routes */}
+      {/* Routes with Suspense */}
       <div className="flex-1 flex flex-col">
-        <Routes>
-          <Route 
-            path="/" 
-            element={
-              <MarketplaceHome 
-                onNavigateToStore={handleNavigateToStoreFromHome}
-                onOpenSellerDashboard={handleOpenSellerDashboard}
-                onNavigateToSuperMall={() => navigate('/sehir-avm')}
-                onNavigateToProduct={handleNavigateToProduct}
-              />
-            } 
-          />
-          <Route 
-            path="/sehir-avm" 
-            element={
-              <SuperMallHome 
-                onNavigateToStore={handleNavigateToStoreFromHome}
-                onNavigateToProduct={handleNavigateToProduct}
-                onOpenSaaSConsole={handleOpenSellerDashboard}
-                onBackToMarketplace={() => navigate('/')}
-              />
-            } 
-          />
-          <Route 
-            path="/dukkan/:slug" 
-            element={<StoreProfileRouteWrapper />} 
-          />
-          <Route 
-            path="/urun/:slug" 
-            element={<ProductDetailRouteWrapper />} 
-          />
-          <Route 
-            path="/yonetim" 
-            element={
-              <TampazarSellerDashboard 
-                onNavigate={(tab) => navigate(`/saas-konsol/${tab}`)} 
-                activeStoreName={activeTenant.name} 
-              />
-            } 
-          />
-          <Route 
-            path="/saas-konsol/:subTab" 
-            element={
-              <SaaSConsoleRouteWrapper 
-                activeTenant={activeTenant} 
-                handleUpdateTenantPos={handleUpdateTenantPos} 
-              />
-            } 
-          />
-          <Route 
-            path="/saas-konsol" 
-            element={
-              <SaaSConsoleRouteWrapper 
-                activeTenant={activeTenant} 
-                handleUpdateTenantPos={handleUpdateTenantPos} 
-              />
-            } 
-          />
-        </Routes>
+        <Suspense fallback={
+          <div className="min-h-[60vh] flex items-center justify-center">
+            <div className="w-8 h-8 border-4 border-indigo-900 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        }>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <MarketplaceHome 
+                  onNavigateToStore={handleNavigateToStoreFromHome}
+                  onOpenSellerDashboard={handleOpenSellerDashboard}
+                  onNavigateToSuperMall={() => navigate('/sehir-avm')}
+                  onNavigateToProduct={handleNavigateToProduct}
+                />
+              } 
+            />
+            <Route 
+              path="/sehir-avm" 
+              element={
+                <SuperMallHome 
+                  onNavigateToStore={handleNavigateToStoreFromHome}
+                  onNavigateToProduct={handleNavigateToProduct}
+                  onOpenSaaSConsole={handleOpenSellerDashboard}
+                  onBackToMarketplace={() => navigate('/')}
+                />
+              } 
+            />
+            <Route 
+              path="/dukkan/:slug" 
+              element={<StoreProfileRouteWrapper />} 
+            />
+            <Route 
+              path="/urun/:slug" 
+              element={<ProductDetailRouteWrapper />} 
+            />
+            <Route 
+              path="/yonetim" 
+              element={
+                <TampazarSellerDashboard 
+                  onNavigate={(tab) => navigate(`/saas-konsol/${tab}`)} 
+                  activeStoreName={activeTenant.name} 
+                />
+              } 
+            />
+            <Route 
+              path="/saas-konsol/:subTab" 
+              element={
+                <SaaSConsoleRouteWrapper 
+                  activeTenant={activeTenant} 
+                  handleUpdateTenantPos={handleUpdateTenantPos} 
+                />
+              } 
+            />
+            <Route 
+              path="/saas-konsol" 
+              element={
+                <SaaSConsoleRouteWrapper 
+                  activeTenant={activeTenant} 
+                  handleUpdateTenantPos={handleUpdateTenantPos} 
+                />
+              } 
+            />
+            {/* Legal Routes */}
+            <Route path="/mesafeli-satis" element={<LegalRouteWrapper type="mesafeli-satis" />} />
+            <Route path="/gizlilik" element={<LegalRouteWrapper type="gizlilik" />} />
+            <Route path="/kvkk" element={<LegalRouteWrapper type="kvkk" />} />
+            <Route path="/cerez-politikasi" element={<LegalRouteWrapper type="cerez-politikasi" />} />
+            <Route path="/iade-ve-degisim" element={<LegalRouteWrapper type="iade-ve-degisim" />} />
+          </Routes>
+        </Suspense>
       </div>
 
       {/* Footer */}
-      <footer className="border-t border-slate-200 py-8 px-6 bg-white text-center text-xs text-slate-400 space-y-2 mt-auto">
+      <footer className="border-t border-slate-200 py-8 px-6 bg-white text-center text-xs text-slate-400 space-y-3 mt-auto">
+        <h1 className="sr-only">TamPazar Açık Dijital AVM ve Hibrit Pazaryeri</h1>
         <p className="font-semibold text-slate-600">tampazar.com · Açık Dijital AVM ve Entegre Ticaret İşletim Sistemi</p>
         <p className="max-w-2xl mx-auto text-[11px] text-slate-400 leading-relaxed">
           Fiziksel bir çarşı ve AVM'nin dijital dünyadaki bağımsız karşılığı. Sabit aidat modeli, %0 komisyon, esnafın doğrudan kendi Sanal POS'u ile tahsilat ve GİB UBL-TR 2.1 yerleşik ön muhasebe altyapısı.
         </p>
+        <div className="flex flex-wrap justify-center gap-3 pt-2 text-[11px] font-medium text-slate-500">
+          <Link to="/mesafeli-satis" className="hover:text-indigo-900 transition-colors">Mesafeli Satış</Link>
+          <span>·</span>
+          <Link to="/gizlilik" className="hover:text-indigo-900 transition-colors">Gizlilik Politikası</Link>
+          <span>·</span>
+          <Link to="/kvkk" className="hover:text-indigo-900 transition-colors">KVKK</Link>
+          <span>·</span>
+          <Link to="/cerez-politikasi" className="hover:text-indigo-900 transition-colors">Çerez Politikası</Link>
+          <span>·</span>
+          <Link to="/iade-ve-degisim" className="hover:text-indigo-900 transition-colors">İade ve Değişim</Link>
+        </div>
         <div className="flex justify-center gap-4 pt-2 font-mono text-[10px] text-slate-400">
           <span>NestJS Modüler Mimari</span>
           <span>·</span>
