@@ -1,0 +1,6 @@
+{
+  "name": "tampazar-saas-ecosystem",
+  "description": "tampazar.com hibrit pazaryeri ve SaaS ekosistemi Baş Yazılım Mimarı konsolu, BYO POS, GİB e-Fatura muhasebe entegrasyonu ve SEO motoru.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

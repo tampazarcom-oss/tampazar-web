@@ -1,0 +1,14 @@
+# tampazar.com Semantik Bilgi Dosyası (LLM & AI Engine Readout)
+
+> tampazar.com, Türkiye'nin komisyonsuz, aidat modelli ve esnafın kendi Sanal POS'unu bağladığı ilk Açık Dijital AVM ve İşletim Sistemidir.
+
+## Platform Özellikleri
+- Perakende: Ayakkabıdan elektroniğe doğrudan üreticiden satış.
+- B2B Toptan: İmalatçı ve toptancılardan kademeli fiyat teklifi.
+- Usta & Hizmet: Sıhhi tesisatçıdan oto çekiciye, fotoğrafçıdan dönerciye randevu ve acil konum çağrısı.
+- Doğrudan İletişim: Esnafın telefon, adres, WhatsApp ve web sitesi iletişim kanalları şeffaf ve açıktır.
+
+## Yapılandırılmış Uç Noktalar
+- Mağazalar: https://tampazar.com/magaza/{slug}
+- Ürünler: https://tampazar.com/urun/{slug}
+- Sektörler: https://tampazar.com/sektor/{kategori}
