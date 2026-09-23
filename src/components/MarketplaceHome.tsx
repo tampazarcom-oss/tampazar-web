@@ -15,9 +15,10 @@ interface MarketplaceHomeProps {
   onNavigateToStore?: (storeId: string) => void;
   onOpenSellerDashboard?: (tab?: string) => void;
   onNavigateToSuperMall?: () => void;
+  onNavigateToProduct?: (slug: string) => void;
 }
 
-export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboard, onNavigateToSuperMall }: MarketplaceHomeProps) {
+export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboard, onNavigateToSuperMall, onNavigateToProduct }: MarketplaceHomeProps) {
   const [tenants] = useState<Tenant[]>(() => {
     const saved = localStorage.getItem('tampazar_tenants');
     return saved ? JSON.parse(saved) : initialTenants;
@@ -523,6 +524,18 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
               <p className="text-xs text-slate-500 leading-relaxed">
                 {activeModalProduct.description}
               </p>
+
+              <div>
+                <button
+                  onClick={() => {
+                    setActiveModalProduct(null);
+                    onNavigateToProduct?.(activeModalProduct.slug);
+                  }}
+                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+                >
+                  Ürünün Detay Sayfasına Git →
+                </button>
+              </div>
 
               {/* Retail Variants Selection */}
               {activeModalProduct.type === 'retail' && activeModalProduct.variants && (

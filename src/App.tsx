@@ -264,6 +264,7 @@ function MainLayout() {
                 onNavigateToStore={handleNavigateToStoreFromHome}
                 onOpenSellerDashboard={handleOpenSellerDashboard}
                 onNavigateToSuperMall={() => navigate('/sehir-avm')}
+                onNavigateToProduct={handleNavigateToProduct}
               />
             } 
           />
