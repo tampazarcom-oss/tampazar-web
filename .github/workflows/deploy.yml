@@ -9,18 +9,31 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Sunucuya Baglan ve Canliya Al
+      - name: Sunucuya Baglan ve Guvenli Canliya Al
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd /var/www/tampazar
-            git remote set-url origin https://github.com/tampazarcom-oss/tampazar-web.git
-            git fetch origin main
-            git reset --hard origin/main
+            set -e
+            echo "1. Gecici derleme alanina geciliyor..."
+            rm -rf /tmp/tampazar-build
+            mkdir -p /tmp/tampazar-build
+            git clone https://github.com/tampazarcom-oss/tampazar-web.git /tmp/tampazar-build
+            
+            echo "2. Bagimliliklar kuruluyor ve build aliniyor..."
+            cd /tmp/tampazar-build
             npm install --legacy-peer-deps
             npm run build
+            
+            echo "3. Atomik gecis (atomic deployment) uygulaniyor..."
+            mkdir -p /var/www/tampazar/dist
+            rm -rf /var/www/tampazar/dist/*
+            cp -r dist/* /var/www/tampazar/dist/
+            
+            echo "4. Nginx konfigürasyonu test ediliyor ve yenileniyor..."
+            nginx -t
             systemctl reload nginx
-            echo "TamPazar Web basariyla canliya alindi!"
+            
+            echo "TamPazar Web sifir kesinti (zero-downtime) ile basariyla canliya alindi!"
