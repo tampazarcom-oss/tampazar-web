@@ -17,9 +17,10 @@ jobs:
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
             cd /var/www/tampazar
+            git remote set-url origin https://github.com/tampazarcom-oss/tampazar-web.git
             git fetch origin main
             git reset --hard origin/main
             npm install --legacy-peer-deps
             npm run build
             systemctl reload nginx
-            echo "Yeni surum basariyla canliya alindi!"
+            echo "TamPazar Web basariyla canliya alindi!"
