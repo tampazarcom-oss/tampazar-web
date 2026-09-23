@@ -373,7 +373,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
                       {store.rating || 4.9} ({store.reviews || 128} Değerlendirme)
                     </span>
                     <button 
-                      onClick={() => onNavigateToStore ? onNavigateToStore(store.id) : onOpenSellerDashboard?.('catalog')}
+                      onClick={() => onNavigateToStore ? onNavigateToStore(store.slug || store.id) : onOpenSellerDashboard?.('catalog')}
                       className="font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
                     >
                       Mağazayı İncele →

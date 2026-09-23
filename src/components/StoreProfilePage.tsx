@@ -261,8 +261,46 @@ export default function StoreProfilePage({
   const [showBookingEngine, setShowBookingEngine] = useState(false);
   const [customProducts, setCustomProducts] = useState<Record<string, ProductItem[]>>({});
 
-  // Load store data
-  const store = MOCK_STORES_DATA[activeStoreId] || MOCK_STORES_DATA['kuzey-usta-tesisat'];
+  React.useEffect(() => {
+    if (storeId) {
+      setActiveStoreId(storeId);
+    }
+  }, [storeId]);
+
+  // Find store by key, slug or id
+  const findStoreData = (idOrSlug: string) => {
+    if (MOCK_STORES_DATA[idOrSlug]) return MOCK_STORES_DATA[idOrSlug];
+    const foundKey = Object.keys(MOCK_STORES_DATA).find(
+      k => MOCK_STORES_DATA[k].slug === idOrSlug || MOCK_STORES_DATA[k].id === idOrSlug
+    );
+    if (foundKey) return MOCK_STORES_DATA[foundKey];
+    return null;
+  };
+
+  const store = findStoreData(activeStoreId);
+
+  if (!store) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6 text-center font-sans">
+        <div className="bg-white p-8 rounded-3xl border border-slate-200 shadow-xl max-w-md w-full space-y-4">
+          <div className="w-14 h-14 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto font-bold text-2xl border border-rose-100">
+            !
+          </div>
+          <h2 className="text-xl font-black text-slate-900">Dükkân Bulunamadı</h2>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Aradığınız dükkân veya esnaf profili ({activeStoreId}) sistemimizde kayıtlı değil veya kaldırılmış olabilir.
+          </p>
+          <button
+            onClick={onBackToMarketplace}
+            className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl transition cursor-pointer shadow"
+          >
+            ← Ana Vitrine Geri Dön
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   const allStoreProducts = [...(customProducts[activeStoreId] || []), ...store.products];
 
   // Prepare service items for Booking Engine
