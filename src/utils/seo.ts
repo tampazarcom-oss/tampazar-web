@@ -93,6 +93,32 @@ export interface SeoCategoryItem {
   price?: number;
 }
 
+export interface SeoArticleFaq {
+  question: string;
+  answer: string;
+}
+
+export interface SeoArticleData {
+  title: string;
+  slug: string;
+  excerpt: string;
+  category: string;
+  coverImage?: string;
+  datePublished?: string;
+  dateModified?: string;
+  authorName?: string;
+  authorRole?: string;
+  authorAvatar?: string;
+  city?: string;
+  district?: string;
+  sectorName?: string;
+  audience?: 'esnaf' | 'tuketici' | 'all';
+  tags?: string[];
+  faqs?: SeoArticleFaq[];
+  wordCount?: number;
+  checklist?: string[];
+}
+
 export interface SeoOptions {
   pathname: string;
   title?: string;
@@ -104,6 +130,7 @@ export interface SeoOptions {
   robots?: string;
   product?: SeoProductData;
   store?: SeoStoreData;
+  article?: SeoArticleData;
   breadcrumbs?: SeoBreadcrumbItem[];
   collectionItems?: SeoCategoryItem[];
 }
@@ -443,6 +470,95 @@ export function buildOrganizationSchema() {
   };
 }
 
+/**
+ * 10. Blog & Programatik Rehber Makalesi (schema.org/Article)
+ */
+export function buildArticleSchema(article: SeoArticleData) {
+  const fullUrl = `${BASE_URL}/blog/${article.slug}`;
+  const coverImage = article.coverImage || DEFAULT_OG_IMAGE;
+  const publishDate = article.datePublished ? `${article.datePublished}T08:00:00+03:00` : '2026-09-24T08:00:00+03:00';
+  const modifiedDate = article.dateModified || '2026-09-24T03:30:00+03:00';
+
+  const authorName = article.authorName || (article.city ? `TamPazar ${article.city} Bölge Heyeti` : 'TamPazar Ticaret ve Esnaf Heyeti');
+  const authorRole = article.authorRole || 'TamPazar Rehber ve Yerel Ticaret Editörlüğü';
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    '@id': `${fullUrl}#article`,
+    'mainEntityOfPage': {
+      '@type': 'WebPage',
+      '@id': fullUrl
+    },
+    'headline': article.title,
+    'name': article.title,
+    'description': article.excerpt,
+    'image': [
+      coverImage
+    ],
+    'datePublished': publishDate,
+    'dateModified': modifiedDate,
+    'author': {
+      '@type': 'Person',
+      'name': authorName,
+      'jobTitle': authorRole,
+      'url': `${BASE_URL}/blog`
+    },
+    'publisher': {
+      '@type': 'Organization',
+      'name': BRAND_NAME,
+      'url': BASE_URL,
+      'logo': {
+        '@type': 'ImageObject',
+        'url': `${BASE_URL}/tampazar-mark-transparent-1024.png`,
+        'width': 512,
+        'height': 512
+      }
+    },
+    'articleSection': article.category || 'Esnaf & Tüketici Rehberi',
+    'keywords': article.tags && article.tags.length > 0 ? article.tags.join(', ') : 'tampazar, esnaf rehberi, yerel e-ticaret, sıfır komisyon',
+    'inLanguage': 'tr-TR',
+    'wordCount': article.wordCount || 1250,
+    ...(article.city ? {
+      'contentLocation': {
+        '@type': 'AdministrativeArea',
+        'name': `${article.district ? article.district + ', ' : ''}${article.city}`,
+        'addressCountry': 'TR'
+      }
+    } : {}),
+    ...(article.sectorName ? {
+      'about': {
+        '@type': 'Thing',
+        'name': `${article.sectorName} Esnafı ve Yerel Ticaret Modeli`
+      }
+    } : {}),
+    'speakable': {
+      '@type': 'SpeakableSpecification',
+      'cssSelector': ['h1', 'article p']
+    }
+  };
+}
+
+/**
+ * 11. Sıkça Sorulan Sorular (schema.org/FAQPage)
+ */
+export function buildFAQPageSchema(faqs: SeoArticleFaq[], pageUrl?: string) {
+  const fullUrl = pageUrl || `${BASE_URL}/blog`;
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${fullUrl}#faq`,
+    'mainEntity': faqs.map((faq) => ({
+      '@type': 'Question',
+      'name': faq.question,
+      'acceptedAnswer': {
+        '@type': 'Answer',
+        'text': faq.answer
+      }
+    }))
+  };
+}
+
 // =========================================================================
 // 2. DOM ENJEKTÖRÜ (CANONICAL, META, OPENGRAPH, TWITTER, JSON-LD)
 // =========================================================================
@@ -551,6 +667,41 @@ export function applyPageSEO(options: SeoOptions) {
       { name: p.category, url: `/sehir-avm` },
       { name: `${p.store.city || 'Yerel'} Esnafı`, url: `/dukkan/${p.store.slug}` },
       { name: p.title, url: `/urun/${p.slug}` }
+    ];
+    schemasToInject.push(buildBreadcrumbSchema(breadcrumbs));
+  }
+
+  // A2. BLOG & PROGRAMATİK REHBER MAKALESİ (/blog/:slug)
+  else if (options.article) {
+    const art = options.article;
+    const citySuffix = art.city ? ` (${art.district ? art.district + '/' : ''}${art.city})` : '';
+
+    if (!pageTitle) {
+      pageTitle = `${art.title}${citySuffix} | TamPazar Rehber`;
+    }
+    if (!pageDesc) {
+      pageDesc = art.excerpt;
+    }
+    ogType = 'article';
+    if (art.coverImage) ogImage = art.coverImage;
+    if (art.tags && art.tags.length > 0) {
+      pageKeywords = art.tags.map(t => t.replace('#', ''));
+    }
+
+    // 1. Article Schema
+    schemasToInject.push(buildArticleSchema(art));
+
+    // 2. FAQ Schema
+    if (art.faqs && art.faqs.length > 0) {
+      schemasToInject.push(buildFAQPageSchema(art.faqs, canonicalUrl));
+    }
+
+    // 3. Breadcrumbs
+    const breadcrumbs: SeoBreadcrumbItem[] = options.breadcrumbs || [
+      { name: 'Ana Sayfa', url: '/' },
+      { name: 'Rehber & Blog', url: '/blog' },
+      { name: art.category || 'Rehber', url: '/blog' },
+      { name: art.title, url: `/blog/${art.slug}` }
     ];
     schemasToInject.push(buildBreadcrumbSchema(breadcrumbs));
   }

@@ -21,6 +21,8 @@ const LegalPages = lazy(() => import('./components/LegalPages'));
 const TampazarSellerDashboard = lazy(() => import('./components/TampazarSellerDashboard'));
 const CustomerAccountPage = lazy(() => import('./components/CustomerAccountPage'));
 const B2BWholesaleMarketplace = lazy(() => import('./components/B2BWholesaleMarketplace'));
+const BlogPage = lazy(() => import('./pages/Blog'));
+const BlogSitemap = lazy(() => import('./pages/BlogSitemap'));
 
 const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
 const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
@@ -69,15 +71,15 @@ function SaaSConsoleRouteWrapper({ activeTenant, handleUpdateTenantPos }: any) {
     <main className="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8 space-y-8">
       {/* SaaS Nav Sub-tabs */}
       <nav aria-label="SaaS Konsol Menüsü" className="flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500 overflow-x-auto pb-4 border-b border-slate-200">
-        <Link to="/saas-konsol/architecture" className={`transition-colors whitespace-nowrap ${currentTab === 'architecture' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Mimarî</Link>
-        <Link to="/saas-konsol/byopos" className={`transition-colors whitespace-nowrap ${currentTab === 'byopos' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Sanal POS (BYO)</Link>
-        <Link to="/saas-konsol/logistics" className={`transition-colors whitespace-nowrap ${currentTab === 'logistics' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📦 Kargo (BYO)</Link>
-        <Link to="/saas-konsol/qrmenu" className={`transition-colors whitespace-nowrap ${currentTab === 'qrmenu' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📱 QR Masa</Link>
-        <Link to="/saas-konsol/b2bquotes" className={`transition-colors whitespace-nowrap ${currentTab === 'b2bquotes' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>📑 B2B Teklif</Link>
-        <Link to="/saas-konsol/gibdespatch" className={`transition-colors whitespace-nowrap ${currentTab === 'gibdespatch' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>🚚 e-İrsaliye</Link>
-        <Link to="/saas-konsol/catalog" className={`transition-colors whitespace-nowrap ${currentTab === 'catalog' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Ürün & SEO</Link>
-        <Link to="/saas-konsol/accounting" className={`transition-colors whitespace-nowrap ${currentTab === 'accounting' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>Ön Muhasebe</Link>
-        <Link to="/saas-konsol/codebase" className={`transition-colors whitespace-nowrap ${currentTab === 'codebase' ? 'text-indigo-900 border-b-2 border-indigo-900 pb-1 font-bold' : 'hover:text-slate-900'}`}>API Kodları</Link>
+        <Link to="/saas-konsol/architecture" className={`transition-colors whitespace-nowrap ${currentTab === 'architecture' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>Mimarî</Link>
+        <Link to="/saas-konsol/byopos" className={`transition-colors whitespace-nowrap ${currentTab === 'byopos' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>Sanal POS (BYO)</Link>
+        <Link to="/saas-konsol/logistics" className={`transition-colors whitespace-nowrap ${currentTab === 'logistics' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>📦 Kargo (BYO)</Link>
+        <Link to="/saas-konsol/qrmenu" className={`transition-colors whitespace-nowrap ${currentTab === 'qrmenu' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>📱 QR Masa</Link>
+        <Link to="/saas-konsol/b2bquotes" className={`transition-colors whitespace-nowrap ${currentTab === 'b2bquotes' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>📑 B2B Teklif</Link>
+        <Link to="/saas-konsol/gibdespatch" className={`transition-colors whitespace-nowrap ${currentTab === 'gibdespatch' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>🚚 e-İrsaliye</Link>
+        <Link to="/saas-konsol/catalog" className={`transition-colors whitespace-nowrap ${currentTab === 'catalog' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>Ürün & SEO</Link>
+        <Link to="/saas-konsol/accounting" className={`transition-colors whitespace-nowrap ${currentTab === 'accounting' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>Ön Muhasebe</Link>
+        <Link to="/saas-konsol/codebase" className={`transition-colors whitespace-nowrap ${currentTab === 'codebase' ? 'text-[#0F4C3A] border-b-2 border-[#0F4C3A] pb-1 font-black' : 'hover:text-[#0B132B]'}`}>API Kodları</Link>
       </nav>
 
       <div className="transition-all duration-300">
@@ -145,25 +147,25 @@ function MainLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFDFD] text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
       {/* Top Global Ecosystem Switcher Bar */}
-      <div className="bg-slate-950 text-white text-[11px] font-medium px-6 py-2 flex items-center justify-between border-b border-slate-800">
+      <div className="bg-[#0B132B] text-white text-[11px] font-medium px-6 py-2 flex items-center justify-between border-b border-[#111B38]">
         <div className="flex items-center gap-2">
-          <span className="bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded font-bold text-[9px] uppercase tracking-wider">
+          <span className="bg-[#F59E0B] text-[#0B132B] px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider shadow-2xs">
             Açık Dijital AVM
           </span>
-          <span className="hidden sm:inline text-slate-400">
+          <span className="hidden sm:inline text-slate-300">
             tampazar.com — Açık Dijital AVM ve Entegre Ticaret İşletim Sistemi (%0 Komisyon · Doğrudan Esnaf Kasası · GİB e-Fatura)
           </span>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <Link
             to="/"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/' 
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -173,7 +175,7 @@ function MainLayout() {
             to="/sehir-avm"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/sehir-avm' 
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -183,7 +185,7 @@ function MainLayout() {
             to="/hesabim"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/hesabim' 
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
                 : 'text-slate-300 hover:text-white'
             }`}
           >
@@ -193,18 +195,28 @@ function MainLayout() {
             to="/toptan"
             className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
               location.pathname === '/toptan' 
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
                 : 'text-amber-300 hover:text-white'
             }`}
           >
             🏢 B2B Toptan & Esnaf Ağı
           </Link>
           <Link
+            to="/blog"
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
+              location.pathname.startsWith('/blog')
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            📚 Rehber & Blog
+          </Link>
+          <Link
             to="/yonetim"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/yonetim' 
-                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
-                : 'text-amber-300 hover:text-amber-200'
+                ? 'bg-[#10B981] text-[#0B132B] font-black shadow-xs' 
+                : 'text-emerald-400 hover:text-emerald-300 font-semibold'
             }`}
           >
             📊 Esnaf Ön Muhasebe
@@ -213,7 +225,7 @@ function MainLayout() {
             to="/saas-konsol/byopos"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname.startsWith('/saas-konsol')
-                ? 'bg-slate-800 text-amber-300 font-semibold border border-slate-700' 
+                ? 'bg-[#111B38] text-amber-300 font-semibold border border-slate-700' 
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -224,11 +236,11 @@ function MainLayout() {
 
       {/* Header bar for non-home pages */}
       {location.pathname !== '/' && location.pathname !== '/sehir-avm' && (
-        <header className="sticky top-0 z-40 bg-[#FDFDFD]/90 backdrop-blur-md border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-xs">
+        <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-xs">
           <div className="flex items-center gap-3 shrink-0">
             <Link 
               to="/"
-              className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-900 font-semibold"
+              className="flex items-center gap-1 text-xs text-slate-500 hover:text-[#0F4C3A] font-bold"
             >
               ← Vitrine Dön
             </Link>
@@ -243,7 +255,7 @@ function MainLayout() {
               <button
                 aria-label="Kiracı / Esnaf Seçim Menüsü"
                 onClick={() => setShowTenantDropdown(!showTenantDropdown)}
-                className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white shadow-xs transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-[#0F4C3A]/40 rounded-lg text-xs font-semibold text-[#0B132B] bg-white shadow-xs transition-colors cursor-pointer"
               >
                 <span className="text-sm">{activeTenant.logo}</span>
                 <span className="truncate max-w-[120px]">{activeTenant.name}</span>
@@ -263,7 +275,7 @@ function MainLayout() {
                         setActiveTenant(t);
                         setShowTenantDropdown(false);
                       }}
-                      className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors ${activeTenant.id === t.id ? 'bg-slate-50 font-bold' : ''}`}
+                      className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between hover:bg-slate-50 transition-colors ${activeTenant.id === t.id ? 'bg-emerald-50 text-[#0F4C3A] font-bold' : ''}`}
                     >
                       <div className="flex items-center gap-2">
                         <span className="text-sm">{t.logo}</span>
@@ -273,7 +285,7 @@ function MainLayout() {
                         </div>
                       </div>
                       {activeTenant.id === t.id && (
-                        <Check className="w-4 h-4 text-emerald-500" />
+                        <Check className="w-4 h-4 text-[#10B981]" />
                       )}
                     </button>
                   ))}
@@ -289,7 +301,7 @@ function MainLayout() {
       <div className="flex-1 flex flex-col">
         <Suspense fallback={
           <div className="min-h-[60vh] flex items-center justify-center">
-            <div className="w-8 h-8 border-4 border-indigo-900 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-[#0F4C3A] border-t-transparent rounded-full animate-spin"></div>
           </div>
         }>
           <Routes>
@@ -330,6 +342,22 @@ function MainLayout() {
             <Route 
               path="/toptan" 
               element={<B2BWholesaleMarketplace />} 
+            />
+            <Route 
+              path="/blog" 
+              element={<BlogPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
+              path="/blog/:slug" 
+              element={<BlogPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
+              path="/sitemap-blog.xml" 
+              element={<BlogSitemap />} 
+            />
+            <Route 
+              path="/sitemap.xml" 
+              element={<BlogSitemap />} 
             />
             <Route 
               path="/hesabim" 
@@ -400,6 +428,10 @@ function MainLayout() {
           Fiziksel bir çarşı ve AVM'nin dijital dünyadaki bağımsız karşılığı. Sabit aidat modeli, %0 komisyon, esnafın doğrudan kendi Sanal POS'u ile tahsilat ve GİB UBL-TR 2.1 yerleşik ön muhasebe altyapısı.
         </p>
         <div className="flex flex-wrap justify-center gap-3 pt-2 text-[11px] font-medium text-slate-500">
+          <Link to="/blog" className="text-amber-600 hover:text-amber-700 font-bold transition-colors">📚 Rehber & Blog</Link>
+          <span>·</span>
+          <Link to="/sitemap-blog.xml" className="text-emerald-700 hover:text-emerald-800 font-bold transition-colors">🗺️ Blog Sitemap (SEO)</Link>
+          <span>·</span>
           <Link to="/mesafeli-satis" className="hover:text-indigo-900 transition-colors">Mesafeli Satış</Link>
           <span>·</span>
           <Link to="/gizlilik" className="hover:text-indigo-900 transition-colors">Gizlilik Politikası</Link>
