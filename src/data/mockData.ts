@@ -43,6 +43,38 @@ export interface Product {
   badge?: string;
   tierPriceNote?: string;
   
+  // Enterprise ERP & TamPazar Kurumsal Nitelikleri
+  brand?: string;
+  modelNo?: string;
+  costPrice?: number;
+  listPrice?: number;
+  withholdingCode?: string;
+  images?: string[];
+  stockCount?: number;
+  criticalStockThreshold?: number;
+  variantMatrix?: {
+    id: string;
+    size?: string;
+    color?: string;
+    material?: string;
+    sku: string;
+    barcode: string;
+    stock: number;
+    priceDiff: number;
+  }[];
+  deliveryOptions?: {
+    type: 'physical_cargo' | 'local_express' | 'field_service';
+    desi?: number;
+    carrierCompany?: string;
+    isFreeShipping?: boolean;
+    localDeliveryTime?: string;
+    minBasketAmount?: number;
+    isTakeawayAllowed?: boolean;
+    fixedServiceFee?: number;
+    serviceRadiusKm?: number;
+    isOnSiteService?: boolean;
+  };
+
   // Retail specific
   variants?: {
     sizes?: string[];
@@ -99,10 +131,21 @@ export interface LedgerAccount {
   tenantId: string;
   name: string;
   code: string; // e.g., 120.01.001
-  type: 'buyer' | 'supplier';
+  type: 'buyer' | 'supplier' | 'both';
   balance: number; // positive is receivable, negative is payable
   email: string;
   taxId: string;
+  taxOffice?: string;
+  phone?: string;
+  whatsapp?: string;
+  city?: string;
+  district?: string;
+  address?: string;
+  isCompany?: boolean;
+  legalTitle?: string;
+  dueDays?: number;
+  discountRate?: number;
+  openingBalance?: number;
 }
 
 export interface LedgerTransaction {

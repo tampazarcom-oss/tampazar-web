@@ -280,7 +280,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
-      {/* 1. ÜST HEADER: Amazon Arama Gücü + Trendyol Akıcılığı */}
+      {/* 1. ÜST HEADER: Hızlı Arama & TamPazar Akıcılığı */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-6">
           
@@ -796,7 +796,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
                       <div>
                         <div className="flex items-center gap-2">
                           <strong className="text-xs font-bold text-slate-900">Hizmeti Konuma Çağır</strong>
-                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Armut Modeli</span>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">TamUsta</span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-0.5">Usta harita konumuza yönlendirilir, randevulu veya acil servis verilir.</p>
                       </div>

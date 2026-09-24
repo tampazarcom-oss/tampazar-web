@@ -28,6 +28,9 @@ import LocalOrdersModule from './merchant/LocalOrdersModule';
 import ServiceOrdersModule from './merchant/ServiceOrdersModule';
 import CashflowModule from './merchant/CashflowModule';
 import SubscriptionTierModal from './merchant/SubscriptionTierModal';
+import AdvancedProductModal from './merchant/AdvancedProductModal';
+import AdvancedLedgerAccountModal from './merchant/AdvancedLedgerAccountModal';
+import StoreSettingsModule from './merchant/StoreSettingsModule';
 
 interface TampazarSellerDashboardProps {
   onNavigate?: (tab: string, subParam?: any) => void;
@@ -44,7 +47,8 @@ export type DashboardTab =
   | 'orders_local' 
   | 'orders_service' 
   | 'pos' 
-  | 'subscription';
+  | 'subscription'
+  | 'settings';
 
 export default function TampazarSellerDashboard({
   onNavigate,
@@ -177,7 +181,9 @@ export default function TampazarSellerDashboard({
   // Modal States
   const [showCreateInvoiceModal, setShowCreateInvoiceModal] = useState(false);
   const [showAddProductModal, setShowAddProductModal] = useState(false);
+  const [showAddLedgerAccountModal, setShowAddLedgerAccountModal] = useState(false);
   const [selectedInvoiceForPreview, setSelectedInvoiceForPreview] = useState<Invoice | null>(null);
+  const [toastNotification, setToastNotification] = useState<string | null>(null);
 
   // New Invoice Form
   const [newInvCustomer, setNewInvCustomer] = useState('');
@@ -412,6 +418,30 @@ export default function TampazarSellerDashboard({
     }));
   };
 
+  const handleSaveAdvancedProduct = (newProduct: Product) => {
+    setProducts(prev => {
+      const updated = [newProduct, ...prev];
+      try {
+        localStorage.setItem('tampazar_products', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setToastNotification(`"${newProduct.title}" ürünü başarıyla eklendi ve vitrinde yayına alındı!`);
+    setTimeout(() => setToastNotification(null), 3500);
+  };
+
+  const handleSaveAdvancedLedgerAccount = (newAccount: LedgerAccount) => {
+    setAccounts(prev => {
+      const updated = [newAccount, ...prev];
+      try {
+        localStorage.setItem('tampazar_ledger_accounts', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    setToastNotification(`"${newAccount.name}" cari kartı başarıyla tanımlandı!`);
+    setTimeout(() => setToastNotification(null), 3500);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col md:flex-row font-sans">
       
@@ -535,7 +565,7 @@ export default function TampazarSellerDashboard({
           >
             <div className="flex items-center gap-3">
               <Truck className="w-4 h-4 text-indigo-400" />
-              <span>Ulusal Kargo (Trendyol)</span>
+              <span>TamKargo (Ulusal Gönderi)</span>
             </div>
             <span className="text-[10px] bg-indigo-950/80 text-indigo-300 font-bold px-1.5 py-0.5 rounded">
               {hybridOrders.filter(o => o.deliveryType === 'CARGO').length}
@@ -552,7 +582,7 @@ export default function TampazarSellerDashboard({
           >
             <div className="flex items-center gap-3">
               <Bell className="w-4 h-4 text-amber-400" />
-              <span>Yerel Sipariş (Getir/Zil)</span>
+              <span>TamHızlı (Ekspres Sipariş & Zil)</span>
             </div>
             <span className="text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded">
               {hybridOrders.filter(o => o.deliveryType === 'LOCAL_EXPRESS').length}
@@ -569,7 +599,7 @@ export default function TampazarSellerDashboard({
           >
             <div className="flex items-center gap-3">
               <Building2 className="w-4 h-4 text-amber-400" />
-              <span>Saha Servisi (Armut)</span>
+              <span>TamUsta (Yerinde Servis & Randevu)</span>
             </div>
             <span className="text-[10px] bg-amber-950/80 text-amber-300 font-bold px-1.5 py-0.5 rounded">
               {hybridOrders.filter(o => o.deliveryType === 'FIELD_SERVICE').length}
@@ -594,10 +624,15 @@ export default function TampazarSellerDashboard({
           </button>
 
           <button
-            onClick={() => onNavigate && onNavigate('byopos')}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/60 transition text-left cursor-pointer"
+            onClick={() => setActiveTab('settings')}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'settings' 
+                ? 'bg-indigo-600 text-white font-bold shadow-sm' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
           >
-            <Settings className="w-4 h-4" /> Kendi POS Ayarlarım
+            <Settings className="w-4 h-4 text-indigo-400" />
+            <span>Mağaza & Entegrasyon Ayarları</span>
           </button>
 
           <button
@@ -641,11 +676,12 @@ export default function TampazarSellerDashboard({
               {activeTab === 'efatura' && 'GİB e-Fatura & e-Arşiv Fatura Portali'}
               {activeTab === 'cariler' && 'Cari Hesap & Müşteri Borç/Alacak Defteri'}
               {activeTab === 'stok' && 'Gelişmiş Stok, Depo & Varyant Yönetimi'}
-              {activeTab === 'orders_cargo' && 'Ulusal Kargo ve E-Ticaret Siparişleri (Trendyol Modeli)'}
-              {activeTab === 'orders_local' && 'Anlık Yerel Siparişler & Canlı Sipariş Zili (Getir Modeli)'}
-              {activeTab === 'orders_service' && 'Saha Hizmetleri, Acil Çağrı & Usta Takvimi (Armut Modeli)'}
+              {activeTab === 'orders_cargo' && 'TamKargo: Ulusal Kargo & Sevk İrsaliyesi Yönetimi'}
+              {activeTab === 'orders_local' && 'TamHızlı: Anlık Mahalle Siparişleri & Canlı Sipariş Zili (30 Dk)'}
+              {activeTab === 'orders_service' && 'TamUsta: Saha Hizmetleri, Acil Çağrı & Usta Takvimi'}
               {activeTab === 'pos' && 'Sanal POS & Doğrudan Tahsilat Akışı'}
               {activeTab === 'subscription' && 'Esnaf Abonelik & Ticari Model Mimarisi (%0 Komisyon)'}
+              {activeTab === 'settings' && 'Mağaza Profili, Kurumsal Kimlik & Kendi Sanal POS (BYO POS) Ayarları'}
             </h1>
           </div>
 
@@ -666,6 +702,22 @@ export default function TampazarSellerDashboard({
             </button>
           </div>
         </header>
+
+        {/* TOAST BİLDİRİMİ */}
+        {toastNotification && (
+          <div className="mx-6 mt-4 p-3.5 bg-emerald-600 text-white rounded-2xl shadow-lg flex items-center justify-between animate-fade-in text-xs font-bold">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 shrink-0 text-white" />
+              <span>{toastNotification}</span>
+            </div>
+            <button 
+              onClick={() => setToastNotification(null)}
+              className="text-white/80 hover:text-white p-1 cursor-pointer"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {/* ANA İÇERİK BÖLÜMÜ */}
         <main className="p-6 space-y-6 max-w-[1600px] w-full mx-auto">
@@ -787,7 +839,7 @@ export default function TampazarSellerDashboard({
                         <Truck className="w-5 h-5" />
                       </span>
                       <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-full">
-                        Trendyol/Amazon
+                        TamKargo
                       </span>
                     </div>
                     <div className="text-xl font-black text-slate-900">
@@ -808,7 +860,7 @@ export default function TampazarSellerDashboard({
                         <Bell className="w-5 h-5" />
                       </span>
                       <span className="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-full flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" /> Getir / Zil
+                        <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-ping" /> TamHızlı (Zil)
                       </span>
                     </div>
                     <div className="text-xl font-black text-slate-900">
@@ -829,7 +881,7 @@ export default function TampazarSellerDashboard({
                         <Building2 className="w-5 h-5" />
                       </span>
                       <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-                        Armut Modeli
+                        TamUsta
                       </span>
                     </div>
                     <div className="text-xl font-black text-slate-900">
@@ -1029,6 +1081,13 @@ export default function TampazarSellerDashboard({
                   <span className="text-xs bg-emerald-50 text-emerald-800 font-bold px-3 py-1.5 rounded-xl border border-emerald-200">
                     Toplam Alacak: {totalReceivable.toLocaleString('tr-TR')} ₺
                   </span>
+                  <button
+                    onClick={() => setShowAddLedgerAccountModal(true)}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>+ Yeni Cari Kart Tanımla</span>
+                  </button>
                 </div>
               </div>
 
@@ -1045,15 +1104,39 @@ export default function TampazarSellerDashboard({
                       <div className="space-y-2">
                         <div className="flex items-center justify-between">
                           <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded ${
-                            acc.type === 'buyer' ? 'bg-indigo-50 text-indigo-700' : 'bg-amber-50 text-amber-700'
+                            acc.type === 'buyer' 
+                              ? 'bg-indigo-50 text-indigo-700' 
+                              : acc.type === 'supplier'
+                                ? 'bg-amber-50 text-amber-700'
+                                : 'bg-emerald-50 text-emerald-700'
                           }`}>
-                            {acc.type === 'buyer' ? 'Müşteri (Alıcı)' : 'Tedarikçi (Toptancı)'}
+                            {acc.type === 'buyer' ? 'Müşteri (Alıcı)' : acc.type === 'supplier' ? 'Tedarikçi (Toptancı)' : 'Hem Müşteri / Tedarikçi'}
                           </span>
                           <span className="text-[10px] font-mono text-slate-400">{acc.code}</span>
                         </div>
 
                         <h4 className="font-black text-slate-900 text-sm leading-snug">{acc.name}</h4>
                         <p className="text-[11px] text-slate-400 font-mono">VKN/TC: {acc.taxId} • {acc.email}</p>
+                        
+                        {(acc.city || acc.dueDays !== undefined) && (
+                          <div className="flex flex-wrap items-center gap-2 pt-1 text-[10px]">
+                            {acc.city && (
+                              <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">
+                                📍 {acc.city} {acc.district ? `/ ${acc.district}` : ''}
+                              </span>
+                            )}
+                            {acc.dueDays !== undefined && (
+                              <span className="bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-bold">
+                                ⏱ {acc.dueDays} Gün Vade
+                              </span>
+                            )}
+                            {acc.discountRate !== undefined && acc.discountRate > 0 && (
+                              <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded font-bold">
+                                %{acc.discountRate} İskonto
+                              </span>
+                            )}
+                          </div>
+                        )}
 
                         <div className="pt-2 border-t border-slate-100 flex items-baseline justify-between">
                           <span className="text-xs text-slate-500 font-medium">Bakiye Durumu:</span>
@@ -1117,51 +1200,106 @@ export default function TampazarSellerDashboard({
                     <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase font-mono text-[10px]">
                       <tr>
                         <th className="py-3.5 px-4 font-bold">Ürün / Hizmet</th>
-                        <th className="py-3.5 px-4 font-bold">Kategori</th>
+                        <th className="py-3.5 px-4 font-bold">Kategori & Varyant</th>
                         <th className="py-3.5 px-4 font-bold">SKU / Barkod</th>
                         <th className="py-3.5 px-4 font-bold">KDV</th>
-                        <th className="py-3.5 px-4 font-bold">Fiyat (KDV Dahil)</th>
+                        <th className="py-3.5 px-4 font-bold">Fiyat & Kâr Marjı</th>
+                        <th className="py-3.5 px-4 font-bold">Stok Durumu</th>
                         <th className="py-3.5 px-4 font-bold text-right">Hızlı Fiyat Ayarı</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 font-medium">
-                      {products.map((prod) => (
-                        <tr key={prod.id} className="hover:bg-slate-50/80 transition">
-                          <td className="py-3.5 px-4">
-                            <div className="flex items-center gap-3">
-                              <img src={prod.image} alt={prod.title} className="w-10 h-10 rounded-xl object-cover border border-slate-200" />
-                              <div>
-                                <span className="font-bold text-slate-900 block line-clamp-1">{prod.title}</span>
-                                <span className="text-[10px] text-slate-400 font-mono">{prod.type.toUpperCase()}</span>
+                      {products.map((prod) => {
+                        const calculatedCost = prod.costPrice || (prod.price * 0.55);
+                        const calculatedVat = prod.price * (prod.vatRate / 100);
+                        const netEarnings = prod.price - calculatedVat;
+                        const netProfit = netEarnings - calculatedCost;
+                        const marginPercent = prod.price > 0 ? ((netProfit / prod.price) * 100) : 0;
+                        const hasVariants = prod.variantMatrix && prod.variantMatrix.length > 0;
+                        const totalStock = prod.stockCount !== undefined ? prod.stockCount : (hasVariants ? prod.variantMatrix!.reduce((acc, v) => acc + v.stock, 0) : 45);
+                        const isCritical = totalStock <= (prod.criticalStockThreshold || 5);
+
+                        return (
+                          <tr key={prod.id} className="hover:bg-slate-50/80 transition">
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-3">
+                                <img src={prod.image} alt={prod.title} className="w-11 h-11 rounded-xl object-cover border border-slate-200 shrink-0" />
+                                <div>
+                                  <span className="font-bold text-slate-900 block line-clamp-1">{prod.title}</span>
+                                  <div className="flex items-center gap-1.5 mt-0.5">
+                                    {prod.brand && (
+                                      <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200">
+                                        {prod.brand}
+                                      </span>
+                                    )}
+                                    <span className="text-[10px] text-slate-400 font-mono">{prod.type.toUpperCase()}</span>
+                                    {prod.deliveryOptions?.type === 'local_express' && (
+                                      <span className="text-[9px] bg-amber-100 text-amber-900 font-bold px-1.5 py-0.2 rounded">TamHızlı/30Dk</span>
+                                    )}
+                                    {prod.deliveryOptions?.type === 'field_service' && (
+                                      <span className="text-[9px] bg-emerald-100 text-emerald-900 font-bold px-1.5 py-0.2 rounded">TamUsta/Saha</span>
+                                    )}
+                                    {prod.deliveryOptions?.type === 'physical_cargo' && (
+                                      <span className="text-[9px] bg-indigo-100 text-indigo-900 font-bold px-1.5 py-0.2 rounded">TamKargo</span>
+                                    )}
+                                  </div>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td className="py-3.5 px-4 text-slate-600">{prod.category}</td>
-                          <td className="py-3.5 px-4 font-mono text-slate-500">{prod.sku}</td>
-                          <td className="py-3.5 px-4 font-mono">%{prod.vatRate}</td>
-                          <td className="py-3.5 px-4 font-black font-mono text-slate-900 text-sm">
-                            {prod.price.toLocaleString('tr-TR')} ₺
-                          </td>
-                          <td className="py-3.5 px-4 text-right">
-                            <div className="inline-flex items-center gap-1.5">
-                              <button
-                                onClick={() => handleUpdatePrice(prod.id, -50)}
-                                className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs cursor-pointer"
-                                title="50 TL Düşür"
-                              >
-                                -50 ₺
-                              </button>
-                              <button
-                                onClick={() => handleUpdatePrice(prod.id, 50)}
-                                className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs cursor-pointer"
-                                title="50 TL Artır"
-                              >
-                                +50 ₺
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <span className="text-slate-700 font-medium block">{prod.category}</span>
+                              {hasVariants && (
+                                <span className="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.2 rounded mt-0.5 inline-block">
+                                  {prod.variantMatrix!.length} Varyant Seçeneği
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3.5 px-4 font-mono text-slate-600 text-[11px]">{prod.sku}</td>
+                            <td className="py-3.5 px-4 font-mono font-bold">%{prod.vatRate}</td>
+                            <td className="py-3.5 px-4">
+                              <span className="font-black font-mono text-slate-900 text-sm block">
+                                {prod.price.toLocaleString('tr-TR')} ₺
+                              </span>
+                              <div className="flex items-center gap-1 text-[10px] font-mono mt-0.5">
+                                <span className="text-slate-400">Maliyet: {calculatedCost.toFixed(0)} ₺</span>
+                                <span className={`font-bold px-1 rounded ${marginPercent >= 20 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}`}>
+                                  %{marginPercent.toFixed(0)} Kâr
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4">
+                              <div className="flex items-center gap-1.5">
+                                <span className={`font-mono font-bold text-xs ${isCritical ? 'text-rose-600 font-black' : 'text-slate-800'}`}>
+                                  {totalStock} Adet
+                                </span>
+                                {isCritical && (
+                                  <span className="text-[9px] bg-rose-100 text-rose-700 font-black px-1.5 py-0.2 rounded animate-pulse">
+                                    Kritik!
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="py-3.5 px-4 text-right">
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  onClick={() => handleUpdatePrice(prod.id, -50)}
+                                  className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg text-xs cursor-pointer"
+                                  title="50 TL Düşür"
+                                >
+                                  -50 ₺
+                                </button>
+                                <button
+                                  onClick={() => handleUpdatePrice(prod.id, 50)}
+                                  className="px-2 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold rounded-lg text-xs cursor-pointer"
+                                  title="50 TL Artır"
+                                >
+                                  +50 ₺
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -1289,6 +1427,13 @@ export default function TampazarSellerDashboard({
                 subscription={merchantSubscription}
                 onUpdateTier={handleUpdateTier}
               />
+            </div>
+          )}
+
+          {/* TAB: MAĞAZA VE KENDİ SANAL POS AYARLARI (BYO POS) */}
+          {activeTab === 'settings' && (
+            <div className="animate-fade-in">
+              <StoreSettingsModule />
             </div>
           )}
 
@@ -1528,74 +1673,22 @@ export default function TampazarSellerDashboard({
         </div>
       )}
 
-      {/* 5. MODAL: YENİ ÜRÜN / HİZMET EKLE */}
-      {showAddProductModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-fade-in text-xs">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="font-black text-slate-900 text-sm">Yeni Ürün / Hizmet Ekle</h3>
-              <button onClick={() => setShowAddProductModal(false)} className="p-1 text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
+      {/* 5. MODAL: GELİŞMİŞ TRENDYOL & AMAZON DÜZEYİ ÜRÜN / HİZMET SİHİRBAZI */}
+      <AdvancedProductModal
+        isOpen={showAddProductModal}
+        onClose={() => setShowAddProductModal(false)}
+        onSaveProduct={handleSaveAdvancedProduct}
+        tenantId={user?.storeId || 's3'}
+        storeName={currentStore}
+      />
 
-            <form onSubmit={handleCreateProduct} className="space-y-3">
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Ürün / Hizmet Başlığı *</label>
-                <input 
-                  type="text" 
-                  required
-                  value={newProdTitle}
-                  onChange={(e) => setNewProdTitle(e.target.value)}
-                  placeholder="Örn: Hakiki Deri Klasik Ayakkabı" 
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="font-bold text-slate-700 block mb-1">Kategori</label>
-                <input 
-                  type="text" 
-                  value={newProdCategory}
-                  onChange={(e) => setNewProdCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">Fiyat (₺) *</label>
-                  <input 
-                    type="number" 
-                    required
-                    min={1}
-                    value={newProdPrice}
-                    onChange={(e) => setNewProdPrice(Number(e.target.value))}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold"
-                  />
-                </div>
-                <div>
-                  <label className="font-bold text-slate-700 block mb-1">SKU / Barkod</label>
-                  <input 
-                    type="text" 
-                    value={newProdSku}
-                    onChange={(e) => setNewProdSku(e.target.value)}
-                    placeholder="BAR-9902"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none font-mono"
-                  />
-                </div>
-              </div>
-
-              <button
-                type="submit"
-                className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-bold rounded-xl mt-3 transition cursor-pointer"
-              >
-                Ürünü Kaydet & Stoğa Al
-              </button>
-            </form>
-          </div>
-        </div>
-      )}
+      {/* 6. MODAL: DETAYLI BİZİMHESAP & PARAŞÜT DÜZEYİ CARİ HESAP KARTI */}
+      <AdvancedLedgerAccountModal
+        isOpen={showAddLedgerAccountModal}
+        onClose={() => setShowAddLedgerAccountModal(false)}
+        onSaveAccount={handleSaveAdvancedLedgerAccount}
+        tenantId={user?.storeId || 's3'}
+      />
 
     </div>
   );

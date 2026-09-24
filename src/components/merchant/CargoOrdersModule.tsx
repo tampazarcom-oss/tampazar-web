@@ -59,10 +59,10 @@ export default function CargoOrdersModule({ orders, onUpdateOrderStatus }: Cargo
             <span className="p-2 rounded-xl bg-indigo-50 text-indigo-700 font-bold">
               <Truck className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-black text-slate-900">Ulusal Kargo ve E-Ticaret Siparişleri</h2>
+            <h2 className="text-xl font-black text-slate-900">TamKargo (Ulusal Gönderi & E-Ticaret)</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Trendyol & Amazon standartlarında tüm Türkiye kargo gönderileri, otomatik e-İrsaliye barkodu ve entegrasyonu.
+            TamPazar lojistik standartlarında tüm Türkiye kargo gönderileri, otomatik e-İrsaliye barkodu ve entegrasyonu.
           </p>
         </div>
 

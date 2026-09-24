@@ -50,10 +50,10 @@ export default function ServiceOrdersModule({ orders, onUpdateOrderStatus }: Ser
             <span className="p-2 rounded-xl bg-amber-100 text-amber-900 font-bold">
               <Wrench className="w-5 h-5" />
             </span>
-            <h2 className="text-xl font-black text-slate-900">Saha Hizmetleri, Acil Çağrı & Usta Takvimi</h2>
+            <h2 className="text-xl font-black text-slate-900">TamUsta (Yerinde Servis & Randevu)</h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Armut & Acil Servis modeliyle harita üzerinden müşterinin tam konumunu görün, tek tıkla navigasyon rotası açın.
+            TamPazar Saha Servisi altyapısıyla harita üzerinden müşterinin tam konumunu görün, tek tıkla navigasyon rotası açın.
           </p>
         </div>
 

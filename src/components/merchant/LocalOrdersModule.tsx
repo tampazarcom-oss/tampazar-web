@@ -47,9 +47,9 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 bg-slate-950 text-amber-400 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span>Yemeksepeti / Getir Modeli Canlı Esnaf Ekranı</span>
+            <span>TamHızlı Canlı Esnaf Ekranı</span>
           </div>
-          <h2 className="text-2xl font-black tracking-tight">Anlık Yerel Siparişler & Masaüstü Zili</h2>
+          <h2 className="text-2xl font-black tracking-tight">TamHızlı (Ekspres Sipariş & Zil)</h2>
           <p className="text-xs text-slate-900 font-medium">
             30-45 dakikalık mahalle siparişleri doğrudan bu ekrana düşer ve sesli zil çalar.
           </p>

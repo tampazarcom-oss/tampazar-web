@@ -241,9 +241,9 @@ export const initialCashflowTransactions: CashflowTransaction[] = [
 // ==========================================
 
 export type HybridDeliveryType = 
-  | 'CARGO'           // 1. Ulusal E-Ticaret & Kargo (Trendyol/Amazon modeli)
-  | 'LOCAL_EXPRESS'   // 2. Anlık Yerel Teslimat (30-45 Dk / Yemeksepeti-Getir modeli)
-  | 'FIELD_SERVICE';  // 3. Yerel Hizmet & Saha Servisi (Armut modeli)
+  | 'CARGO'           // 1. TamKargo (Ulusal E-Ticaret & Kargo Gönderimi)
+  | 'LOCAL_EXPRESS'   // 2. TamHızlı (30-45 Dk Anlık Yerel Teslimat)
+  | 'FIELD_SERVICE';  // 3. TamUsta (Yerel Hizmet & Saha Servisi)
 
 export interface HybridOrder {
   id: string;
@@ -317,7 +317,7 @@ export interface HybridOrder {
 }
 
 export const initialHybridOrders: HybridOrder[] = [
-  // 1. ULUSAL KARGO SİPARİŞİ (Trendyol/Amazon Modeli)
+  // 1. ULUSAL KARGO SİPARİŞİ (TamKargo)
   {
     id: 'ord-cargo-101',
     orderNumber: 'TPZ-TR-2026-8812',
@@ -390,7 +390,7 @@ export const initialHybridOrders: HybridOrder[] = [
     createdAt: '2026-09-22 11:20'
   },
 
-  // 2. ANLIK YEREL SİPARİŞ (Yemeksepeti / Getir Modeli)
+  // 2. ANLIK YEREL SİPARİŞ (TamHızlı)
   {
     id: 'ord-local-201',
     orderNumber: 'TPZ-YEREL-2026-0044',
@@ -481,7 +481,7 @@ export const initialHybridOrders: HybridOrder[] = [
     createdAt: '2026-09-23 14:15'
   },
 
-  // 3. YEREL HİZMET & SAHA SERVİSİ (Armut Modeli)
+  // 3. YEREL HİZMET & SAHA SERVİSİ (TamUsta)
   {
     id: 'ord-srv-301',
     orderNumber: 'TPZ-SERVIS-2026-018',
