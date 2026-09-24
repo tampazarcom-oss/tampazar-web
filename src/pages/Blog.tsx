@@ -376,8 +376,8 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
             </div>
           </header>
 
-          {/* Featured Image */}
-          <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-md bg-slate-100 max-h-96 relative">
+          {/* Featured Cover Image */}
+          <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-md bg-slate-100 max-h-[420px] relative">
             <img 
               src={currentPost.coverImage} 
               alt={currentPost.title} 
@@ -387,12 +387,37 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
               }}
             />
             {currentPost.featured && (
-              <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1 rounded-xl font-bold text-xs shadow-md flex items-center gap-1.5">
-                <Award className="w-3.5 h-3.5" />
+              <div className="absolute top-4 left-4 bg-emerald-600 text-white px-3 py-1.5 rounded-xl font-bold text-xs shadow-md flex items-center gap-1.5">
+                <Award className="w-4 h-4" />
                 <span>⭐ Öne Çıkan Başvuru Rehberi</span>
               </div>
             )}
           </div>
+
+          {/* CALLOUT BOX (Öne Çıkan Hap Bilgiler Kutusu) */}
+          {currentPost.calloutBox && (
+            <div className="bg-gradient-to-r from-amber-500/10 via-indigo-500/10 to-emerald-500/10 border-2 border-amber-300/80 p-5 sm:p-6 rounded-3xl space-y-3 shadow-xs">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-600 fill-amber-400" />
+                  <span>{currentPost.calloutBox.title}</span>
+                </h3>
+                {currentPost.calloutBox.badge && (
+                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-slate-950">
+                    {currentPost.calloutBox.badge}
+                  </span>
+                )}
+              </div>
+              <ul className="space-y-2 pt-1">
+                {currentPost.calloutBox.items.map((item, cIdx) => (
+                  <li key={cIdx} className="flex items-start gap-2 text-xs font-bold text-slate-800">
+                    <span className="text-amber-600 font-extrabold text-sm leading-none mt-0.5">⚡</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Checklist Box (Bu rehberde ne öğreneceksiniz?) */}
           {currentPost.checklist && currentPost.checklist.length > 0 && (
@@ -415,23 +440,68 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
           {/* Article Content */}
           <div className="space-y-8 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xs">
             {/* Lead */}
-            <p className="text-base text-slate-800 font-semibold leading-relaxed border-l-4 border-amber-500 pl-4 py-1 bg-amber-50/40 rounded-r-xl">
+            <p className="text-base sm:text-lg text-slate-800 font-semibold leading-relaxed border-l-4 border-amber-500 pl-4 py-2 bg-amber-50/50 rounded-r-2xl">
               {currentPost.content.lead}
             </p>
 
             {/* Sections */}
             {currentPost.content.sections.map((section, idx) => (
-              <section key={idx} className="space-y-3.5 pt-6 border-t border-slate-100 first:border-0 first:pt-0">
-                <h2 className="text-xl font-black text-slate-900 tracking-tight">
+              <section key={idx} className="space-y-4 pt-6 border-t border-slate-100 first:border-0 first:pt-0">
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
                   {section.heading}
                 </h2>
 
+                {section.subheading && (
+                  <h3 className="text-sm sm:text-base font-bold text-slate-700 font-sans tracking-wide">
+                    {section.subheading}
+                  </h3>
+                )}
+
                 {section.paragraphs.map((p, pIdx) => (
-                  <p key={pIdx} className="text-sm text-slate-700 leading-relaxed font-normal">
+                  <p key={pIdx} className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
                     {p}
                   </p>
                 ))}
 
+                {/* Inline Detail Image with Caption */}
+                {section.inlineImage && (
+                  <figure className="my-6 rounded-3xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
+                    <img 
+                      src={section.inlineImage.url} 
+                      alt={section.inlineImage.caption} 
+                      className="w-full h-64 sm:h-80 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80';
+                      }}
+                    />
+                    <figcaption className="p-3.5 text-center text-xs font-semibold text-slate-600 italic bg-slate-100/90 border-t border-slate-200 flex items-center justify-center gap-1.5">
+                      <span>📸</span>
+                      <span>{section.inlineImage.caption}</span>
+                    </figcaption>
+                  </figure>
+                )}
+
+                {/* Step Guide Items */}
+                {section.stepGuide && section.stepGuide.length > 0 && (
+                  <div className="space-y-3 pt-2">
+                    <h4 className="text-xs font-black uppercase text-indigo-900 tracking-wider">Adım Adım Uygulama Kılavuzu:</h4>
+                    <div className="grid grid-cols-1 gap-3">
+                      {section.stepGuide.map((step, sIdx) => (
+                        <div key={sIdx} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-3 shadow-2xs">
+                          <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                            {step.stepNumber}
+                          </span>
+                          <div className="space-y-1">
+                            <h5 className="text-xs font-black text-slate-900">{step.title}</h5>
+                            <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Highlight Box */}
                 {section.highlightBox && (
                   <div className="bg-indigo-50/80 border border-indigo-200 p-4 sm:p-5 rounded-2xl space-y-1.5 mt-3">
                     <div className="flex items-center justify-between">
@@ -451,10 +521,11 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                   </div>
                 )}
 
+                {/* Bullet Points */}
                 {section.bulletPoints && section.bulletPoints.length > 0 && (
                   <ul className="space-y-2 pt-2">
                     {section.bulletPoints.map((item, bIdx) => (
-                      <li key={bIdx} className="flex items-start gap-2.5 text-xs font-bold text-slate-800 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                      <li key={bIdx} className="flex items-start gap-2.5 text-xs font-bold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                         <span>{item}</span>
                       </li>
@@ -463,6 +534,44 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                 )}
               </section>
             ))}
+
+            {/* COMPARISON TABLE (Karşılaştırma Tablosu) */}
+            {currentPost.comparisonTable && (
+              <div className="pt-6 border-t border-slate-200 space-y-3">
+                <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
+                  <Calculator className="w-4 h-4 text-amber-600" />
+                  <span>{currentPost.comparisonTable.title}</span>
+                </h3>
+                <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-2xs bg-white">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-900 text-white font-black text-[11px] uppercase tracking-wider">
+                      <tr>
+                        {currentPost.comparisonTable.headers.map((head, hIdx) => (
+                          <th key={hIdx} className={`p-3.5 ${hIdx === 2 ? 'bg-amber-600 text-slate-950' : ''}`}>
+                            {head}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {currentPost.comparisonTable.rows.map((row, rIdx) => (
+                        <tr key={rIdx} className={rIdx % 2 === 0 ? 'bg-slate-50/60' : 'bg-white'}>
+                          <td className="p-3.5 font-bold text-slate-900 w-1/3 border-r border-slate-100">
+                            {row[0]}
+                          </td>
+                          <td className="p-3.5 text-slate-600 w-1/3 border-r border-slate-100">
+                            {row[1]}
+                          </td>
+                          <td className="p-3.5 font-extrabold text-emerald-900 bg-emerald-50/60 w-1/3">
+                            {row[2]}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* SIKÇA SORULAN SORULAR (Accordion FAQ Section) */}
             {currentPost.faqs && currentPost.faqs.length > 0 && (
@@ -509,6 +618,46 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
               </div>
             )}
 
+            {/* SOSYAL MEDYA PAYLAŞIM BUTONLARI (Social Share Bar) */}
+            <div className="pt-6 border-t border-slate-200 space-y-3">
+              <span className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+                <Share2 className="w-3.5 h-3.5 text-slate-500" />
+                Bu Rehberi Sosyal Medyada Paylaşın:
+              </span>
+              <div className="flex flex-wrap items-center gap-2">
+                <a
+                  href={`https://api.whatsapp.com/send?text=${encodeURIComponent(`${currentPost.title} - ${window.location.href}`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5"
+                >
+                  <span>💬 WhatsApp'ta Gönder</span>
+                </a>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(currentPost.title)}&url=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5"
+                >
+                  <span>𝕏 X'te Paylaş</span>
+                </a>
+                <a
+                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-3.5 py-2 bg-blue-700 hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-2xs transition flex items-center gap-1.5"
+                >
+                  <span>💼 LinkedIn</span>
+                </a>
+                <button
+                  onClick={handleShare}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>🔗 {copiedLink ? 'Bağlantı Kopyalandı ✓' : 'Bağlantıyı Kopyala'}</span>
+                </button>
+              </div>
+            </div>
+
             {/* Conclusion */}
             <div className="pt-6 border-t border-slate-200 space-y-2">
               <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">Sonuç & Değerlendirme</h3>
@@ -536,8 +685,40 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
             </div>
           </div>
 
-          {/* DÖNÜŞÜM CTA KUTUSU (Conversion Box) */}
-          {currentPost.ctaType === 'merchant' ? (
+          {/* TAILORED CUSTOM CTA CARD (Dönüşüm Çağrı Kartı) */}
+          {currentPost.customCta ? (
+            <div className="bg-gradient-to-br from-[#0B132B] via-[#0F4C3A] to-slate-950 text-white p-6 sm:p-8 rounded-3xl border border-emerald-800/60 shadow-xl space-y-4">
+              <div className="flex items-center gap-2 text-[#F59E0B] font-bold text-xs">
+                <Store className="w-4 h-4" />
+                <span>{currentPost.customCta.badge || 'TAMPAYAR ÖZEL HİZMETİ'}</span>
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-xl sm:text-2xl font-black text-white">
+                  {currentPost.customCta.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                  {currentPost.customCta.description}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  onClick={() => navigate(currentPost.customCta?.primaryButtonAction || '/yonetim')}
+                  className="px-6 py-3 bg-[#F59E0B] hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition flex items-center gap-2 cursor-pointer"
+                >
+                  <Store className="w-4 h-4" />
+                  <span>{currentPost.customCta.primaryButtonText}</span>
+                </button>
+                {currentPost.customCta.secondaryButtonText && (
+                  <button
+                    onClick={() => navigate(currentPost.customCta?.secondaryButtonAction || '/')}
+                    className="px-5 py-3 bg-slate-800/80 hover:bg-slate-700 text-white font-bold text-xs rounded-xl border border-slate-700 transition cursor-pointer"
+                  >
+                    {currentPost.customCta.secondaryButtonText}
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : currentPost.ctaType === 'merchant' ? (
             <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white p-6 sm:p-8 rounded-3xl border border-slate-800 shadow-xl space-y-4">
               <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
                 <Store className="w-4 h-4" />
@@ -599,28 +780,46 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
             </div>
           )}
 
-          {/* Diğer Rehber Yazıları */}
-          <div className="pt-6 border-t border-slate-200 space-y-4">
-            <h3 className="text-base font-black text-slate-900">Diğer İlgili Rehberler</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {staticBlogPosts.filter(p => p.id !== currentPost.id).slice(0, 4).map(other => (
+          {/* İLGİLİ DİĞER REHBERLER (Recommended Related Guides) */}
+          <div className="pt-8 border-t border-slate-200 space-y-4">
+            <h3 className="text-base sm:text-lg font-black text-slate-900">İlgili Diğer Başvuru Rehberleri</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {staticBlogPosts.filter(p => p.id !== currentPost.id).slice(0, 3).map(other => (
                 <Link
                   key={other.id}
                   to={`/blog/${other.slug}`}
-                  className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition space-y-2 block group shadow-2xs"
+                  className="p-4 bg-white hover:bg-slate-50 border border-slate-200 rounded-2xl transition space-y-3 block group shadow-2xs hover:shadow-md"
                 >
-                  <span className="text-[10px] font-black uppercase text-amber-800 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200">
-                    {other.categoryLabel}
-                  </span>
-                  <h4 className="text-xs font-black text-slate-900 group-hover:text-indigo-900 transition line-clamp-2">
-                    {other.title}
-                  </h4>
-                  <p className="text-[11px] text-slate-500 line-clamp-2">
-                    {other.excerpt}
-                  </p>
-                  <span className="text-[11px] font-bold text-indigo-600 flex items-center gap-1 pt-1">
-                    Rehberi Oku <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
-                  </span>
+                  <div className="h-32 rounded-xl overflow-hidden bg-slate-100">
+                    <img 
+                      src={other.coverImage} 
+                      alt={other.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80';
+                      }}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-black uppercase text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-200">
+                        {other.categoryLabel}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-400 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {other.readTime}
+                      </span>
+                    </div>
+                    <h4 className="text-xs font-black text-slate-900 group-hover:text-amber-800 transition line-clamp-2 leading-snug">
+                      {other.title}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 line-clamp-2">
+                      {other.excerpt}
+                    </p>
+                    <span className="text-[11px] font-bold text-amber-700 flex items-center gap-1 pt-1">
+                      Rehberi Oku <ArrowRight className="w-3 h-3 group-hover:translate-x-1 transition" />
+                    </span>
+                  </div>
                 </Link>
               ))}
             </div>

@@ -4,7 +4,8 @@
  */
 
 import React, { useState } from 'react';
-import { Database, Server, Cpu, Search, Layers, Shield, Key, Shuffle } from 'lucide-react';
+import { Database, Server, Cpu, Search, Layers, Shield, Key, Shuffle, Gauge } from 'lucide-react';
+import PerfMonitor from './PerfMonitor';
 
 export default function SystemArchitecture() {
   const [activeSchemaTab, setActiveSchemaTab] = useState<'tables' | 'rls' | 'prisma'>('tables');
@@ -401,6 +402,11 @@ model Product {
           </div>
           <span className="font-mono text-emerald-500 font-semibold uppercase">AES-256-GCM + IV Verified</span>
         </div>
+      </div>
+
+      {/* Core Web Vitals & Real-time Perf Monitor Integration */}
+      <div className="pt-2">
+        <PerfMonitor />
       </div>
     </div>
   );

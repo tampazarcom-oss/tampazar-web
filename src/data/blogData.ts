@@ -14,6 +14,51 @@ export interface BlogFAQ {
   answer: string;
 }
 
+export interface ComparisonTable {
+  title: string;
+  headers: [string, string, string];
+  rows: Array<[string, string, string]>;
+}
+
+export interface CalloutBox {
+  title: string;
+  badge?: string;
+  items: string[];
+}
+
+export interface CustomCTA {
+  title: string;
+  description: string;
+  badge?: string;
+  primaryButtonText: string;
+  primaryButtonAction: string;
+  secondaryButtonText?: string;
+  secondaryButtonAction?: string;
+}
+
+export interface StepGuideItem {
+  stepNumber: number;
+  title: string;
+  description: string;
+}
+
+export interface BlogPostSection {
+  heading: string;
+  subheading?: string;
+  paragraphs: string[];
+  highlightBox?: {
+    title: string;
+    text: string;
+    badge?: string;
+  };
+  bulletPoints?: string[];
+  stepGuide?: StepGuideItem[];
+  inlineImage?: {
+    url: string;
+    caption: string;
+  };
+}
+
 export interface BlogPost {
   id: string;
   slug: string;
@@ -40,19 +85,13 @@ export interface BlogPost {
   tags: string[];
   ctaType: 'merchant' | 'consumer';
   checklist?: string[];
+  calloutBox?: CalloutBox;
+  comparisonTable?: ComparisonTable;
+  customCta?: CustomCTA;
   faqs?: BlogFAQ[];
   content: {
     lead: string;
-    sections: {
-      heading: string;
-      paragraphs: string[];
-      highlightBox?: {
-        title: string;
-        text: string;
-        badge?: string;
-      };
-      bulletPoints?: string[];
-    }[];
+    sections: BlogPostSection[];
     conclusion: string;
   };
 }
@@ -460,328 +499,790 @@ export function buildProgrammaticSlug(city: string, district: string, sectorId: 
 }
 
 /**
- * 6 Temel Manuel Rehber Makalesi (Sabit Başvuru Rehberleri)
+ * Manuel Temel Rehber Makaleleri (Görsel Zenginlik, Detaylı İçerik ve SEO Uyumlu Yapı)
  */
 export const staticBlogPosts: BlogPost[] = [
   {
     id: 'post-1',
-    slug: 'mahalle-esnafi-icin-dijital-pazara-adim-adim-gecis-rehberi',
-    title: 'Mahalle Esnafı İçin Dijital Pazara Adım Adım Geçiş Rehberi',
-    excerpt: 'Tek kuruş yüksek komisyon ödemeden ve kendi mahallenizde dijital sipariş ağı kurmanın 4 temel kuralı.',
+    slug: 'sifir-komisyon-ile-e-ticaret-devrimi-tampazar-nasil-calisir',
+    title: 'Sıfır Komisyon ile E-Ticaret Devrimi: TamPazar Nasıl Çalışır?',
+    excerpt: 'Geleneksel pazaryerlerinin %20-%30 komisyon kesintilerine son! Kendi PayTR sanal POS\'unuz ve IBAN\'ınızla paranın doğrudan size geçmesini sağlayan TamPazar modelini keşfedin.',
     audience: 'esnaf',
     subCategory: 'esnaf',
-    categoryLabel: 'Esnaf Rehberi',
+    categoryLabel: 'E-Ticaret Rehberi',
     readTime: '6 dk okuma',
     date: '2026-09-24',
-    readCount: '14.2k',
-    likePercentage: 98,
+    readCount: '15.4k',
+    likePercentage: 99,
     featured: true,
     author: {
-      name: 'Selim Usta & Zanaatkar Heyeti',
-      role: 'TamPazar Esnaf Topluluğu Sözcüsü',
+      name: 'Selim Usta & TamPazar Yerel Ticaret Editörü',
+      role: 'KOBİ & Esnaf Büyüme Uzmanı',
       avatar: '👨‍💼'
     },
     coverImage: 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#komisyonsuz', '#yerelesnaf', '#byopos', '#e-fatura'],
+    tags: ['#komisyonsuz', '#byopos', '#yerelesnaf', '#e-fatura'],
     ctaType: 'merchant',
     checklist: [
-      '%0 komisyon & esnafın kendi Sanal POS\'u ile anında tahsilat',
-      'GİB e-Fatura ve otomatik kargo barkodu entegrasyonu',
-      'Mahalle içi 30-45 dk hızlı teslimat & masaüstü esnaf zili',
-      'Doğrudan müşteri sadakati ve dijital veresiye defteri'
+      '%0 Komisyon ile cironuzun tamamını kasada tutma formülü',
+      'Esnafın kendi PayTR / İyzico / banka POS hesabını bağlaması',
+      'GİB UBL-TR 2.1 onaylı ücretsiz e-fatura ve e-arşiv altyapısı',
+      'Hemen Mağaza Aç butonuyla 2 dakikada dijital dükkan kurulumu'
     ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: %0 Komisyon Mimarisi',
+      badge: 'KRİTİK AVANTAJ',
+      items: [
+        'TamPazar, aracı bir finansal havuz kullanmaz; ciro doğrudan esnafın banka hesabına yatar.',
+        'Geleneksel pazaryerlerindeki 30 günlük vade blokesi yoktur; tahsilat ertesi gün hesabınızdadır.',
+        'GİB onaylı e-Arşiv ve e-Fatura entegrasyonu ek hiçbir muhasebe yazılımı ücreti gerektirmez.'
+      ]
+    },
+    comparisonTable: {
+      title: 'TamPazar %0 Komisyon vs Geleneksel Pazar Yerleri Karşılaştırması',
+      headers: ['Mali & Operasyonel Metrik', 'Geleneksel Pazaryerleri', 'TamPazar Açık AVM Modeli'],
+      rows: [
+        ['Satış Komisyon Oranı', '%18 - %30 arasında yüksek kesinti', '%0 Sabit Komisyon (Tamamen Ücretsiz)'],
+        ['Ödeme & Nakit Akış Vadesi', '14 - 30 gün boyunca para blokesi', 'Ertesi gün doğrudan esnaf banka hesabında'],
+        ['Müşteri Mülkiyeti & Verisi', 'Müşteri platforma aittir, esnafla paylaşılmaz', 'Müşteri doğrudan esnafın dijital müdavimidir'],
+        ['E-Fatura & Muhasebe', 'Ek maliyetli karmaşık entegrasyonlar', 'Ücretsiz GİB UBL-TR 2.1 otomatik e-Fatura'],
+        ['Aylık Sabit Maliyet', 'Değişken komisyonlar nedeniyle belirsiz', 'Şeffaf ve sembolik sabit dükkan aidatı']
+      ]
+    },
+    customCta: {
+      title: 'Dükkanınızı Bugün Dijitalleştirin, %0 Komisyonla Kazanın',
+      description: 'Binlerce esnaf gibi siz de kendi Sanal POS\'unuzu bağlayın, komisyonsuz dijital ticaretin tadını çıkarın.',
+      badge: '2 Dakikada Kurulum',
+      primaryButtonText: 'Hemen Mağaza Aç',
+      primaryButtonAction: '/yonetim',
+      secondaryButtonText: 'Vitrinleri İncele',
+      secondaryButtonAction: '/'
+    },
     faqs: [
       {
-        question: 'TamPazar\'da ürün satarken satış başı komisyon öder miyim?',
-        answer: 'Hayır, TamPazar %0 komisyon mantığıyla çalışır. Esnaf yalnızca dilediği sabit aylık küçük aidatı öder ve satışlardan asla kesinti yapılmaz.'
+        question: 'TamPazar\'da satışlardan komisyon kesiliyor mu?',
+        answer: 'Kesinlikle hayır! TamPazar %0 komisyon politikasıyla çalışır. Satış tutarının tamamı doğrudan kendi Sanal POS hesabınıza aktarılır.'
       },
       {
-        question: 'Ödemeler banka hesabıma ne zaman geçer?',
-        answer: 'Kendi Sanal POS\'unuz (BYO POS) tanımlı olduğu için müşteri ödeme yaptığı an tahsilat doğrudan sizin banka hesabınıza geçer. Platformda bloke süresi yoktur.'
+        question: 'Ödemelerim banka hesabıma ne zaman yatar?',
+        answer: 'Kendi PayTR veya banka POS\'unuzu bağladığınız için ödemeler aracı havuzunda beklemeden doğrudan sizin hesabınıza anında yatar.'
       },
       {
-        question: 'E-Fatura entegrasyonu için ek ücret ödemem gerekir mi?',
-        answer: 'Hayır, TamPazar GİB UBL-TR 2.1 onaylı e-Arşiv ve e-Fatura altyapısını işletim sisteminin dahili bir parçası olarak ücretsiz sunar.'
+        question: 'E-Fatura entegrasyonu için ek bir ücret ödemem gerekir mi?',
+        answer: 'Hayır, TamPazar GİB UBL-TR 2.1 e-Arşiv ve e-Fatura altyapısını sistem dahilinde tamamen ücretsiz sunmaktadır.'
       }
     ],
     content: {
-      lead: 'Geleneksel e-ticaret tekelleri, mahalle esnafının cirosundan %18 ile %30 arasında komisyon kesip parayı 30 gün bloke ederken, müşteriyi de dükkandan koparıyor. TamPazar ile fiziksel dükkanınızın bağımsız dijital şubesini nasıl kuracağınızı adım adım açıklıyoruz.',
+      lead: 'Geleneksel e-ticaret platformları mahalle esnafının cirosundan %18 ile %30 arasında fahiş komisyonlar kesip parayı haftalarca bloke ederken, TamPazar fiziksel çarşının özgürlüğünü dijitale taşıyor. İşte komisyonsuz e-ticaret devriminin tüm detayları.',
       sections: [
         {
-          heading: '1. Adım: Kendi Sanal POS\'unuzu Bağlayarak Komisyondan Kurtulun',
+          heading: '1. %0 Komisyon Mantığı ve Esnafın Kendi Kasası (BYO POS)',
+          subheading: 'Aracı Havuzları Ortadan Kaldıran Doğrudan POS Mimarisi',
           paragraphs: [
-            'TamPazar\'da satılan ürünlerden aracı komisyonu alınmaz. Müşteri kredi kartıyla ödeme yaptığı anda tahsilat esnafın kendi banka veya ödeme kuruluşu hesabına (PayTR, İyzico, Garanti BBVA vb.) anında yansır.',
-            'Böylece ertesi gün nakit akışına kavuşur ve kâr marjınızı aracı platformlara kaptırmazsınız.'
+            'E-ticarette büyümenin önündeki en büyük engel, yüksek pazaryeri komisyonları ve uzun bloke süreleridir. Aylık 100.000 TL ciro yapan bir işletme, geleneksel platformlara yılda ortalama 250.000 TL ila 300.000 TL arasında komisyon öder.',
+            'TamPazar bu adaletsizliği kökten çözer: BYO POS (Bring Your Own POS) yani "Kendi POS\'unu Getir" modeli sayesinde PayTR, İyzico veya dilediğiniz banka hesabınızı sisteme tek tıkla bağlarsınız. Müşteri ödeme yaptığında finansal akış doğrudan sizin banka hesabınıza akar.'
           ],
           highlightBox: {
-            title: 'BYO POS (Kendi POS\'unu Getir) Avantajı',
-            text: 'Müşteriler dükkanınızdan güvenle çeker, hesap ekstresinde sizin mağazanızın adı yazar.',
-            badge: '%0 Komisyon'
+            title: 'Sıfır Komisyon, %100 Kazanç Güvencesi',
+            text: 'TamPazar altyapısında dükkan açtığınızda satış adediniz veya cironuz ne kadar artarsa artsın komisyon ödemezsiniz.',
+            badge: '%0 Kesinti'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1556742111-a301076d9d18?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Esnafın kendi PayTR ve banka POS cihazıyla doğrudan tahsilat yapması ve aracı komisyonunu sıfırlaması.'
           }
         },
         {
-          heading: '2. Adım: GİB UBL-TR 2.1 E-Fatura ve Barkodlu Kargo Çıkışı',
+          heading: '2. 3 Adımda Kolay Dijital Mağaza Kurulum Rehberi',
+          subheading: 'Karmaşık Yazılımlar Olmadan 2 Dakikada Satışa Başlayın',
           paragraphs: [
-            'Karmaşık ve pahalı muhasebe programlarına ihtiyacınız yok. Sipariş geldiğinde sistem otomatik olarak Gelir İdaresi Başkanlığı onaylı e-Arşiv veya ticari faturayı oluşturur.',
-            'Anlaşmalı TamKargo entegrasyonu ile tek tıkla barkodlu sevk fişi basılır.'
+            'Dükkanınızı dijitalleştirmek için yazılımcı kiralamanıza veya haftalarca beklemenize gerek yok. TamPazar esnaf paneli sezgisel arayüzü ile herkesin kolayca kullanabileceği şekilde tasarlandı.'
           ],
-          bulletPoints: [
-            'Ücretsiz resmi GİB e-fatura/e-arşiv çıktısı',
-            'Sektöre göre dinamik tartı, malzeme seçici veya dosya yükleme desteği',
-            'Stok ve cari hesapların anlık senkronizasyonu'
+          stepGuide: [
+            {
+              stepNumber: 1,
+              title: 'Vergi / Sicil Bilginizle Kaydolun',
+              description: 'Vergi numaranız veya esnaf sicil bilginizle 1 dakikada güvenli tüccar hesabınızı oluşturun.'
+            },
+            {
+              stepNumber: 2,
+              title: 'Sanal POS ve IBAN Adresinizi Tanımlayın',
+              description: 'Anlaşmalı ödeme kuruluşunuzun API anahtarlarını veya IBAN bilginizi girerek kasayı doğrudan dükkanınıza bağlayın.'
+            },
+            {
+              stepNumber: 3,
+              title: 'Ürünlerinizi Yükleyin ve Sipariş Almaya Başlayın',
+              description: 'Fotoğraf, fiyat ve stok bilgilerinizi girerek mahallenize ve tüm Türkiye\'ye anında satışa başlayın.'
+            }
           ]
         },
         {
-          heading: '3. Adım: Mahalle İçi 30 Dakikada Sıcak Teslimat Zili',
+          heading: '3. GİB UBL-TR 2.1 E-Fatura Entegrasyonu ve Otomasyon',
+          subheading: 'Muhasebe Masraflarını Sıfırlayan Akıllı Altyapı',
           paragraphs: [
-            'Fırın, manav, kasap veya restoranlar için sipariş düştüğünde sesli uyarı çalar. Sipariş hazırlanıp yerel moto-kurye ile dakikalar içinde müşteriye teslim edilir.'
+            'Geleneksel faturalandırma süreçleri saatlerinizi alabilir. TamPazar, Gelir İdaresi Başkanlığı onaylı GİB UBL-TR 2.1 e-Arşiv ve e-Fatura altyapısını dahili olarak çalıştırır.',
+            'Müşteriniz sipariş verdiğinde sistem otomatik olarak e-faturayı keser, kargo barkodunu hazırlar ve müşterinize SMS/E-posta ile bildirir.'
+          ],
+          bulletPoints: [
+            'Otomatik GİB e-Fatura & e-Arşiv basımı',
+            'Sektöre özel dinamik tartı, malzeme seçici ve randevu takvimi',
+            'TamKargo entegrasyonu ile tek tıkla barkodlu kargo çıktısı'
           ]
         }
       ],
-      conclusion: 'Kendi dükkanınızın patronu olarak dijital pazarda bağımsızca büyümek artık çok kolay.'
+      conclusion: 'Alın terinizi komisyonculara ve aracı platformlara kaptırmayın. TamPazar ile dijital dükkanınızı bugün açın, kendi işinizin gerçek patronu olun.'
     }
   },
   {
     id: 'post-2',
-    slug: 'mevsiminde-tuketim-takvimi-hangi-ayda-hangi-sebze-meyve-ve-balik-alinir',
-    title: 'Mevsiminde Tüketim Takvimi: Hangi Ayda Hangi Sebze, Meyve ve Balık Alınır?',
-    excerpt: 'Daha lezzetli, besleyici ve ekonomik alışverişin anahtarı. 12 aylık interaktif mevsim takvimi ve yerel manav rehberi.',
-    audience: 'tuketici',
-    subCategory: 'mevsimsel',
-    categoryLabel: 'Mevsimsel & Sağlık',
+    slug: 'tamkurye-ile-tanisin-mahallenizin-bagimsiz-kurye-agi',
+    title: 'TamKurye ile Tanışın: Mahallenizin Bağımsız Kurye Ağı',
+    excerpt: 'Esnafın tek tıkla yakındaki serbest kuryeleri çağırması, şeffaf km/paket tarifeleri ve kuryelerin kendi çalışma şartlarını belirlemesi.',
+    audience: 'esnaf',
+    subCategory: 'esnaf',
+    categoryLabel: 'Lojistik & Teslimat',
     readTime: '5 dk okuma',
-    date: '2026-09-22',
-    readCount: '9.8k',
-    likePercentage: 99,
+    date: '2026-09-23',
+    readCount: '12.8k',
+    likePercentage: 98,
     author: {
-      name: 'Dr. Zeynep Kaya & Mahalle Manavları',
-      role: 'Beslenme Uzmanı & Yerel Tarım Gönüllüsü',
-      avatar: '👩‍🌾'
+      name: 'Koray Demir & TamPazar Lojistik Ekibi',
+      role: 'TamKurye Operasyon Direktörü',
+      avatar: '🛵'
     },
-    coverImage: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#mevsiminde', '#gıdaisrafı', '#yerelesnaf'],
-    ctaType: 'consumer',
+    coverImage: 'https://images.unsplash.com/photo-1617347454431-f49d7ff5c3b1?auto=format&fit=crop&w=1200&q=80',
+    tags: ['#tamkurye', '#hızlıteslimat', '#yerelesnaf', '#komisyonsuz'],
+    ctaType: 'merchant',
     checklist: [
-      'Ay ay sebze, meyve ve deniz ürünleri takvimi',
-      'Serada değil doğal güneş ışığında yetişen ürünlerin besin değeri',
-      'Mevsiminde alarak %40 daha tasarruflu mutfak bütçesi',
-      'Yerel manav ve balıkçılardan taze seçme tüyoları'
+      'Esnafın tek tıkla en yakın serbest moto-kuryeyi dükkanına çağırması',
+      'Şeffaf km ve paket başına sabit teslimat tarifesi ile sürprizsiz maliyet',
+      'Kuryelerin kendi çalışma saatlerini ve bölgelerini serbestçe seçmesi',
+      '30-45 dakikada mahalle içi sıcak ve taze teslimat güvencesi'
     ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: Bağımsız Kurye Modeli',
+      badge: 'HIZLI LOJİSTİK',
+      items: [
+        'TamKurye, kuryelerin kazancından fahiş komisyon kesmez; kurye emeğinin karşılığını tam alır.',
+        'Esnaf kendi dükkan kuryesini kullanabileceği gibi, yoğun anlarda tek tıkla serbest kurye çağırabilir.',
+        'Müşteri, siparişinin harita üzerinde canlı olarak yaklaşmasını anlık takip edebilir.'
+      ]
+    },
+    comparisonTable: {
+      title: 'TamKurye vs Standart Kargo & Tekel Kurye Firmaları',
+      headers: ['Karşılaştırma Kriteri', 'Standart Kargo & Tekel Kuryeler', 'TamKurye Bağımsız Ağı'],
+      rows: [
+        ['Teslimat Süresi', '24 - 48 Saat (Şehir içi dahil)', '30 - 45 Dakika (Ekspres Mahalle Teslimatı)'],
+        ['Kurye Komisyon Kesintisi', '%30-%40 varan yüksek şirket kesintileri', '%0 Komisyon (Mesafe bazlı doğrudan kurye kazancı)'],
+        ['Esneklik & Çalışma Saatleri', 'Vardiyalı ve zorunlu çalışma saatleri', 'Kurye dilediği saatte sisteme girip teslimat alır'],
+        ['Ürün Hassasiyeti', 'Standart kargo aktarma merkezleri', 'Sıcak ekmek, taze et ve hassas ürün taşıma uygunluğu'],
+        ['Canlı Harita Takibi', 'Sadece genel durum güncellemesi', 'Anlık GPS koordinatlı harita takibi']
+      ]
+    },
+    customCta: {
+      title: 'TamKurye Ağına Katılın veya Dükkanınız İçin Kurye Çağırın',
+      description: 'Motosiklet veya bisikletinizle serbest kurye olarak yüksek kazanç elde edin ya da dükkanınızın siparişlerini ışık hızında teslim ettirin.',
+      badge: 'Şeffaf & Adil Lojistik',
+      primaryButtonText: 'Kurye Olarak Başvur',
+      primaryButtonAction: '/yonetim',
+      secondaryButtonText: 'Teslimat Ağını İncele',
+      secondaryButtonAction: '/sehir-avm'
+    },
     faqs: [
       {
-        question: 'Mevsiminde sebze ve meyve tüketmek bütçeye ne kadar katkı sağlar?',
-        answer: 'Turfanda seralarda yetiştirilen ürünlere göre mevsiminde toplanan sebze ve meyveler ortalama %40-50 daha ucuzdur ve besin değerleri 3 kat daha yüksektir.'
+        question: 'TamKurye nasıl çalışır?',
+        answer: 'Esnaf sipariş hazırladığında "Kurye Çağır" butonuna basar. Sistem, dükkana en yakın müsait serbest motorlu kuryeye bildirimi ileterek anında teslimat başlatır.'
       },
       {
-        question: 'TamPazar\'da manav alışverişi yaparken gramaj seçebilir miyim?',
-        answer: 'Evet! TamPazar Dinamik Ölçü Seçicisi sayesinde sabit paketler yerine tam olarak 250g, 500g veya 1.5 kg gibi istediğiniz hassas gramajda sipariş verebilirsiniz.'
+        question: 'Kurye ücretini kim öder?',
+        answer: 'Mesafe bazlı teslimat ücreti sipariş sırasında şeffaf şekilde hesaplanır ve dilediğiniz takdirde müşteriye yansıtılır veya esnaf tarafından karşılanır.'
       }
     ],
     content: {
-      lead: 'Doğru mevsimde tüketilen meyve ve sebzeler hem 3 kat daha fazla vitamin içerir hem de turfanda ürünlere göre %40-50 daha ekonomiktir.',
+      lead: 'Yerel ticarette hız ve tazelik müşteri memnuniyetinin anahtarıdır. Fırından çıkan sıcak ekmek, kasaptan alınan taze et veya manavdan sipariş edilen sebzelerin dakikalar içinde adrese ulaşması gerekir. TamKurye bu ihtiyacı bağımsız ve adil bir ağla çözüyor.',
       sections: [
         {
-          heading: 'Sonbahar ve Kış Döneminde Ne Tüketilmeli?',
+          heading: '1. Tek Tıkla Yakındaki Serbest Kuryeyi Çağırma',
+          subheading: 'Sabit Kurye Maliyetinden Kurtulun, İhtiyaç Anında Çağırın',
           paragraphs: [
-            'Eylül, Ekim ve Kasım aylarında pırasa, karnabahar, brokoli, nar, mandalina, hamsi ve palamut en lezzetli ve taze dönemindedir.',
-            'Yerel üreticiden ve manavdan doğrudan gramajlı tartı ile alışveriş yaparak ambalaj atığını ve gereksiz maliyetleri önleyebilirsiniz.'
+            'Küçük bir dükkan için tam zamanlı bir kurye istihdam etmek maş, sigorta ve motosiklet bakımı nedeniyle büyük bir finansal yüktür. TamKurye modeli ile sadece sipariş geldiğinde kurye çağırırsınız.',
+            'Dükkanınızın bulunduğu mahalledeki bağımsız motorlu ve bisikletli kuryeler sistemde anında görüntülenir. Siparişi hazırlayıp buton bastığınızda en yakın kurye kapınıza gelir.'
           ],
           highlightBox: {
-            title: 'Mevsiminde Almanın Bütçeye Etkisi',
-            text: 'Domatesi kışın seradan fahiş fiyata almak yerine sonbaharda doğal konserve yapmak mutfak bütçesinde yıllık ortalama 8.000 TL tasarruf sağlar.',
-            badge: '%40 Tasarruf'
+            title: '30 Dakikada Sıcak ve Taze Kapıda',
+            text: 'Aktarma merkezleri olmadan, dükkandan doğrudan müşteri adresine kesintisiz ve hızlı teslimat.',
+            badge: 'Sıfır Gecikme'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Mahalle içi 30-45 dakikada ekspres motorlu teslimat ağıyla taze ve sıcak sipariş gönderimi.'
           }
         },
         {
-          heading: 'Balık Takvimi ve Taze Seçim İpuçları',
+          heading: '2. Kuryeler İçin Bağımsızlık ve Hak Ettiği Kazanç',
+          subheading: 'Aracı Şirket Baskısı Olmadan Kendi İşinin Patronu Olma İmkanı',
           paragraphs: [
-            'Balığın gözlerinin parlak, solungaçlarının canlı kırmızı ve etinin sert olması tazeliğin temel göstergeleridir. Yerel balıkçı esnafınızdan temizlenmiş ve porsiyonlanmış olarak sipariş verebilirsiniz.'
+            'TamKurye sadece esnafı değil, zor şartlarda çalışan kuryeleri de korur. Kuryeler diledikleri saatte uygulamayı açıp çalışabilir, kabul etmek istedikleri teslimatları kendileri seçer.',
+            'Mesafe bazlı şeffaf ücretlendirmenin tamamı kuryenin hesabına aktarılır; şirket komisyonu adı altında kurye emeği sömürülmez.'
           ],
-          bulletPoints: [
-            'Eylül-Ekim: Palamut, Lüfer, Sardalya',
-            'Kasım-Aralık: Hamsi, Çipura, Levrek, Tekir',
-            'Ocak-Şubat: Kalkan, Mezgit, Uskumru'
+          stepGuide: [
+            {
+              stepNumber: 1,
+              title: 'TamKurye Kaydınızı Tamamlayın',
+              description: 'Ehliyet, ruhsat ve araç bilgilerinizi yükleyerek bağımsız kurye profilinizi aktif edin.'
+            },
+            {
+              stepNumber: 2,
+              title: 'Haritada Çevrimiçi Olun',
+              description: 'Çalışmak istediğiniz saatlerde uygulamayı açarak çevrenizdeki esnaf siparişlerini görün.'
+            },
+            {
+              stepNumber: 3,
+              title: 'Teslimatı Yapın, Kazancınızı Anında Alın',
+              description: 'Siparişi adrese ulaştırın, teslimat ücretini herhangi bir kesinti olmadan hesabınızda görün.'
+            }
           ]
         }
       ],
-      conclusion: 'Sağlığınızı korumak ve sofranıza gerçek lezzet getirmek için mevsiminde yerel esnaftan alışveriş yapın.'
+      conclusion: 'Mahallenizin bağımsız kurye ağıyla hem esnaf kazansın hem kurye kazansın hem de müşteriler taze siparişe hızla ulaşsın.'
     }
   },
   {
     id: 'post-3',
-    slug: 'maliyet-komisyon-ve-karlilik-kucuk-isletmeler-icin-fiyatlandirma-matematigi',
-    title: 'Maliyet, Komisyon ve Kârlılık: Küçük İşletmeler İçin Fiyatlandırma Matematiği',
-    excerpt: 'Geleneksel pazaryerlerinin gizli maliyetlerini hesaplayın; sabit aidat ve %0 komisyonla net kârınızı 2 katına çıkarın.',
+    slug: 'fiziksel-dukkandan-dijital-vitrine-qr-afis-ile-satislari-katlayin',
+    title: 'Fiziksel Dükkandan Dijital Vitrine: QR Afiş ile Satışları Katlayın',
+    excerpt: 'Dükkan camına asılan TamPazar QR kodunun yoldan geçen müşterileri dijital müdavime dönüştürmesi ve mahalle sadakat kartı ikramları.',
     audience: 'esnaf',
-    subCategory: 'finans',
-    categoryLabel: 'Finans & Maliyet',
-    readTime: '7 dk okuma',
-    date: '2026-09-20',
-    readCount: '11.4k',
+    subCategory: 'seo',
+    categoryLabel: 'Esnaf Rehberi',
+    readTime: '5 dk okuma',
+    date: '2026-09-21',
+    readCount: '9.6k',
     likePercentage: 97,
     author: {
-      name: 'Mali Müşavir Burak Yalçın',
-      role: 'KOBİ Finans Danışmanı',
-      avatar: '📊'
+      name: 'Aylin Çelik & TamPazar Tasarım Ekibi',
+      role: 'Perakende Deneyimi ve QR Tasarım Uzmanı',
+      avatar: '📱'
     },
-    coverImage: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#fiyatlandırma', '#komisyonsuz', '#e-fatura', '#byopos'],
+    coverImage: 'https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=1200&q=80',
+    tags: ['#qrafiş', '#dijitalvitrin', '#yerelesnaf', '#komisyonsuz'],
     ctaType: 'merchant',
     checklist: [
-      'Geleneksel pazaryeri komisyon + kargo + iade maliyet simülasyonu',
-      'Doğrudan POS ile vade farksız anında nakit akışı',
-      'Birim maliyet ve brüt kâr marjı formülasyonu',
-      'TamPazar ile yıllık 100.000 TL+ komisyon tasarrufu hesabı'
+      'Dükkan kapalıyken bile vitrinden 7/24 kesintisiz sipariş alma',
+      'Yoldan geçen potansiyel müşterileri QR taramasıyla dijital müdavim yapma',
+      'Mahalle sadakat kartı ve özel QR indirim kuponları tanımlama',
+      'Hemen mağaza açarak otomatik yüksek çözünürlüklü QR afiş üretme'
     ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: Akıllı QR Vitrin Teknolojisi',
+      badge: '7/24 AKTİF',
+      items: [
+        'Dükkanınız kepenk indirse dahi camınızdaki QR afiş 24 saat satış yapmaya devam eder.',
+        'Müşteri uygulama indirmeden telefon kamerasıyla dükkan menünüzü ve ürünlerinizi inceler.',
+        'Siparişler doğrudan masaüstü esnaf zilinizde sesli uyarı ile görüntülenir.'
+      ]
+    },
+    comparisonTable: {
+      title: 'Geleneksel Dükkan Vitrini vs TamPazar QR Afişli Dijital Vitrin',
+      headers: ['Vitrin Özelliği', 'Klasik Fiziksel Vitrin', 'TamPazar Akıllı QR Vitrin'],
+      rows: [
+        ['Çalışma Saatleri', 'Sadece kapı açıkken (09:00 - 19:00)', '7/24 Gece ve gündüz kesintisiz sipariş'],
+        ['Ürün Çeşitliliği Gösterimi', 'Fiziksel alanla sınırlı kısıtlı sergileme', 'Tüm ürün kataloğu, varyantlar ve stok durumu'],
+        ['Müşteri Etkileşimi', 'Yoldan bakıp geçen pasif ziyaretçi', 'Anında taranabilir, sepete eklenebilir aktif etkileşim'],
+        ['Sadakat & Kampanya', 'Kağıt kartvizit veya sözlü bilgilendirme', 'Otomatik dijital sadakat puanı ve QR kuponlar'],
+        ['Kurulum Maliyeti', 'Pahalı dekorasyon ve dijital ekranlar', 'Ücretsiz basılabilir akıllı QR afiş']
+      ]
+    },
+    customCta: {
+      title: 'Dükkanınız İçin Akıllı QR Afişinizi Oluşturun',
+      description: 'TamPazar esnaf panelinden tek tıkla dükkanınıza özel QR kodunuzu indirin, camınıza asın ve gece bile sipariş alın.',
+      badge: 'Ücretsiz QR Oluşturucu',
+      primaryButtonText: 'QR Afişini Şimdi Üret',
+      primaryButtonAction: '/yonetim',
+      secondaryButtonText: 'Örnek Vitrini Gör',
+      secondaryButtonAction: '/'
+    },
     faqs: [
       {
-        question: 'Pazaryeri komisyonu kârlılığı nasıl etkiler?',
-        answer: 'Brüt kâr marjı %30 olan bir işletmede %22 komisyon kesildiğinde, cironun neredeyse tüm kârı platforma gider. Sıfır komisyon modelinde ise kârın %100\'ü işletmede kalır.'
+        question: 'QR afişler dükkanımıza nasıl ulaşır?',
+        answer: 'TamPazar yönetim panelinizden dükkanınıza özel yüksek çözünürlüklü vektör QR dosyasını indirip matbaanızdan bastırabilir veya kargo ile basılı afiş talep edebilirsiniz.'
+      },
+      {
+        question: 'Müşterinin uygulama indirmesi gerekir mi?',
+        answer: 'Hayır! TamPazar QR kodları web tabanlı çalışır; müşteri telefon kamerasını tuttuğu an dükkanınızın web sayfası anında açılır.'
       }
     ],
     content: {
-      lead: 'E-ticarette 1.000 TL\'lik bir satış yaptığınızda elinize gerçekten ne kadar kalıyor? Komisyon, hizmet bedeli, erken ödeme kesintisi ve kargo farkları toplandığında cironun %30\'u eriyip gidiyor.',
+      lead: 'Fiziksel dükkanınızın konumu harika olabilir ancak hava karardığında veya kepenk kapandığında satışlarınız duruyor mu? TamPazar QR Afiş teknolojisi ile fiziksel dükkanınızı 7/24 sipariş alan akıllı bir dijital vitrine dönüştürün.',
       sections: [
         {
-          heading: 'Komisyon Tuzağı: 100.000 TL Ciroda 25.000 TL Kayıp',
+          heading: '1. Kepenk Kapalıyken Bile Yoldan Geçen Müşteriyi Yakalayın',
+          subheading: 'Gece Yürüyüşündeki Komşuyu Dijital Müdavime Dönüştürme',
           paragraphs: [
-            'Geleneksel platformlar %20-25 komisyon keser. 100.000 TL ciro yapan bir esnaf yılda 300.000 TL\'den fazla parayı komisyon olarak aracıya kaptırır.',
-            'TamPazar\'ın sabit aidat modelinde ise cironuz ne kadar artarsa artsın komisyon ödemezsiniz.'
+            'Akşam işten dönen veya hafta sonu caddede yürüyen bir komşunuz, dükkanınız kapalı olsa dahi camdaki QR afişi taratarak yarın sabah için taze ekmek siparişi verebilir veya kasap reyonundan et rezerve edebilir.',
+            'Bu sayede fiziksel mülkünüzün kira maliyetini 24 saat kesintisiz gelire dönüştürürsünüz.'
           ],
           highlightBox: {
-            title: 'Sabit Aidat vs Komisyonlu Model',
-            text: 'TamPazar\'da 500 TL sabit aylık aidatla dükkan işletirsiniz; geriye kalan tüm kazanç banka hesabınızda kalır.',
-            badge: 'Net Kazanç'
+            title: 'Sıfır Yazılım Maliyetiyle Akıllı Vitrin',
+            text: 'Pahalı dijital panolar veya reklam ekranları yerine yüksek kaliteli TamPazar QR afişi yeterlidir.',
+            badge: 'Tam Verimlilik'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1556740758-90de374c12ad?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Dükkan camına asılan QR afiş ile gece kepenk kapalıyken bile yoldan geçen müşterilerden sipariş alma.'
           }
         },
         {
-          heading: 'Fiyatlandırma Formülü: Doğru Marj Nasıl Hesaplanır?',
+          heading: '2. Mahalle Sadakat Kartı ve QR İkram Kampanyaları',
+          subheading: 'Müşteriyi Sürekli Dükkanınıza Çeken Kampanya Kurguları',
           paragraphs: [
-            'Ürün Maliyeti + İşçilik/Operasyon + Kargo + Hedef Kâr = Satış Fiyatı. Araya aracı komisyonu girmediğinde hem fiyatınız piyasaya göre %15 daha ucuz olur hem de kârınız yükselir.'
+            'QR afişinizi taratan müşterilere "İlk QR Siparişinizde Çay İkramı" veya "5. Alışverişte %10 İndirim" gibi mahalle samimiyetine uygun dijital sadakat kartları sunabilirsiniz.'
+          ],
+          stepGuide: [
+            {
+              stepNumber: 1,
+              title: 'Paneldan QR Kodunuzu İndirin',
+              description: 'Esnaf panelinizin "QR Afiş" sekmesinden dükkan logonuzun yer aldığı tasarımı seçin.'
+            },
+            {
+              stepNumber: 2,
+              title: 'Camınıza veya Kasaya Görünür Şekilde Asın',
+              description: 'Afişi dükkan camının dışarıdan rahat okunabilecek göz hizası noktasına yapıştırın.'
+            },
+            {
+              stepNumber: 3,
+              title: 'Gelen Müşterilere QR İkramını Anlatın',
+              description: 'Kasada duran müşterilerinize QR kodu taratarak dijital veresiye ve indirimlerden faydalanabileceklerini hatırlatın.'
+            }
           ]
         }
       ],
-      conclusion: 'Alın terinizi komisyonculara değil, işletmenizin büyümesine ve müşterilerinize yatırın.'
+      conclusion: 'Dükkanınızın kapısını kapatsanız da dijital vitrininiz hep açık kalsın. Hemen mağazanızı açın ve QR afişinizi indirin.'
     }
   },
   {
     id: 'post-4',
-    slug: 'yerel-arama-ve-haritalarda-zirveye-cikma-esnafin-google-tampazar-rehberi',
-    title: 'Yerel Arama ve Haritalarda Zirveye Çıkma: Esnafın Google & TamPazar Rehberi',
-    excerpt: 'Yakınımdaki müşterilerin sizi Google Haritalar\'da ve TamPazar Şehir AVM\'sinde ilk sırada bulmasını sağlayacak SEO taktikleri.',
+    slug: 'b2b-kapali-devre-toptan-fabrikadan-ve-ureticiden-dogrudan-tedarik',
+    title: 'B2B Kapalı Devre Toptan: Fabrikadan ve Üreticiden Doğrudan Tedarik',
+    excerpt: 'Restoran, market ve atölyeler için koli/palet bazlı indirimli tedarik, GİB e-irsaliye güvencesi ve ambar sevkiyatları.',
     audience: 'esnaf',
-    subCategory: 'seo',
-    categoryLabel: 'Yerel Pazarlama & SEO',
-    readTime: '5 dk okuma',
-    date: '2026-09-18',
-    readCount: '8.3k',
-    likePercentage: 96,
+    subCategory: 'finans',
+    categoryLabel: 'Toptan Ticaret',
+    readTime: '6 dk okuma',
+    date: '2026-09-19',
+    readCount: '11.2k',
+    likePercentage: 98,
     author: {
-      name: 'Kemal Arslan',
-      role: 'Yerel SEO ve Dijital Büyüme Uzmanı',
-      avatar: '🎯'
+      name: 'Hakan Öztürk & B2B Tedarik Kurulu',
+      role: 'B2B Tedarik Zinciri Müdürü',
+      avatar: '🏭'
     },
-    coverImage: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#yerelesnaf', '#komisyonsuz', '#mahalledayanışması'],
+    coverImage: 'https://images.unsplash.com/photo-1586528116311-ad8dd3c8310d?auto=format&fit=crop&w=1200&q=80',
+    tags: ['#toptanticaret', '#b2b', '#efatura', '#komisyonsuz'],
     ctaType: 'merchant',
     checklist: [
-      'Google İşletme Profili & TamPazar dükkan eşleşmesi',
-      'Mahalle ve ilçe bazlı yerel anahtar kelime optimizasyonu',
-      'Müşteri yorumları ve yıldız puanlarının sıralamaya etkisi',
-      'Şehir Açık AVM vitrininde öne çıkma teknikleri'
+      'Restoran, market ve atölyeler için koli ve palet bazlı doğrudan fabrika fiyatları',
+      'Fabrikadan ve ana üreticiden aracı toptancı olmadan satın alım imkanı',
+      'GİB e-irsaliye ve resmi ticari fatura entegrasyonu ile tam yasal güvence',
+      'Ambar ve kamyonet sevkiyatlarında şeffaf navlun takibi'
+    ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: B2B Toptan Ağı',
+      badge: 'TOPTAN TASARRUF',
+      items: [
+        'TamPazar B2B ağı sadece onaylı vergi mükellefi işletmelere açıktır (Kapalı Devre).',
+        'Kademeli sipariş miktarına göre (MOQ) palet ve koli alımlarında %25-30 maliyet avantajı sağlanır.',
+        'E-İrsaliye ve e-Fatura süreçleri doğrudan Gelir İdaresi Başkanlığı sistemleriyle entegredir.'
+      ]
+    },
+    comparisonTable: {
+      title: 'Aracılı Toptancı Satışı vs TamPazar B2B Toptan Modeli',
+      headers: ['Tedarik Kriteri', 'Geleneksel Toptancı & Distribütör', 'TamPazar B2B Kapalı Devre'],
+      rows: [
+        ['Fiyatlandırma', 'Çok katmanlı aracı kâr marjları eklenmiş', 'Doğrudan fabrika ve ana üretici çıkış fiyatı'],
+        ['Minimum Sipariş (MOQ)', 'Sert ve yüksek kotayla kısıtlı', 'Esnek koli ve palet bazlı kademeli fiyatlama'],
+        ['Belgelendirme & İrsaliye', 'Kağıt irsaliye ve gecikmeli faturalar', 'Anında GİB e-İrsaliye ve dijital fatura kaydı'],
+        ['Sevkiyat Seçenekleri', 'Sadece bölge distribütörünün rotası', 'Anlaşmalı ambar, kargo ve yerel nakliye ağı'],
+        ['Komisyon Oranı', 'Distribütör payı %15-%25 arası', '%0 Komisyon (İşletmeler arası doğrudan ticaret)']
+      ]
+    },
+    customCta: {
+      title: 'İşletmenizin Tedarik Maliyetlerini %25 Düşürün',
+      description: 'Vergi levhanızla B2B kapalı devre toptan ağına katılın, fabrikadan koli ve palet bazlı tedariğe hemen başlayın.',
+      badge: 'Kurumsal Tedarik',
+      primaryButtonText: 'B2B Toptan Panelini Aç',
+      primaryButtonAction: '/yonetim',
+      secondaryButtonText: 'Tedarikçileri İncele',
+      secondaryButtonAction: '/'
+    },
+    faqs: [
+      {
+        question: 'B2B toptan pazaryerine kimler katılabilir?',
+        answer: 'Vergi mükellefi olan tüm restoranlar, kafeler, bakkallar, marketler, atölyeler ve fabrika üreticileri B2B modülünden toptan alım veya satım yapabilir.'
+      },
+      {
+        question: 'Ambar ve nakliye süreçleri nasıl işler?',
+        answer: 'Sipariş oluşturulurken palet ve koli hacmine göre anlaşmalı ambar tarifeleri görüntülenir. Sevkiyat e-İrsaliye ile güvenle yola çıkar.'
+      }
     ],
     content: {
-      lead: 'Müşteriler artık "en yakın terzi", "taze manav kadıköy", "oto ekspertiz ordu" gibi aramalarla alışveriş yapıyor. Yerel aramalarda ilk 3\'te yer almak cironuzu anında katlar.',
+      lead: 'Restoranınız için un, zeytinyağı veya et; bakkalınız için gıda kolileri; atölyeniz için hammadde... Geleneksel distribütör ve aracı zincirleri hammadde maliyetlerini yükselterek kârlılığınızı eritir. TamPazar B2B Kapalı Devre Toptan Ağı üretici ile işletmeyi doğrudan buluşturuyor.',
       sections: [
         {
-          heading: 'Yerel Arama Varlığını Güçlendirme',
+          heading: '1. Fabrikadan ve Üreticiden Doğrudan Koli/Palet Alımı',
+          subheading: 'Aracıları Aradan Çıkararak Hammadde Maliyetini Düşürme',
           paragraphs: [
-            'TamPazar üzerindeki dükkan profiliniz, otomatik Schema.org LocalBusiness yapılandırılmış verisiyle Google tarafından anında indekslenir.',
-            'Adres, telefon, çalışma saatleri ve fotoğraflarınız arama motorlarına eksiksiz iletilir.'
+            'B2B Kapalı Devre sisteminde üreticiler doğrudan fabrikanın çıkış fiyatlarını tanımlar. İşletmeniz 5 koli alımda farklı, 2 palet alımda farklı kademeli indirimlerden (MOQ) faydalanır.',
+            'Sistem sadece doğrulanmış vergi mükelleflerine açık olduğu için nihai tüketici fiyatları zedelenmez ve ticari gizlilik korunur.'
+          ],
+          highlightBox: {
+            title: 'Brüt Kâr Marjınızı %25 Artırın',
+            text: 'Girdi maliyetlerinizi düşürerek rekabette öne geçin ve işletmenizin nakit akışını güçlendirin.',
+            badge: 'Doğrudan Üretici'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1578575437130-527eed3abbec?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Koli ve palet bazlı doğrudan üretici tedariki ile restoran ve bakkallara ambar teslimat güvencesi.'
+          }
+        },
+        {
+          heading: '2. GİB e-İrsaliye ve Ambar Sevkiyat Yönetimi',
+          subheading: 'Yasal Uyum ve Güvenli Şehirlerarası Lojistik',
+          paragraphs: [
+            'Toptan ticarette belge takibi kritik önem taşır. TamPazar B2B modülü Gelir İdaresi Başkanlığı e-İrsaliye standartlarıyla tam entegre çalışır. Faturanız sipariş anında otomatik kesilir.'
+          ],
+          stepGuide: [
+            {
+              stepNumber: 1,
+              title: 'Vergi Levhanızla B2B Doğrulaması Yapın',
+              description: 'Esnaf panelinizden vergi levhanızı yükleyerek B2B Kapalı Devre yetkisi alın.'
+            },
+            {
+              stepNumber: 2,
+              title: 'Üretici Kataloğundan Palet/Koli Seçin',
+              description: 'İhtiyacınız olan ürün miktarına göre kademeli toptan indirim oranlarını inceleyin.'
+            },
+            {
+              stepNumber: 3,
+              title: 'e-İrsaliye ile Ambar Teslimatını Takip Edin',
+              description: 'Ödemenizi yapın, GİB onaylı e-İrsaliyenizle ambar ve kargo takip kodunuzu alın.'
+            }
           ]
         }
       ],
-      conclusion: 'Yerel görünürlüğünüzü artırarak mahallenizdeki her yeni müşterinin ilk tercihi olun.'
+      conclusion: 'Toptan alım ve satımda aracıları ortadan kaldırın. B2B Kapalı Devre Toptan ağına hemen katılın.'
     }
   },
   {
     id: 'post-5',
-    slug: 'gida-israfini-onleme-dogru-saklama-kosullari-yesillikler-peynirler-ve-ekmek',
-    title: 'Gıda İsrafını Önleme & Doğru Saklama Koşulları: Yeşillikler, Peynirler ve Ekmek',
-    excerpt: 'Alınan gıdaların çöpe gitmesini engelleyen profesyonel saklama tüyoları. Sıfır israfla aile bütçenizi koruyun.',
+    slug: 'hizmet-ve-ustalikta-komisyonsuz-teklif-cagi-tamusta-tamteklif',
+    title: 'Hizmet ve Ustalıkta Komisyonsuz Teklif Çağı: TamUsta & TamTeklif',
+    excerpt: 'Tesisatçı, boyacı, tamirci ve fotoğrafçıların müşteriyle doğrudan WhatsApp/telefon üzerinden aracısız buluşması.',
     audience: 'tuketici',
-    subCategory: 'mevsimsel',
-    categoryLabel: 'Mevsimsel & Sağlık',
-    readTime: '4 dk okuma',
-    date: '2026-09-15',
-    readCount: '12.1k',
+    subCategory: 'tuketici',
+    categoryLabel: 'Yerel Hizmetler',
+    readTime: '5 dk okuma',
+    date: '2026-09-17',
+    readCount: '13.5k',
     likePercentage: 99,
     author: {
-      name: 'Mutfak Şefi Emel Hanım',
-      role: 'Sıfır Atık Mutfak Danışmanı',
-      avatar: '🥗'
+      name: 'Meryem Aydın & Yerel Zanaat Heyeti',
+      role: 'Yerel Hizmetler Deneyim Uzmanı',
+      avatar: '🔧'
     },
-    coverImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#gıdaisrafı', '#mevsiminde', '#yerelesnaf'],
+    coverImage: 'https://images.unsplash.com/photo-1504917599217-d4dc5ebe6122?auto=format&fit=crop&w=1200&q=80',
+    tags: ['#tamteklif', '#tamusta', '#yerelusta', '#komisyonsuz'],
     ctaType: 'consumer',
     checklist: [
-      'Yeşillikleri 2 hafta taze tutan kağıt havlu ve cam kavanoz yöntemi',
-      'Peynirlerin küflenmesini önleyen balmumu ve salamura teknikleri',
-      'Bayat ekmekleri değerlendirme ve dondurucu kılavuzu',
-      'Gramajlı tartı ile sadece ihtiyacın kadar satın alma avantajı'
+      'Tesisatçı, boyacı, tamirci ve fotoğrafçılardan kapalı zarf usulü şeffaf teklif toplama',
+      'WhatsApp veya telefon üzerinden aracı komisyonu olmadan doğrudan usta ile görüşme',
+      'Gerçek müşteri puanları, onaylı oda kayıtları ve belgeli usta rozetleri',
+      '1 dakikada fotoğraf ve açıklama ekleyerek ücretsiz teklif talebi oluşturma'
+    ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: TamTeklif Modeli',
+      badge: 'ARACISIZ HİZMET',
+      items: [
+        'TamTeklif sisteminde ustalar birbirlerinin teklif fiyatlarını göremez (Kapalı Zarf).',
+        'Müşteriden veya ustadan teklif başı komisyon alınmaz; pazarlık doğrudan yapılır.',
+        'İş bitiminde ödeme aracı siteye değil doğrudan ustanın kendisine teslim edilir.'
+      ]
+    },
+    comparisonTable: {
+      title: 'TamTeklif vs Komisyonlu Usta Bulma Siteleri',
+      headers: ['Hizmet Özelliği', 'Klasik Komisyonlu Usta Siteleri', 'TamPazar TamTeklif Modeli'],
+      rows: [
+        ['Usta ve Müşteriden Komisyon', 'Teklif verme ve iş alma başına %15-%25 kesinti', '%0 Komisyon (Tamamen ücretsiz iletişim)'],
+        ['İletişim Kanalı', 'Site içi kısıtlı mesajlaşma, numara gizleme', 'Doğrudan WhatsApp ve Telefon ile anında görüşme'],
+        ['Teklif Usulü', 'Açık eksiltme ile fiyat kırma savaşı', 'Kapalı zarf usulüyle kaliteli ve adil teklif verme'],
+        ['Ustalık Doğrulaması', 'Yalnızca e-posta doğrulaması', 'Oda kaydı, ustalık belgesi ve mahalle referansı'],
+        ['Ödeme Güvencesi', 'Site havuzunda komisyon kesintili', 'İş tesliminde doğrudan ustaya ödeme']
+      ]
+    },
+    customCta: {
+      title: 'Aradığınız Ustaya 1 Dakikada Aracısız Ulaşın',
+      description: 'Tesisat, boya, tamir veya fotoğrafçılık... İhtiyacınızı yazın, mahallenizin güvenilir ustalarından kapalı zarf teklifleri toplayın.',
+      badge: '%0 Komisyonlu Teklif',
+      primaryButtonText: 'TamTeklif Ver / Usta Bul',
+      primaryButtonAction: '/sehir-avm',
+      secondaryButtonText: 'Usta Profillerini İncele',
+      secondaryButtonAction: '/'
+    },
+    faqs: [
+      {
+        question: 'TamTeklif üzerinden nasıl usta bulabilirim?',
+        answer: 'TamTeklif sekmesinden aradığınız hizmeti (örn: su kaçağı tespiti veya ev boyama) seçip fotoğraf/açıklama ekleyerek talebinizi oluşturursunuz. Bölgenizdeki ustalar size kapalı zarf teklif gönderir.'
+      },
+      {
+        question: 'Ustalara teklif için ücret öder miyim?',
+        answer: 'Hayır, TamTeklif sistemi hem müşteriler hem de ustalar için tamamen ücretsizdir.'
+      }
     ],
     content: {
-      lead: 'Türkiye\'de her yıl üretilen gıdanın yaklaşık %30\'u uygun saklanmadığı için çöpe gidiyor. Doğru saklama teknikleriyle hem doğayı koruyabilir hem de mutfak giderlerinizi azaltabilirsiniz.',
+      lead: 'Evimizde bir su tesisatı patladığında veya boya badana yaptıracağımızda en büyük endişemiz güvenilir bir usta bulmak ve fahiş komisyon alan aracı sitelere para kaptırmamaktır. TamTeklif, mahallemizin belgeli ustaları ile sizi doğrudan ve komisyonsuz buluşturuyor.',
       sections: [
         {
-          heading: 'Yeşillik ve Sebzeleri Taze Saklamanın Püf Noktaları',
+          heading: '1. Kapalı Zarf Usulü Şeffaf ve Adil Fiyatlandırma',
+          subheading: 'Ustaların Kaliteden Ödün Vermeden En İyi Fiyatı Sunması',
           paragraphs: [
-            'Maydanoz, dereotu ve naneyi yıkamadan, nemini alacak şekilde kağıt havluya sarıp hava almayan cam kapta buzdolabında sakladığınızda 15 güne kadar ilk günkü tazeliğini korur.',
-            'TamPazar manavlarından demet yerine tam ihtiyacınız olan gramajda sipariş vermek ilk adımdır.'
+            'Klasik hizmet sitelerinde ustalar sürekli fiyat kırarak kaliteden ödün vermek zorunda kalır. TamTeklif sisteminde ise ustalar birbirinin fiyatını görmez.',
+            'Usta, işin gerektirdiği malzeme ve işçilik kalitesine göre en gerçekçi teklifini hazırlar. Siz de gelen teklifleri, ustanın puanlarını ve geçmiş iş fotoğraflarını inceleyerek karar verirsiniz.'
+          ],
+          highlightBox: {
+            title: 'Doğrudan WhatsApp ve Telefon İletişimi',
+            text: 'Teklifi beğendiğiniz an ustanın WhatsApp butonuna basarak fotoğrafları paylaşabilir ve anında keşif saati belirleyebilirsiniz.',
+            badge: 'Anında Bağlantı'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Tesisat, tamir ve zanaat ustalarının müşterilerle doğrudan WhatsApp/telefon üzerinden aracısız buluşması.'
+          }
+        },
+        {
+          heading: '2. Belgelendirilmiş ve Mahalle Referanslı Zanaatkarlar',
+          subheading: 'Sadece Ehliyetli ve Güvenilir Ustalarla Çalışma Huzuru',
+          paragraphs: [
+            'TamUsta modülüne kayıt olan ustaların Esnaf ve Sanatkarlar Odası kayıtları ve Ustalık/Kalfalık belgeleri doğrulanır.',
+            'Mahallenizdeki komşularınızın değerlendirmeleri sayesinde işini temiz yapan zanaat sahipleri öne çıkar.'
+          ],
+          stepGuide: [
+            {
+              stepNumber: 1,
+              title: 'İhtiyacınızı ve Arızanın Fotoğrafını Yükleyin',
+              description: '1 dakikada adresinizi ve yapılacak işin detayını TamTeklif formuna yazın.'
+            },
+            {
+              stepNumber: 2,
+              title: 'Gelen Kapalı Zarf Teklifleri Karşılaştırın',
+              description: 'Bölgenizdeki ustalardan gelen fiyat, malzeme kalitesi ve usta puanlarını inceleyin.'
+            },
+            {
+              stepNumber: 3,
+              title: 'Ustayı Doğrudan Arayıp İşi Başlatın',
+              description: 'Tek tıkla ustanızla görüşün, iş bitiminde ödemenizi komisyonsuz doğrudan teslim edin.'
+            }
           ]
         }
       ],
-      conclusion: 'Bilinçli tüketim ve sıfır atık mutfak kültürü ile sürdürülebilir bir geleceğe adım atın.'
+      conclusion: 'Evinizdeki ve iş yerinizdeki tüm tamirat ve hizmet işleri için komisyonculara değil, mahallenizin usta ellerine güvenin.'
     }
   },
   {
     id: 'post-6',
-    slug: 'yerel-esnaftan-alisveris-yapmanin-mahalle-ekonomisine-7-gorunmez-katkisi',
-    title: 'Yerel Esnaftan Alışveriş Yapmanın Mahalle Ekonomisine 7 Görünmez Katkısı',
-    excerpt: 'Harcadığınız her 100 TL mahallede kaldığında ne oluyor? Sosyal dayanışma, istihdam ve canlı sokakların formülü.',
+    slug: 'askida-mahalle-ve-yerel-dayanisma-firinlar-manavlar-ve-komsu-sofralari',
+    title: 'Askıda Mahalle ve Yerel Dayanışma: Fırınlar, Manavlar ve Komşu Sofraları',
+    excerpt: 'Mahalle fırınları ve manavlarında askıda ekmek/sebze ikramı ile komşuluk dayanışmasını dijitalleştiren TamPazar Sosyal Modeli.',
     audience: 'tuketici',
     subCategory: 'dayanisma',
     categoryLabel: 'Yerel Ekonomi & Dayanışma',
-    readTime: '5 dk okuma',
-    date: '2026-09-12',
-    readCount: '10.5k',
-    likePercentage: 98,
+    readTime: '4 dk okuma',
+    date: '2026-09-18',
+    readCount: '11.8k',
+    likePercentage: 99,
     author: {
-      name: 'Prof. Dr. Ahmet Yılmaz',
-      role: 'Yerel Kalkınma ve Sosyoloji Araştırmacısı',
-      avatar: '🏛️'
+      name: 'Dr. Zeynep Kaya & Mahalle Dayanışma Ağı',
+      role: 'Sosyal Dayanışma ve Yerel Kalkınma Uzmanı',
+      avatar: '🍞'
     },
-    coverImage: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=1200&q=80',
-    tags: ['#mahalledayanışması', '#yerelesnaf', '#komisyonsuz'],
+    coverImage: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=1200&q=80',
+    tags: ['#mahalledayanışması', '#askıdaekmek', '#yerelesnaf', '#komşuluk'],
     ctaType: 'consumer',
     checklist: [
-      'Paranın mahalle içinde 3 ila 5 kat daha fazla dönmesi (Çarpan Etkisi)',
-      'Yerel istihdamın ve genç çırak/usta yetişmesinin desteklenmesi',
-      'Sokakların aydınlık, canlı ve güvenli kalması',
-      'Aracı komisyonları olmadan samimi esnaf-komşu ilişkisi'
+      'Sıcak fırın ekmeği, taze meyve ve çorba için dijital askıya ikram bırakma',
+      'Aracı vakıf veya komisyon olmadan doğrudan mahalle fırınına iletim',
+      'İhtiyaç sahiplerinin rencide olmadan askıdan faydalanabilmesi',
+      'Şeffaf dijital sayaç ile askıdaki toplam ürün sayısını anlık izleme'
+    ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: Askıda Mahalle Kültürü',
+      badge: 'GÖNÜL KÖPRÜSÜ',
+      items: [
+        'Geleneksel "Askıda Ekmek" kültürünü dijital çağın şeffaflığıyla buluşturur.',
+        'Bırakılan her ikram doğrudan seçtiğiniz mahalle fırınının veya manavının panosuna düşer.',
+        'Sıfır komisyon ilkesiyle bıraktığınız her kuruş %100 oranında somut gıdaya dönüşür.'
+      ]
+    },
+    comparisonTable: {
+      title: 'Anonim Bağış Toplama vs TamPazar Askıda Mahalle Modeli',
+      headers: ['Dayanışma Kriteri', 'Klasik Anonim Fonlar & Siteler', 'TamPazar Askıda Mahalle'],
+      rows: [
+        ['Paranın Ulaştığı Yer', 'Merkezi havuz ve bürokrasi giderleri', 'Doğrudan seçtiğiniz mahalle fırını/manavı'],
+        ['Şeffaflık & İzleme', 'Genel yıllık raporlar', 'Anlık dijital askı panosu ve canlı adet sayacı'],
+        ['Yerel Esnafa Katkı', 'Yerel esnafa dokunmaz', 'Mahalle fırıncısının ve manavının çarkını döndürür'],
+        ['İhtiyaç Sahibine Ulaşım', 'Karmaşık başvuru süreçleri', 'Mahallelinin samimi ve rencide etmeyen komşu takibi'],
+        ['Kesinti Oranı', '%10-%20 yönetim gideri kesintisi', '%0 Kesinti (Paranın tamamı ekmeğe dönüşür)']
+      ]
+    },
+    customCta: {
+      title: 'Mahallenizdeki Fırına ve Manava Bir İkram da Siz Bırakın',
+      description: 'Sıcak bir ekmek veya bir çorba ikramıyla komşularınızın sofrasına bereket katın, yerel esnafınızı destekleyin.',
+      badge: '%100 Doğrudan İkram',
+      primaryButtonText: 'Askıya İkram Bırak',
+      primaryButtonAction: '/sehir-avm',
+      secondaryButtonText: 'Mahalle Fırınlarını Gör',
+      secondaryButtonAction: '/'
+    },
+    faqs: [
+      {
+        question: 'Askıda Ekmek sistemi nasıl işler?',
+        answer: 'TamPazar üzerinden alışveriş yaparken veya doğrudan Askıda Mahalle sekmesinden dilediğiniz mahalle fırınını seçip 1, 5 veya 10 ekmek ikramı eklersiniz. Fırıncı bu ikramı anında askı panosuna işler.'
+      }
     ],
     content: {
-      lead: 'Büyük uluslararası zincirlerden veya tekel platformlardan alışveriş yaptığınızda paranız şehir dışına ve vergi cennetlerine uçar. Mahalle esnafından alışveriş yaptığınızda ise para sokakta kalır, okul servisine, yerel fırına ve komşunuza can suyu olur.',
+      lead: 'Anadolu kültürünün en zarif geleneklerinden biri olan Askıda Ekmek, komşusu açken tok yatmayan samimi mahalle dayanışmasının simgesidir. TamPazar bu asil kültürü dijital çağın şeffaflığıyla mahallelerinize taşıyor.',
       sections: [
         {
-          heading: 'Yerel Ekonomik Çarpan Etkisi Nedir?',
+          heading: '1. Dijital Çağda Komşuluk ve Şeffaf İkram Panosu',
+          subheading: 'Hangi Fırında Kaç Askıda Ekmek Olduğunu Anlık Görme',
           paragraphs: [
-            'Yerel bir dükkanda harcanan 100 TL\'nin 68 TL\'si o mahallede dönmeye devam ederken, zincir mağazalarda bu oran 14 TL\'ye kadar düşmektedir.',
-            'TamPazar, esnafın dükkanını koruyarak bu dayanışmayı dijital çağın hız ve konforuyla buluşturur.'
+            'Büyük şehirlerde komşularımızla iletişimimiz azalsa da dayanışma ruhumuz dipdiri. TamPazar Askıda Mahalle modülü ile yaşadığınız veya doğduğunuz mahalledeki fırına cep telefonunuzdan ekmek bırakabilirsiniz.',
+            'Fırın ekranında "Askıda 12 Sıcak Ekmek Var" yazısı belirir ve ihtiyacı olan komşularımız rencide olmadan fırından ekmeğini alabilir.'
+          ],
+          highlightBox: {
+            title: '%100 İkram, %0 Bürokrasi',
+            text: 'TamPazar bu hayır köprüsünden hiçbir işletim ücreti kesmez; bıraktığınız her ikram eksiksiz olarak fırıncıya ve komşunuza ulaşır.',
+            badge: 'Gönül Rahatlığı'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Mahalle fırınları ve manavlarında askıda ekmek/sebze ikramı ile komşuluk dayanışmasını dijitalleştiren model.'
+          }
+        }
+      ],
+      conclusion: 'Mahalle fırınlarımızı yaşatmak ve komşu sofralarına bereket olmak için siz de bir ikram bırakın.'
+    }
+  },
+  {
+    id: 'post-7',
+    slug: 'tamdijital-tasarimcilar-ve-ureticiler-icin-dijital-varlik-pazari',
+    title: 'TamDijital: Tasarımcılar ve Üreticiler İçin Dijital Varlık Pazarı',
+    excerpt: 'Vektör çizimler, lazer/CNC kesim şablonları, sosyal medya kitleri ve e-kitapların anında indirme modeliyle satışı.',
+    audience: 'tuketici',
+    subCategory: 'tuketici',
+    categoryLabel: 'Dijital Ürünler',
+    readTime: '4 dk okuma',
+    date: '2026-09-15',
+    readCount: '10.1k',
+    likePercentage: 98,
+    author: {
+      name: 'Canberk Erdem & TamDijital Ekibi',
+      role: 'Dijital Ürünler Küratörü',
+      avatar: '💻'
+    },
+    coverImage: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&w=1200&q=80',
+    tags: ['#tamdijital', '#dijitalürünler', '#vektörçizim', '#komisyonsuz'],
+    ctaType: 'consumer',
+    checklist: [
+      'Vektör çizimler, 3D modeller ve lazer/CNC kesim şablonları satışı',
+      'Sosyal medya kitleri, grafik tasarım şablonları ve e-kitaplar',
+      'Ödeme onaylandığı an otomatik ve güvenli dosya indirme bağlantısı (Instant Download)',
+      'Tasarımcılar ve dijital içerik üreticileri için %0 komisyonla gelir elde etme'
+    ],
+    calloutBox: {
+      title: 'Öne Çıkan Hap Bilgiler: TamDijital Üretici Pazarı',
+      badge: 'ANINDA İNDİRME',
+      items: [
+        'Dijital dosyalar güvenli sunucularda barındırılır ve ödeme sonrası saniyesinde indirilir.',
+        'Yabancı stok sitelerindeki %50-%70 varan komisyon kesintilerine son verir.',
+        'Lazer kesim ve CNC atölyeleri doğrudan Türk tasarımcıların şablonlarını satın alır.'
+      ]
+    },
+    comparisonTable: {
+      title: 'Uluslararası Stok Siteleri vs TamDijital %0 Komisyon Modeli',
+      headers: ['Pazaryeri Metriği', 'Yabancı Stok Platformları (Etsy, Envato)', 'TamPazar TamDijital'],
+      rows: [
+        ['Tasarımcı Komisyon Kesintisi', '%30 - %70 arasında devasa kesintiler', '%0 Komisyon (Kazancın %100\'ü tasarımcının)'],
+        ['Dosya Teslimat Süresi', 'Manuel onay süreçleri ve gecikmeler', 'Ödeme anında otomatik güvenli indirme bağlantısı'],
+        ['Para Çekme & Kur Kaybı', 'Yüksek swift ücretleri ve kur kaybı', 'Ertesi gün doğrudan Türk Lirası banka hesabına'],
+        ['Fatura & Yasal Uyum', 'Karmaşık yurt dışı vergilendirme', 'Otomatik GİB e-Arşiv/e-Fatura entegrasyonu'],
+        ['Atölye ve Üretici Uyumu', 'Genel ve Türkçe desteği olmayan içerik', 'Lazer, CNC ve mobilya üreticilerine özel şablonlar']
+      ]
+    },
+    customCta: {
+      title: 'Tasarımlarınızı Yükleyin, %0 Komisyonla Dijital Varlık Satın',
+      description: 'Lazer kesim vektörleri, grafik şablonları veya e-kitaplar... Eserlerinizi Türkiye\'deki üreticilere ve ajanslara anında ulaştırın.',
+      badge: 'Anında Dosya Satışı',
+      primaryButtonText: 'Dijital Varlık Sat',
+      primaryButtonAction: '/yonetim',
+      secondaryButtonText: 'Şablon Kütüphanesini Gez',
+      secondaryButtonAction: '/'
+    },
+    faqs: [
+      {
+        question: 'Dijital ürünler nasıl teslim edilir?',
+        answer: 'Ödeme tamamlandığı anda sistem müşteriye anında güvenli ve tek kullanımlık bir indirme bağlantısı (secure download link) üretir.'
+      },
+      {
+        question: 'Hangi dosya formatlarını yükleyebilirim?',
+        answer: 'AI, DXF, SVG, CDR (lazer/CNC kesim için), PDF, ZIP, PSD ve EPUB dahil tüm popüler dijital varlık formatları desteklenmektedir.'
+      }
+    ],
+    content: {
+      lead: 'Fiziksel ürünlerin yanı sıra dijital varlık üreten tasarımcılar, çizerler, mimarlar ve yazarlar için TamDijital pazaryeri açıldı. Yabancı platformların yüksek komisyonlarına son verin.',
+      sections: [
+        {
+          heading: '1. Anında İndirme (Instant Download) ve Yüksek Güvenlik',
+          subheading: 'Tasarımcı Emeğini Koruyan Otomatik Lisanslama',
+          paragraphs: [
+            'Lazer kesim ahşap şablonları, CNC vektör çizimleri, sosyal medya tasarım kitleri veya e-kitaplar... Müşteriniz satın alma işlemini tamamladığı an sistem dosyayı saniyesinde sunar.',
+            'Aracı komisyon kesintisi olmadığı için tasarımcılar emeklerinin karşılığını tam olarak banka hesaplarında görür.'
+          ],
+          highlightBox: {
+            title: 'Tasarımcılara %100 Kazanç',
+            text: 'Dijital dosyalarınızı bir kez yükleyin, binlerce üreticiye ve işletmeye sürekli satış yaparak pasif gelir elde edin.',
+            badge: '%100 Telif'
+          },
+          inlineImage: {
+            url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=1200&q=80',
+            caption: 'Lazer/CNC kesim vektörleri, grafik kitleri ve e-kitapların anında indirme (instant download) modeliyle satışı.'
+          }
+        },
+        {
+          heading: '2. Lazer ve CNC Atölyeleri İçin Yerli Şablon Kütüphanesi',
+          subheading: 'Atölyelerin Çizim Zamanından Tasarruf Etmesi',
+          paragraphs: [
+            'Lazer kesim ahşap, pleksi veya metal işleyen üretici atölyeler, sıfırdan çizim yapmak yerine TamDijital kütüphanesindeki onaylı vektörleri indirerek saniyeler içinde kesime başlayabilir.'
+          ],
+          stepGuide: [
+            {
+              stepNumber: 1,
+              title: 'Dijital Dosyanızı Yükleyin',
+              description: 'DXF, SVG, AI veya PDF formatındaki tasarım dosyanızı paneldan sisteme yükleyin.'
+            },
+            {
+              stepNumber: 2,
+              title: 'Lisans Koşulunu ve Fiyatı Belirleyin',
+              description: 'Kişisel veya ticari kullanım lisans fiyatınızı tanımlayın.'
+            },
+            {
+              stepNumber: 3,
+              title: 'Satış Yapın ve Anında Tahsil Edin',
+              description: 'İndirme gerçekleştikçe tutar doğrudan Sanal POS hesabınıza yansısın.'
+            }
           ]
         }
       ],
-      conclusion: 'Mahallenizi, komşunuzu ve zanaatkarınızı yaşatmak için TamPazar açık AVM\'sinde yerel esnafı tercih edin.'
+      conclusion: 'Dijital varlıklarınızı satmak veya en iyi yerli şablonları keşfetmek için TamDijital kütüphanesini bugün keşfedin.'
     }
   }
 ];
