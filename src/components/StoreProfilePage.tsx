@@ -473,26 +473,45 @@ export default function StoreProfilePage({
                   <h1 className="text-2xl md:text-3xl font-black text-slate-900">{store.name}</h1>
                   
                   {/* Puan Rozeti */}
-                  <span className="flex items-center gap-1 text-[11px] font-extrabold bg-amber-50 text-amber-900 px-3 py-1 rounded-full border border-amber-200 shadow-2xs">
-                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>{storeSocialProof.ratingScore} / 5.0</span>
-                    <span className="text-amber-700 font-normal">({storeSocialProof.reviewCount} Yorum)</span>
-                  </span>
+                  <div
+                    className="store-rozet store-rozet-amber"
+                    data-tooltip={`Müşteri Memnuniyet Puanı: ${storeSocialProof.ratingScore}/5.0 (${storeSocialProof.reviewCount} Yorum). Gerçek alıcı yorumları ve teslimat hızına dayalı şeffaf mağaza skorudur.`}
+                  >
+                    <span className="store-rozet-shine" aria-hidden="true" />
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500 relative z-10" />
+                    <span className="relative z-10">{storeSocialProof.ratingScore} / 5.0</span>
+                    <span className="text-amber-700 font-normal relative z-10">({storeSocialProof.reviewCount} Yorum)</span>
+                  </div>
 
                   {/* Doğrulanmış Esnaf Rozeti */}
-                  <span className="flex items-center gap-1 text-[11px] font-bold bg-emerald-50 text-emerald-800 px-3 py-1 rounded-full border border-emerald-200">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Doğrulanmış Esnaf
-                  </span>
+                  <div
+                    className="store-rozet store-rozet-emerald"
+                    data-tooltip={`GİB Onaylı Mükellef Kimliği: Gelir İdaresi Başkanlığı vergi kaydı (${store.taxOffice} - ${store.taxNumber}) ve resmi e-fatura altyapısı onaylanmış yasal esnaf.`}
+                  >
+                    <span className="store-rozet-shine" aria-hidden="true" />
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 relative z-10" />
+                    <span className="relative z-10">Doğrulanmış Esnaf</span>
+                  </div>
 
                   {/* Doğrudan POS Rozeti */}
-                  <span className="flex items-center gap-1 text-[11px] font-bold bg-indigo-50 text-indigo-900 px-3 py-1 rounded-full border border-indigo-200">
-                    <CreditCard className="w-3.5 h-3.5 text-indigo-600" /> Doğrudan Sanal POS (%0 Komisyon)
-                  </span>
+                  <div
+                    className="store-rozet store-rozet-indigo"
+                    data-tooltip="Komisyonsuz Banka Sanal POS: Ödemeniz aracı platform komisyonu kesilmeden doğrudan esnafın PayTR / iyzico veya kurumsal banka POS hesabına aktarılır."
+                  >
+                    <span className="store-rozet-shine" aria-hidden="true" />
+                    <CreditCard className="w-3.5 h-3.5 text-indigo-600 relative z-10" />
+                    <span className="relative z-10">Doğrudan Sanal POS (%0 Komisyon)</span>
+                  </div>
 
                   {/* TamKurye Hızlı Teslimat Rozeti */}
-                  <span className="flex items-center gap-1 text-[11px] font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full border border-amber-300">
-                    <Truck className="w-3.5 h-3.5 text-amber-700" /> TamKurye (30 Dk)
-                  </span>
+                  <div
+                    className="store-rozet store-rozet-amber"
+                    data-tooltip="Mahalle İçi Ekspres Motorlu Kurye: Aynı ilçe ve mahalle içi siparişleriniz bağımsız TamKurye sürücüleri ile 30-45 dakika içerisinde kapınıza ulaştırılır."
+                  >
+                    <span className="store-rozet-shine" aria-hidden="true" />
+                    <Truck className="w-3.5 h-3.5 text-amber-800 relative z-10" />
+                    <span className="relative z-10">TamKurye (30 Dk)</span>
+                  </div>
                 </div>
 
                 <p className="text-sm font-medium text-slate-600">{store.slogan}</p>
