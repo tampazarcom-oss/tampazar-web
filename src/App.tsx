@@ -346,6 +346,10 @@ function MainLayout() {
               element={<B2BWholesaleMarketplace />} 
             />
             <Route 
+              path="/toptan/:id" 
+              element={<B2BWholesaleMarketplace />} 
+            />
+            <Route 
               path="/blog" 
               element={<BlogPage onBackToMarketplace={() => navigate('/')} />} 
             />
