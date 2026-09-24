@@ -43,6 +43,9 @@ export interface UniversalCardData {
   };
 
   // Sektöre Özel Opsiyonel Alanlar
+  lat?: number;
+  lng?: number;
+  distanceKm?: number;
   wholesaleTiers?: TierPrice[];     // B2B Toptan kademeleri
   minOrderQty?: number;             // Minimum sipariş adedi
   etaMinutes?: string;              // Yeme-içme hazırlık veya çekici varış süresi (örn: "15-20 dk")
@@ -51,7 +54,17 @@ export interface UniversalCardData {
   inStock?: boolean;
 }
 
-export default function UniversalProductCard({ data, onNavigateToProduct }: { data: UniversalCardData; onNavigateToProduct?: (slug: string) => void }) {
+export default function UniversalProductCard({ 
+  data, 
+  onNavigateToProduct,
+  userLocationLabel,
+  onCallLocationDispatch
+}: { 
+  data: UniversalCardData; 
+  onNavigateToProduct?: (slug: string) => void;
+  userLocationLabel?: string;
+  onCallLocationDispatch?: (data: UniversalCardData) => void;
+}) {
   const [selectedQty, setSelectedQty] = useState(data.minOrderQty || 1);
   const [addedAnimation, setAddedAnimation] = useState(false);
 
@@ -68,17 +81,18 @@ export default function UniversalProductCard({ data, onNavigateToProduct }: { da
 
   const currentPrice = getActivePrice();
 
-  // WhatsApp Hızlı İletişim Metni
+  // WhatsApp Hızlı İletişim Metni (Kullanıcı Konumu Ekli)
   const getWhatsAppMessage = () => {
+    const locText = userLocationLabel ? ` (Mevcut Konumum: ${userLocationLabel})` : '';
     switch (data.sector) {
       case 'SERVICE':
-        return `Merhaba ${data.store.name}, tampazar.com üzerinden "${data.title}" hizmetiniz için randevu ve keşif almak istiyorum.`;
+        return `Merhaba ${data.store.name}, tampazar.com üzerinden "${data.title}" hizmetiniz için randevu ve keşif almak istiyorum.${locText} En yakın zamanda gelebilir misiniz?`;
       case 'EMERGENCY':
-        return `ACİL: tampazar.com üzerinden ulaşıyorum, konumuma acil çekici/yardım talep ediyorum.`;
+        return `ACİL YOL YARDIM / ÇEKİCİ: tampazar.com üzerinden ulaşıyorum.${locText} Lütfen acil araç yönlendirin!`;
       case 'WHOLESALE':
-        return `Merhaba, "${data.title}" ürününüzden ${selectedQty} adet toptan alım için teklif görüşmek istiyorum.`;
+        return `Merhaba, "${data.title}" ürününüzden ${selectedQty} adet toptan alım için teklif görüşmek istiyorum.${locText}`;
       default:
-        return `Merhaba, "${data.title}" hakkında bilgi almak istiyorum.`;
+        return `Merhaba, "${data.title}" hakkında bilgi almak istiyorum.${locText}`;
     }
   };
 
@@ -124,19 +138,27 @@ export default function UniversalProductCard({ data, onNavigateToProduct }: { da
             )}
           </div>
 
-          {/* Sağ Üst: Şehir & Süre Rozeti */}
-          <div className="absolute top-3 right-3 z-10 flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[11px] font-bold text-slate-800 shadow-xs">
-            {data.etaMinutes ? (
-              <>
-                <Clock className="w-3 h-3 text-amber-600" />
-                <span>{data.etaMinutes}</span>
-              </>
-            ) : (
-              <>
-                <MapPin className="w-3 h-3 text-slate-500" />
-                <span>{data.store.district}, {data.store.city}</span>
-              </>
+          {/* Sağ Üst: Şehir & Mesafe Rozeti */}
+          <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1">
+            {data.distanceKm !== undefined && (
+              <span className="bg-emerald-600 text-white shadow-md text-[10px] font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 animate-fade-in">
+                <MapPin className="w-3 h-3" />
+                {data.distanceKm <= 0.5 ? 'Mahallende' : `${data.distanceKm} km yakınında`}
+              </span>
             )}
+            <div className="flex items-center gap-1 bg-white/95 backdrop-blur-xs px-2.5 py-0.5 rounded-full text-[10px] font-bold text-slate-800 shadow-xs">
+              {data.etaMinutes ? (
+                <>
+                  <Clock className="w-3 h-3 text-amber-600" />
+                  <span>{data.etaMinutes}</span>
+                </>
+              ) : (
+                <>
+                  <MapPin className="w-3 h-3 text-slate-500" />
+                  <span>{data.store.district}, {data.store.city}</span>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -240,18 +262,31 @@ export default function UniversalProductCard({ data, onNavigateToProduct }: { da
           {/* A. Acil Çekici / Yol Yardım Butonu */}
           {data.sector === 'EMERGENCY' && (
             <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  if (onCallLocationDispatch) {
+                    onCallLocationDispatch(data);
+                  } else {
+                    window.location.href = `tel:${data.store.phone}`;
+                  }
+                }}
+                className="flex-1 py-3 px-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Zap className="w-4 h-4 fill-white" /> Konuma Çağır
+              </button>
               <a
                 href={`tel:${data.store.phone}`}
-                className="flex-1 py-3 px-3 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-black text-xs shadow-md transition flex items-center justify-center gap-2"
+                className="py-3 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center justify-center"
+                title="Hemen Ara"
               >
-                <Phone className="w-4 h-4" /> Hemen Çekici Çağır
+                <Phone className="w-4 h-4" />
               </a>
               <a
                 href={`https://wa.me/${data.store.whatsapp}?text=${encodeURIComponent(getWhatsAppMessage())}`}
                 target="_blank"
                 rel="noreferrer"
                 className="py-3 px-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center justify-center"
-                title="Konum Gönder"
+                title="WhatsApp ile Konum At"
               >
                 <MessageCircle className="w-4 h-4" />
               </a>
@@ -262,16 +297,30 @@ export default function UniversalProductCard({ data, onNavigateToProduct }: { da
           {data.sector === 'SERVICE' && (
             <div className="flex gap-2">
               <button
-                onClick={() => alert(`${data.store.name} işletmesinden "${data.title}" için randevu talebiniz iletildi. Esnaf en kısa sürede dönüş yapacaktır.`)}
+                onClick={() => {
+                  if (onCallLocationDispatch) {
+                    onCallLocationDispatch(data);
+                  } else {
+                    alert(`${data.store.name} işletmesinden "${data.title}" için randevu talebiniz iletildi. Esnaf en kısa sürede dönüş yapacaktır.`);
+                  }
+                }}
                 className="flex-1 py-3 px-3 rounded-2xl bg-indigo-900 hover:bg-indigo-800 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
               >
-                <Calendar className="w-4 h-4 text-amber-400" /> Randevu Oluştur
+                <Calendar className="w-4 h-4 text-amber-400" /> Konuma Çağır / Randevu
               </button>
+              <a
+                href={`tel:${data.store.phone}`}
+                className="py-3 px-3 rounded-2xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition flex items-center justify-center"
+                title="Hemen Ara"
+              >
+                <Phone className="w-4 h-4" />
+              </a>
               <a
                 href={`https://wa.me/${data.store.whatsapp}?text=${encodeURIComponent(getWhatsAppMessage())}`}
                 target="_blank"
                 rel="noreferrer"
                 className="py-3 px-3 rounded-2xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-xs font-bold transition flex items-center justify-center"
+                title="WhatsApp ile Konum At"
               >
                 <MessageCircle className="w-4 h-4" />
               </a>
