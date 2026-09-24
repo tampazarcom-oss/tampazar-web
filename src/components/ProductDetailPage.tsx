@@ -9,7 +9,8 @@ import {
   Store, MessageCircle, Phone, MapPin, Check, Plus, Minus,
   ThumbsUp, UserCheck, ChevronRight, AlertCircle, ShoppingBag, Clock, Navigation, Zap,
   Download, Video, Calendar, FileCode, CheckCircle2, Copy, ExternalLink, X, Sparkles, CreditCard, Lock,
-  Upload, Trash2, Scale, FileText, Utensils, Image as ImageIcon
+  Upload, Trash2, Scale, FileText, Utensils, Image as ImageIcon,
+  Layers, Award, MessageSquare, Send
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -25,6 +26,9 @@ import { HybridOrder, initialHybridOrders } from '../data/hybridCommerceData';
 import { applyPageSEO } from '../utils/seo';
 
 export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?: string; onBackToMarketplace?: () => void }) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
   // 1. Search in localStorage or fallback to initialProducts
   const [allProducts] = useState<Product[]>(() => {
     try {
@@ -369,6 +373,32 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
   const [showFormErrors, setShowFormErrors] = useState(false);
   const [orderSuccessDetails, setOrderSuccessDetails] = useState<string | null>(null);
 
+  // 5. TRENDYOL & GETİR MODELİ: Teslimat Saati & Kasap/Şarküteri Kesim Stili
+  const [deliverySlot, setDeliverySlot] = useState<string>('⚡ Hemen Teslimat (30-45 Dk)');
+  const [butcherCutStyle, setButcherCutStyle] = useState<string>('Kuşbaşı Doğranmış');
+
+  // 6. ETSY MODELİ: Canlı Kişiselleştirme & Atölyeye Soru Sor
+  const [liveCustomText, setLiveCustomText] = useState<string>('');
+  const [liveGiftNote, setLiveGiftNote] = useState<string>('');
+  const [showArtisanQuestionModal, setShowArtisanQuestionModal] = useState(false);
+  const [artisanQuestionText, setArtisanQuestionText] = useState('');
+  const [artisanQuestionSent, setArtisanQuestionSent] = useState(false);
+
+  // 7. AMAZON MODELİ: Çapraz Satış ("Mahallede Birlikte İyi Gider")
+  const [bundleItemsSelected, setBundleItemsSelected] = useState<{ [key: string]: boolean }>({
+    main: true,
+    item1: true,
+    item2: true
+  });
+  const [bundleAddedSuccess, setBundleAddedSuccess] = useState(false);
+
+  // 8. ALIBABA MODELİ: Numune Talep Et Modalı
+  const [showSampleModal, setShowSampleModal] = useState(false);
+  const [sampleName, setSampleName] = useState(user?.name || 'Cemre Demir');
+  const [samplePhone, setSamplePhone] = useState(user?.phone || '0532 444 55 66');
+  const [sampleAddress, setSampleAddress] = useState('Akyazı Mah. Sahil Cad. No: 14 D: 3, Altınordu / Ordu');
+  const [sampleRequestedSuccess, setSampleRequestedSuccess] = useState(false);
+
   // File Upload Handlers
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -413,9 +443,6 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
   const dynamicTotalPrice = measurement?.unit === 'kg' || measurement?.unit === 'gram'
     ? Math.round(baseCalculatedUnitPrice * selectedWeightOrQty * 100) / 100
     : Math.round(baseCalculatedUnitPrice * selectedWeightOrQty);
-
-  const navigate = useNavigate();
-  const { user } = useAuth();
 
   const isDigital = foundProduct?.type === 'digital' || foundProduct?.deliveryOptions?.type === 'digital_download' || foundProduct?.fulfillment?.pillar === 'tamdijital';
   const isSession = foundProduct?.type === 'consultation' || foundProduct?.deliveryOptions?.type === 'online_session' || foundProduct?.fulfillment?.pillar === 'tamseans';
@@ -1177,6 +1204,166 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                     </div>
                   )}
 
+                  {/* E) ETSY MODELİ: CANLI KİŞİSELLEŞTİRME & LAZER BASKI KUTUSU */}
+                  <div className="bg-amber-50/70 border border-amber-200 p-4 rounded-2xl space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
+                        <Sparkles className="w-4 h-4 text-amber-600" />
+                        <span>Canlı Kişiselleştirme & Zanaatkar Notu (Etsy Modeli)</span>
+                      </div>
+                      <span className="text-[10px] bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-black">
+                        Lazer / El İşçiliği
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="relative">
+                        <label className="text-[11px] font-bold text-slate-700 flex items-center justify-between mb-1">
+                          <span>Üzerine Yazılacak İsim / Özel Metin:</span>
+                          <span className="text-[10px] text-slate-400 font-mono">{liveCustomText.length}/40</span>
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={40}
+                          value={liveCustomText}
+                          onChange={(e) => setLiveCustomText(e.target.value)}
+                          placeholder="Örn: Ahmet & Zeynep 2026 / Canım Anneme..."
+                          className="w-full text-xs p-2.5 rounded-xl border border-amber-300 bg-white outline-none focus:ring-2 focus:ring-amber-500 font-medium text-slate-800"
+                        />
+                      </div>
+
+                      {liveCustomText && (
+                        <div className="p-2 bg-amber-100/70 border border-amber-300 rounded-xl flex items-center justify-between text-xs">
+                          <span className="text-[11px] text-amber-900 font-semibold">Canlı Ürün Önizlemesi:</span>
+                          <span className="font-serif italic font-black text-amber-950 bg-white px-2.5 py-1 rounded-lg border border-amber-300 shadow-2xs">
+                            "{liveCustomText}"
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* F) TRENDYOL & GETİR MODELİ: KASAP / ŞARKÜTERİ KESİM STİLİ */}
+                  {(foundProduct?.categorySlug === 'toptan-gida' || foundProduct?.category.toLowerCase().includes('kasap') || foundProduct?.category.toLowerCase().includes('et') || foundProduct?.title.toLowerCase().includes('et') || foundProduct?.title.toLowerCase().includes('döner')) && (
+                    <div className="bg-rose-50/60 border border-rose-200 p-4 rounded-2xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-rose-950 text-xs">
+                          <Utensils className="w-4 h-4 text-rose-600" />
+                          <span>Kasap Hazırlama & Kesim Tercihi</span>
+                        </div>
+                        <span className="text-[10px] bg-rose-200 text-rose-900 px-2 py-0.5 rounded font-black">
+                          Ücretsiz Usta İşçiliği
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {['Kuşbaşı Doğranmış', 'Tek Çekim Kıyma', 'Çift Çekim Kıyma', 'Bütün / Blok', 'İnce Dilimli (Antrikot/Biftek)', 'Özel Marine Soslu'].map((cut) => (
+                          <button
+                            key={cut}
+                            type="button"
+                            onClick={() => setButcherCutStyle(cut)}
+                            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                              butcherCutStyle === cut
+                                ? 'bg-rose-700 text-white border-rose-700 shadow-2xs'
+                                : 'bg-white text-slate-700 border-rose-200 hover:border-rose-300'
+                            }`}
+                          >
+                            {cut}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+              {/* G) ALIBABA MODELİ: KADEMELİ FİYAT SKALASI & MOQ */}
+              {!isDigital && !isSession && (
+                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                      <Layers className="w-4 h-4 text-indigo-600" />
+                      <span>Kademeli Toplu Alım İndirimi (Alibaba Modeli)</span>
+                    </div>
+                    <span className="text-[10px] bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded font-black">
+                      %0 Komisyonlu Toptan
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                    <div className={`p-2 rounded-xl border transition ${
+                      selectedWeightOrQty < 10 
+                        ? 'bg-amber-50 border-amber-400 font-bold shadow-2xs' 
+                        : 'bg-white border-slate-200 text-slate-600'
+                    }`}>
+                      <span className="text-[10px] text-slate-400 block font-semibold">1 - 9 Adet / Kg</span>
+                      <span className="text-sm font-black text-slate-900 font-mono">₺{Math.round(foundProduct?.price || product.price)}</span>
+                      <span className="text-[9px] text-slate-500 block">Standart Perakende</span>
+                    </div>
+
+                    <div className={`p-2 rounded-xl border transition ${
+                      selectedWeightOrQty >= 10 && selectedWeightOrQty < 50 
+                        ? 'bg-amber-50 border-amber-400 font-bold shadow-2xs' 
+                        : 'bg-white border-slate-200 text-slate-600'
+                    }`}>
+                      <span className="text-[10px] text-emerald-600 block font-bold">%20 İndirim</span>
+                      <span className="text-sm font-black text-emerald-700 font-mono">₺{Math.round((foundProduct?.price || product.price) * 0.8)}</span>
+                      <span className="text-[9px] text-slate-500 block">10 - 49 Adet</span>
+                    </div>
+
+                    <div className={`p-2 rounded-xl border transition ${
+                      selectedWeightOrQty >= 50 
+                        ? 'bg-amber-50 border-amber-400 font-bold shadow-2xs' 
+                        : 'bg-white border-slate-200 text-slate-600'
+                    }`}>
+                      <span className="text-[10px] text-indigo-600 block font-bold">%35 Büyük Toptan</span>
+                      <span className="text-sm font-black text-indigo-950 font-mono">₺{Math.round((foundProduct?.price || product.price) * 0.65)}</span>
+                      <span className="text-[9px] text-slate-500 block">50+ Adet / Koli</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-1 text-xs">
+                    <span className="text-slate-500 text-[11px]">
+                      MOQ: <strong>{foundProduct?.b2bMinQty || 1} Birim</strong>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSampleModal(true)}
+                      className="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs rounded-xl transition flex items-center gap-1 cursor-pointer"
+                    >
+                      <span>🧪 Numune Talep Et (1 Adet Test)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* H) TRENDYOL & GETİR MODELİ: TESLİMAT SAATİ SEÇİCİ */}
+              {!isDigital && !isSession && (
+                <div className="space-y-2 pt-1">
+                  <span className="text-xs font-bold text-slate-700 block">
+                    Teslimat Zamanı Tercihiniz (TamHızlı Mahalle Kuryesi):
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { id: '⚡ Hemen (30-45 Dk)', label: '⚡ Hemen (30-45 Dk)', desc: 'Sıcak & Taze Kurye' },
+                      { id: 'Bugün 18:00 - 20:00', label: 'Bugün 18:00 - 20:00', desc: 'Akşam Servisi' },
+                      { id: 'Yarın 10:00 - 12:00', label: 'Yarın 10:00 - 12:00', desc: 'Sabah Teslimatı' }
+                    ].map((slot) => (
+                      <button
+                        key={slot.id}
+                        type="button"
+                        onClick={() => setDeliverySlot(slot.id)}
+                        className={`p-2.5 rounded-xl text-left border transition cursor-pointer ${
+                          deliverySlot === slot.id
+                            ? 'bg-emerald-50 border-emerald-500 text-emerald-950 shadow-2xs font-bold'
+                            : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="text-xs block font-bold">{slot.label}</span>
+                        <span className="text-[10px] text-slate-400 block">{slot.desc}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
 
@@ -1337,7 +1524,195 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
         </div>
 
         {/* ========================================================= */}
+        {/* AMAZON MODELİ: ÇAPRAZ SATIŞ ("Mahallede Birlikte İyi Gider") */}
+        {/* ========================================================= */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-amber-400 text-slate-950 font-black">
+                  <ShoppingBag className="w-4 h-4" />
+                </span>
+                <h3 className="text-lg font-black text-slate-900">
+                  Mahallede Birlikte İyi Gider (Amazon Çapraz Satış Modülü)
+                </h3>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Aynı mahalledeki komşu esnaflardan bu ürünle en sık tercih edilen tamamlayıcı ürünler.
+              </p>
+            </div>
+
+            <span className="bg-emerald-100 text-emerald-800 text-xs font-black px-3 py-1 rounded-full self-start sm:self-auto flex items-center gap-1">
+              <Sparkles className="w-3.5 h-3.5" /> Paket Alımında %10 Mahalle İndirimi
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+            {/* Üç Ürün Kartı */}
+            <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
+              
+              {/* Ürün 1: Ana Ürün */}
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 relative">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bundleItemsSelected.main}
+                    onChange={(e) => setBundleItemsSelected(prev => ({ ...prev, main: e.target.checked }))}
+                    className="mt-1 rounded text-indigo-900 focus:ring-indigo-900"
+                  />
+                  <div className="space-y-1 min-w-0">
+                    <img src={product.images[0]} alt={product.title} className="w-full h-24 rounded-xl object-cover border border-slate-200" />
+                    <span className="text-[10px] text-indigo-700 font-bold block">Bu Ürün</span>
+                    <h5 className="text-xs font-bold text-slate-900 line-clamp-1">{product.title}</h5>
+                    <span className="text-xs font-black text-slate-900 font-mono">₺{product.price}</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Ürün 2: Tamamlayıcı Ürün 1 */}
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 relative">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bundleItemsSelected.item1}
+                    onChange={(e) => setBundleItemsSelected(prev => ({ ...prev, item1: e.target.checked }))}
+                    className="mt-1 rounded text-indigo-900 focus:ring-indigo-900"
+                  />
+                  <div className="space-y-1 min-w-0">
+                    <img src="https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400" alt="Hakiki Ezine Peyniri" className="w-full h-24 rounded-xl object-cover border border-slate-200" />
+                    <span className="text-[10px] text-amber-700 font-bold block">Tarihi Ezine Şarküteri</span>
+                    <h5 className="text-xs font-bold text-slate-900 line-clamp-1">Tam Yağlı Hakiki Ezine Peyniri (500g)</h5>
+                    <span className="text-xs font-black text-slate-900 font-mono">₺195</span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Ürün 3: Tamamlayıcı Ürün 2 */}
+              <div className="p-3 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 relative">
+                <label className="flex items-start gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bundleItemsSelected.item2}
+                    onChange={(e) => setBundleItemsSelected(prev => ({ ...prev, item2: e.target.checked }))}
+                    className="mt-1 rounded text-indigo-900 focus:ring-indigo-900"
+                  />
+                  <div className="space-y-1 min-w-0">
+                    <img src="https://images.unsplash.com/photo-1576092768241-dec231879fc3?w=400" alt="Organik Doğu Karadeniz Çayı" className="w-full h-24 rounded-xl object-cover border border-slate-200" />
+                    <span className="text-[10px] text-emerald-700 font-bold block">Karadeniz Doğal Çiftlik</span>
+                    <h5 className="text-xs font-bold text-slate-900 line-clamp-1">Mayıs Hasadı Organik Rize Çayı (1 Kg)</h5>
+                    <span className="text-xs font-black text-slate-900 font-mono">₺280</span>
+                  </div>
+                </label>
+              </div>
+
+            </div>
+
+            {/* Sağ Paket Fiyatı ve Tek Tıkla Sepete Ekle */}
+            <div className="lg:col-span-4 bg-slate-50 p-5 rounded-3xl border border-slate-200 space-y-4">
+              <div className="space-y-1">
+                <span className="text-xs text-slate-500 font-bold block">Seçilen 3'lü Mahalle Paketi:</span>
+                {(() => {
+                  let rawTotal = 0;
+                  if (bundleItemsSelected.main) rawTotal += product.price;
+                  if (bundleItemsSelected.item1) rawTotal += 195;
+                  if (bundleItemsSelected.item2) rawTotal += 280;
+                  const discountedTotal = Math.round(rawTotal * 0.9);
+
+                  return (
+                    <div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-2xl font-black text-slate-900 font-mono">
+                          ₺{discountedTotal.toLocaleString('tr-TR')}
+                        </span>
+                        {rawTotal > 0 && (
+                          <span className="text-xs text-slate-400 line-through font-mono">
+                            ₺{rawTotal.toLocaleString('tr-TR')}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-[11px] text-emerald-700 font-bold">
+                        Tek tıkla sepete ekle, tek kuryeyle gelsin.
+                      </span>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setBundleAddedSuccess(true);
+                  setTimeout(() => setBundleAddedSuccess(false), 3500);
+                }}
+                className="w-full py-3.5 bg-indigo-900 hover:bg-indigo-800 text-white font-black text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <ShoppingBag className="w-4 h-4 text-amber-400" />
+                <span>{bundleAddedSuccess ? 'Tüm Paket Sepete Eklendi ✓' : 'Tümünü Birlikte Sepete Ekle (%10 İndirimle)'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
+        {/* ETSY MODELİ: BU ÜRÜNÜ ÜRETEN ATÖLYE & ESNAF HİKAYESİ */}
+        {/* ========================================================= */}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-14 h-14 rounded-2xl bg-indigo-900 text-amber-400 font-black text-xl flex items-center justify-center shadow-md">
+                {product.store.name.charAt(0)}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-black text-slate-900">{product.store.name}</h3>
+                  <span className="bg-emerald-100 text-emerald-900 font-bold text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Award className="w-3 h-3 text-emerald-700" /> Usta Zanaatkar Belgesi
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">24 Yıldır Mahallenizde Hizmet Veriyor · {product.store.address}</p>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowArtisanQuestionModal(true)}
+              className="px-4 py-2.5 bg-slate-900 hover:bg-indigo-950 text-white font-bold text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer self-start md:self-auto"
+            >
+              <MessageSquare className="w-4 h-4 text-amber-400" />
+              <span>Esnafa Soru Sor</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-3 text-xs text-slate-600 leading-relaxed">
+              <h4 className="font-bold text-slate-900 text-sm">Zanaatkarın ve Atölyenin Hikayesi:</h4>
+              <p>
+                "Atölyemizde her bir ürün, fabrikasyon seri üretim yerine geleneksel el aletleri ve ustalık tecrübesiyle tek tek üretilir. Kullanılan tüm hammaddeler yerli üreticilerden doğrudan temin edilmekte olup, gıda ürünlerimizde hiçbir koruyucu katkı maddesi kullanılmaz."
+              </p>
+              <p>
+                "TamPazar altyapısı sayesinde komisyonsuz doğrudan mahalle sakinlerimize ve tüm Türkiye'ye aracısız en yüksek kalitede ürünlerimizi ulaştırmanın mutluluğunu yaşıyoruz."
+              </p>
+            </div>
+
+            <div className="space-y-3 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
+              <span className="font-bold text-slate-900 block text-xs">Atölye Güvenceleri:</span>
+              <ul className="space-y-2 text-slate-700 text-[11px]">
+                <li className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" /> %100 El Yapımı / Hakiki Malzeme
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" /> Kişiye Özel Lazer & İsim Yazımı
+                </li>
+                <li className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" /> Faturası ve Garanti Belgesiyle Sevk
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* ========================================================= */}
         {/* 3. ESNAF / MAĞAZA PROFİL KARTI */}
+        {/* ========================================================= */}
         {/* ========================================================= */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100">
@@ -1704,6 +2079,172 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+        </div>
+      )}
+      {/* ========================================================= */}
+      {/* 5. ALIBABA MODELİ: NUMUNE TALEP ET MODALI */}
+      {/* ========================================================= */}
+      {showSampleModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-indigo-100 space-y-4 relative">
+            <button
+              onClick={() => setShowSampleModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <span className="p-2.5 rounded-2xl bg-indigo-100 text-indigo-900 font-bold">
+                🧪
+              </span>
+              <div>
+                <h4 className="font-black text-slate-900 text-sm">Toplu Alım Öncesi Numune Talep Et</h4>
+                <p className="text-[11px] text-slate-500">Esnaftan 1 adet test numunesi isteyin</p>
+              </div>
+            </div>
+
+            {sampleRequestedSuccess ? (
+              <div className="text-center py-6 space-y-3">
+                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+                  <Check className="w-6 h-6" />
+                </div>
+                <h5 className="font-black text-slate-900 text-sm">Numune Talebiniz Alındı!</h5>
+                <p className="text-xs text-slate-500">
+                  {product.store.name} işletmesine numune talebiniz ve adresiniz iletildi. Numune kargo takip no SMS ile gelecektir.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowSampleModal(false);
+                    setSampleRequestedSuccess(false);
+                  }}
+                  className="w-full py-2.5 bg-indigo-900 text-white rounded-xl font-bold text-xs"
+                >
+                  Tamam
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setSampleRequestedSuccess(true);
+                }}
+                className="space-y-3 text-xs"
+              >
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Ad Soyad / Şirket Unvanı</label>
+                  <input
+                    type="text"
+                    required
+                    value={sampleName}
+                    onChange={(e) => setSampleName(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Telefon Numarası</label>
+                  <input
+                    type="text"
+                    required
+                    value={samplePhone}
+                    onChange={(e) => setSamplePhone(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Numunenin Gönderileceği Adres</label>
+                  <textarea
+                    rows={2}
+                    required
+                    value={sampleAddress}
+                    onChange={(e) => setSampleAddress(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none resize-none"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-black text-xs rounded-xl shadow-md cursor-pointer transition"
+                >
+                  Numune Talebini Gönder (Alibaba B2B Modeli)
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* 6. ETSY MODELİ: ESNAFA SORU SOR MODALI */}
+      {/* ========================================================= */}
+      {showArtisanQuestionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4 relative">
+            <button
+              onClick={() => setShowArtisanQuestionModal(false)}
+              className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <span className="p-2.5 rounded-2xl bg-amber-100 text-amber-900 font-bold">
+                <MessageSquare className="w-4 h-4 text-amber-700" />
+              </span>
+              <div>
+                <h4 className="font-black text-slate-900 text-sm">{product.store.name} Atölyesine Soru Sor</h4>
+                <p className="text-[11px] text-slate-500">Zanaatkar esnafa doğrudan mesaj iletin</p>
+              </div>
+            </div>
+
+            {artisanQuestionSent ? (
+              <div className="text-center py-6 space-y-3">
+                <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-full flex items-center justify-center mx-auto">
+                  <Check className="w-6 h-6" />
+                </div>
+                <h5 className="font-black text-slate-900 text-sm">Sorunuz Esnafa İletildi!</h5>
+                <p className="text-xs text-slate-500">
+                  Esnaf cevabı SMS ve bildirim ile hesabınıza aktarılacaktır.
+                </p>
+                <button
+                  onClick={() => {
+                    setShowArtisanQuestionModal(false);
+                    setArtisanQuestionSent(false);
+                    setArtisanQuestionText('');
+                  }}
+                  className="w-full py-2.5 bg-slate-900 text-white rounded-xl font-bold text-xs"
+                >
+                  Tamam
+                </button>
+              </div>
+            ) : (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  setArtisanQuestionSent(true);
+                }}
+                className="space-y-3 text-xs"
+              >
+                <div>
+                  <label className="font-bold text-slate-700 block mb-1">Sorunuz veya Özel Üretim Talebiniz *</label>
+                  <textarea
+                    rows={4}
+                    required
+                    value={artisanQuestionText}
+                    onChange={(e) => setArtisanQuestionText(e.target.value)}
+                    placeholder="Örn: Bu ürünün özel boyutu yapılabilir mi? Hediye paketine özel not eklenebilir mi?..."
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none resize-none leading-relaxed"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-black text-xs rounded-xl shadow-md cursor-pointer transition flex items-center justify-center gap-1.5"
+                >
+                  <Send className="w-3.5 h-3.5 text-amber-400" />
+                  <span>Soruyu Gönder</span>
+                </button>
+              </form>
             )}
           </div>
         </div>

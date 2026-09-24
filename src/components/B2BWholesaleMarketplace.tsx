@@ -518,7 +518,7 @@ export default function B2BWholesaleMarketplace() {
                             </div>
                           )}
 
-                          {/* İki Aksiyon Butonu */}
+                          {/* İki Aksiyon Butonu & Numune Butonu */}
                           <div className="grid grid-cols-2 gap-2 pt-1">
                             <button
                               onClick={() => handleOpenPurchaseModal(product)}
@@ -545,6 +545,16 @@ export default function B2BWholesaleMarketplace() {
                               </button>
                             )}
                           </div>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              showToast(`"${product.title}" için 1 adet numune talebiniz üreticiye iletildi. (Alibaba Modeli)`);
+                            }}
+                            className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <span>🧪 1 Adet Test Numunesi Talep Et</span>
+                          </button>
                         </div>
                       )}
                     </div>

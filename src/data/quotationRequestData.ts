@@ -31,6 +31,15 @@ export interface QuotationRequest {
   };
   timing: 'urgent' | 'within_24h' | 'this_week' | 'flexible';
   timingLabel: string;
+  estimatedBudget?: string;
+  scopeDetails?: {
+    roomCount?: string;
+    areaM2?: number;
+    vehicleType?: string;
+    urgencyLevel?: string;
+    requiresInspection?: boolean;
+    materialProvidedBy?: 'customer' | 'craftsman' | 'included';
+  };
   customer: {
     id: string;
     name: string;
@@ -54,6 +63,9 @@ export interface MerchantQuote {
   merchantRating: number;
   merchantReviewCount: number;
   merchantBadges: string[];
+  certificationBadge?: string; // e.g. "Mesleki Yeterlilik (MYK Seviye 4) Onaylı"
+  onTimeRate?: number; // e.g. 99 (99% on-time completion)
+  portfolioPhotos?: { title: string; url: string }[]; // Before/after or portfolio works
   distanceKm: number;
   price: number;
   vatIncluded: boolean;
@@ -276,6 +288,12 @@ export const INITIAL_MERCHANT_QUOTES: MerchantQuote[] = [
     merchantRating: 4.9,
     merchantReviewCount: 142,
     merchantBadges: ['Onaylı Usta', 'Termal Kamera Sertifikalı', 'GİB e-Faturalı'],
+    certificationBadge: 'MYK Seviye 4 Sıhhi Tesisat Belgesi Onaylı',
+    onTimeRate: 99,
+    portfolioPhotos: [
+      { title: 'Termal Kaçak Tespiti & Noktasal Açma', url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600' },
+      { title: 'Test Sonrası Kusursuz Fayans Kapatma', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600' }
+    ],
     distanceKm: 2.1,
     price: 1350,
     vatIncluded: true,
@@ -295,6 +313,11 @@ export const INITIAL_MERCHANT_QUOTES: MerchantQuote[] = [
     merchantRating: 4.7,
     merchantReviewCount: 88,
     merchantBadges: ['Onaylı Esnaf', 'Hızlı Servis'],
+    certificationBadge: 'Ustalık ve Esnaf Odası Kayıtlı',
+    onTimeRate: 96,
+    portfolioPhotos: [
+      { title: 'Banyo Tesisat Yenileme', url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600' }
+    ],
     distanceKm: 3.5,
     price: 1200,
     vatIncluded: true,
@@ -314,6 +337,11 @@ export const INITIAL_MERCHANT_QUOTES: MerchantQuote[] = [
     merchantRating: 4.8,
     merchantReviewCount: 64,
     merchantBadges: ['Onaylı Esnaf', 'Kredi Kartı / POS'],
+    certificationBadge: 'Doğalgaz & Tesisat Yetkili Firma',
+    onTimeRate: 98,
+    portfolioPhotos: [
+      { title: 'Kombi ve Hat Montajı', url: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600' }
+    ],
     distanceKm: 4.0,
     price: 1500,
     vatIncluded: true,
@@ -335,14 +363,19 @@ export const INITIAL_MERCHANT_QUOTES: MerchantQuote[] = [
     merchantRating: 5.0,
     merchantReviewCount: 210,
     merchantBadges: ['Kaskolu Çekici', '7/24 Nöbetçi', '20 Dk Varış'],
+    certificationBadge: 'K1 & K3 Karayolu Taşıma Yetki Belgeli',
+    onTimeRate: 100,
+    portfolioPhotos: [
+      { title: 'Kayar Kasa Güvenli Binek Araç Transferi', url: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=600' }
+    ],
     distanceKm: 1.5,
-    price: 1100,
+    price: 1250,
     vatIncluded: true,
-    duration: '20 Dakika içinde yükleme',
-    note: 'Kayar kasa hidrolik çekicimiz şu an sahil mevkisinde boştadır. Aracınız tam kaskolu olarak sanayideki ustanıza hasarsız teslim edilir. e-Fatura kesilir.',
-    phone: '0532 111 00 00',
-    whatsapp: '905321110000',
-    createdAt: '2026-09-24 08:30',
+    duration: '20-25 Dakika içinde yükleme',
+    note: 'Kaskolu ve hidrolik kayar kasa çekicimiz hazır beklemektedir. Aracınız tamponuna veya şanzımanına sıfır zarar riskiyle taşınır. Sanayiye kadar refakat edilir.',
+    phone: '0542 777 88 99',
+    whatsapp: '905427778899',
+    createdAt: '2026-09-24 08:25',
     status: 'pending'
   },
   {

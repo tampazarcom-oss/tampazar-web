@@ -524,11 +524,23 @@ export default function CustomerAccountPage() {
                 ) : (
                   <span className="text-slate-400">Esnaf tarafından bizzat teslimat</span>
                 )}
-                <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                  <span className="text-slate-400">Toplam Tutar:</span>
-                  <span className="text-base font-black text-indigo-950 font-mono">
-                    {ord.totalAmount.toLocaleString('tr-TR')} ₺
-                  </span>
+                <div className="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
+                  <button
+                    onClick={() => {
+                      setDownloadSuccessToast(`"${ord.storeName}" siparişinizdeki ${ord.items.length} ürün tek tıkla sepete eklendi! (Amazon Tekrar Sipariş Modeli)`);
+                      setTimeout(() => setDownloadSuccessToast(''), 4500);
+                    }}
+                    className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Tek Tıkla Sepeti Tekrarla</span>
+                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-slate-400">Toplam Tutar:</span>
+                    <span className="text-base font-black text-indigo-950 font-mono">
+                      {ord.totalAmount.toLocaleString('tr-TR')} ₺
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
