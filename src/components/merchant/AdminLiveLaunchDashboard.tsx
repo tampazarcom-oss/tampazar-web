@@ -8,19 +8,23 @@ import {
   Building2, CreditCard, CheckCircle2, AlertCircle, 
   TrendingUp, Users, ShieldCheck, Sparkles, Filter, 
   Search, ExternalLink, ToggleLeft, ToggleRight, Check, 
-  RefreshCw, FileSpreadsheet, Lock, Eye, ArrowUpRight
+  RefreshCw, FileSpreadsheet, Lock, Eye, ArrowUpRight, Activity, Zap
 } from 'lucide-react';
 import { Tenant } from '../../data/mockData';
+import SystemHealthDashboard from './SystemHealthDashboard';
 
 interface AdminLiveLaunchDashboardProps {
   tenants: Tenant[];
   onToggleStoreStatus?: (tenantId: string) => void;
+  defaultView?: 'mrr' | 'health';
 }
 
 export default function AdminLiveLaunchDashboard({
   tenants,
-  onToggleStoreStatus
+  onToggleStoreStatus,
+  defaultView = 'mrr'
 }: AdminLiveLaunchDashboardProps) {
+  const [adminViewMode, setAdminViewMode] = useState<'mrr' | 'health'>(defaultView);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<'all' | 'live' | 'demo' | 'pending'>('all');
   const [localTenants, setLocalTenants] = useState<Tenant[]>(tenants);
@@ -66,8 +70,46 @@ export default function AdminLiveLaunchDashboard({
   return (
     <div className="space-y-6 animate-fade-in text-xs">
       
-      {/* TOP HEADER */}
-      <div className="bg-gradient-to-r from-slate-950 via-[#0F4C3A] to-slate-950 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-emerald-900/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      {/* VIEW MODE TOGGLE */}
+      <div className="flex items-center justify-between bg-white p-2.5 rounded-2xl border border-slate-200/80 shadow-xs">
+        <div className="flex items-center gap-2 font-bold">
+          <button
+            onClick={() => setAdminViewMode('mrr')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
+              adminViewMode === 'mrr'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            <span>Mağaza Vitrinleri & MRR Gelir Konsolu</span>
+          </button>
+
+          <button
+            onClick={() => setAdminViewMode('health')}
+            className={`px-4 py-2 rounded-xl text-xs font-black transition cursor-pointer flex items-center gap-2 ${
+              adminViewMode === 'health'
+                ? 'bg-[#0B132B] text-white shadow-xs border border-emerald-500/30'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+            }`}
+          >
+            <Activity className="w-4 h-4 text-emerald-400" />
+            <span>Sistem Sağlığı & Performans Paneli (API, DB, Hata Logları)</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+          </button>
+        </div>
+
+        <span className="hidden md:inline text-[11px] font-mono text-slate-400 pr-2">
+          {adminViewMode === 'health' ? 'Canlı Telemetri: Aktif' : `Toplam ${tenants.length} Mağaza Kayıtlı`}
+        </span>
+      </div>
+
+      {adminViewMode === 'health' ? (
+        <SystemHealthDashboard />
+      ) : (
+        <>
+          {/* TOP HEADER */}
+          <div className="bg-gradient-to-r from-slate-950 via-[#0F4C3A] to-slate-950 rounded-3xl p-6 sm:p-7 text-white shadow-xl border border-emerald-900/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="space-y-2 max-w-2xl">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-400 text-slate-950 rounded-full text-xs font-black uppercase tracking-wider shadow-xs">
             <Sparkles className="w-3.5 h-3.5" />
@@ -352,6 +394,8 @@ export default function AdminLiveLaunchDashboard({
           </table>
         </div>
       </div>
+      </>
+      )}
 
     </div>
   );

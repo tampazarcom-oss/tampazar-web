@@ -12,7 +12,7 @@ import {
   TrendingUp, TrendingDown, ArrowUpRight, DollarSign, Euro,
   ChevronDown, PlusCircle, CheckCircle2, ShieldCheck, Download,
   Layers, ArrowLeft, ExternalLink, Sparkles, MessageCircle,
-  Printer, Eye, AlertCircle, RefreshCw, Check, Edit2, Trash2, X, Plus, Filter, Video, Heart, Key
+  Printer, Eye, AlertCircle, RefreshCw, Check, Edit2, Trash2, X, Plus, Filter, Video, Heart, Key, Activity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -39,6 +39,7 @@ import B2BDropshippingModule from './merchant/B2BDropshippingModule';
 import CustomerCrmModule from './merchant/CustomerCrmModule';
 import MerchantIntegrationHub from './merchant/MerchantIntegrationHub';
 import AdminLiveLaunchDashboard from './merchant/AdminLiveLaunchDashboard';
+import SystemHealthDashboard from './merchant/SystemHealthDashboard';
 import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface TampazarSellerDashboardProps {
@@ -64,6 +65,7 @@ export type DashboardTab =
   | 'subscription'
   | 'integrations'
   | 'admin_launch'
+  | 'system_health'
   | 'settings';
 
 export default function TampazarSellerDashboard({
@@ -77,6 +79,7 @@ export default function TampazarSellerDashboard({
 
   const getTabFromRoute = (tabParam?: string, pathname?: string): DashboardTab => {
     const p = (tabParam || pathname || '').toLowerCase();
+    if (p.includes('saglik') || p.includes('health') || p.includes('telemetri') || p.includes('performans')) return 'system_health';
     if (p.includes('abonelik') || p.includes('subscription')) return 'subscription';
     if (p.includes('entegrasyon') || p.includes('integration') || p.includes('byo')) return 'integrations';
     if (p.includes('admin') || p.includes('launch') || p.includes('mrr') || p.includes('canli')) return 'admin_launch';
@@ -801,6 +804,24 @@ export default function TampazarSellerDashboard({
           </button>
 
           <button
+            onClick={() => setActiveTab('system_health')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'system_health' 
+                ? 'bg-gradient-to-r from-[#0F4C3A] to-[#0B132B] text-white font-black shadow-sm border border-emerald-500/40' 
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Activity className="w-4 h-4 text-emerald-400" />
+              <span>Sistem Sağlığı & Telemetri</span>
+            </div>
+            <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              Canlı
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('settings')}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition text-left cursor-pointer ${
               activeTab === 'settings' 
@@ -858,6 +879,8 @@ export default function TampazarSellerDashboard({
               {activeTab === 'orders_service' && 'TamUsta: Saha Hizmetleri, Acil Çağrı & Usta Takvimi'}
               {activeTab === 'pos' && 'Sanal POS & Doğrudan Tahsilat Akışı'}
               {activeTab === 'subscription' && 'Esnaf Abonelik & Ticari Model Mimarisi (%0 Komisyon)'}
+              {activeTab === 'admin_launch' && 'Süper Admin: Canlıya Geçiş, Mağaza İzolasyonu & MRR Gelir Konsolu'}
+              {activeTab === 'system_health' && 'Süper Admin: Sistem Sağlığı, Gerçek Zamanlı API Yanıt Süreleri & Hata Logları'}
               {activeTab === 'settings' && 'Mağaza Profili, Kurumsal Kimlik & Kendi Sanal POS (BYO POS) Ayarları'}
             </h1>
           </div>
@@ -1699,6 +1722,13 @@ export default function TampazarSellerDashboard({
                   setTimeout(() => setToastNotification(null), 3500);
                 }}
               />
+            </div>
+          )}
+
+          {/* TAB: SİSTEM SAĞLIĞI & PERFORMANS GÖSTERGE PANELİ */}
+          {activeTab === 'system_health' && (
+            <div className="animate-fade-in">
+              <SystemHealthDashboard />
             </div>
           )}
 
