@@ -248,6 +248,15 @@ export type HybridDeliveryType =
   | 'DIGITAL_DOWNLOAD'  // 4. TamDijital (Etsy & Gumroad Modeli Anında Dosya İndirme)
   | 'ONLINE_SESSION';   // 5. TamSeans (Superpeer & Calendly Modeli Canlı Randevu)
 
+export type DirectPaymentMethod = 
+  | 'CASH_ON_DELIVERY'        // Kapıda Nakit Ödeme (Doğrudan esnafa/kuryeye)
+  | 'DOOR_CARD_POS'           // Kapıda Kredi Kartı / Esnafın Mobil POS'u
+  | 'DIRECT_IBAN_TRANSFER'    // Esnafın Şahsi/Şirket IBAN Hesabına Doğrudan Havale
+  | 'DIRECT_MERCHANT_GATEWAY' // Esnafın Kendi Sanal POS'u (BYO POS - PayTR/iyzico)
+  | 'PAYTR_POS' 
+  | 'IYZICO_POS' 
+  | 'PAY_AT_DOOR';
+
 export interface OrderItemCustomization {
   selectedWeightOrQty?: number;
   unitLabel?: string;
@@ -256,6 +265,53 @@ export interface OrderItemCustomization {
   selectedMandatoryOptions?: { groupTitle: string; optionName: string; priceDiff?: number }[];
   uploadedFiles?: { name: string; size: string; previewUrl?: string }[];
   customFormValues?: { fieldLabel: string; value: string }[];
+}
+
+export interface MultiStoreBreakdownItem {
+  storeId: string;
+  storeName: string;
+  category: string;
+  phone: string;
+  amount: number;
+  items: string[];
+}
+
+export interface SuspendedItemRecord {
+  id: string;
+  storeId: string;
+  storeName: string;
+  type: 'BREAD' | 'SOUP' | 'PIDE' | 'MEAL' | 'CUSTOM';
+  typeName: string;
+  unitPrice: number;
+  count: number;
+  deliveredCount: number;
+  donorName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DigitalServiceProtocol {
+  id: string;
+  protocolNumber: string;
+  quoteId: string;
+  requestId: string;
+  serviceTitle: string;
+  customerName: string;
+  customerPhone: string;
+  customerAddress: string;
+  merchantName: string;
+  merchantPhone: string;
+  merchantIban?: string;
+  agreedPrice: number;
+  agreedDuration: string;
+  jobScopeDescription: string;
+  directPaymentMethod: 'NAKIT' | 'IBAN' | 'KREDI_KARTI_POS';
+  status: 'PENDING_WORK' | 'COMPLETED_VERIFIED';
+  verifiedAt?: string;
+  ratingGiven?: number;
+  reputationPointsAwarded: number;
+  tamPazarCertifiedBadge: boolean;
+  createdAt: string;
 }
 
 export interface HybridOrder {
@@ -284,8 +340,22 @@ export interface HybridOrder {
     customization?: OrderItemCustomization;
   }[];
   totalAmount: number;
-  paymentMethod: 'PAYTR_POS' | 'IYZICO_POS' | 'CASH_ON_DELIVERY' | 'PAY_AT_DOOR';
-  paymentStatus: 'PAID' | 'PENDING';
+  paymentMethod: DirectPaymentMethod;
+  paymentStatus: 'PAID' | 'PENDING' | 'AT_DOOR';
+  
+  // Askıda Mahalle & Dayanışma Katkısı
+  suspendedContribution?: {
+    type: 'BREAD' | 'SOUP' | 'PIDE' | 'MEAL' | 'CUSTOM';
+    typeName: string;
+    count: number;
+    unitPrice: number;
+    totalAmount: number;
+  };
+
+  // Çoklu Mahalle Sepeti (TamKurye)
+  isMultiStoreOrder?: boolean;
+  multiStoreBreakdown?: MultiStoreBreakdownItem[];
+  sharedCourierFee?: number;
   
   // Status by type
   status: 
@@ -917,3 +987,235 @@ export function playOrderAlertChime() {
     console.warn('Web Audio chime not supported or blocked by user gesture policy:', err);
   }
 }
+
+// ==========================================
+// 5. WHATSAPP SİPARİŞ FİŞİ SİMÜLATÖRÜ & DOĞRUDAN İLETİŞİM
+// ==========================================
+
+export function formatPaymentMethodText(method: DirectPaymentMethod): string {
+  switch (method) {
+    case 'CASH_ON_DELIVERY':
+      return '💵 Kapıda Nakit Ödeme (Doğrudan Esnafa/Kuryeye)';
+    case 'DOOR_CARD_POS':
+      return '💳 Kapıda Kredi Kartı (Esnafın Mobil POS Cihazı)';
+    case 'DIRECT_IBAN_TRANSFER':
+      return '🏦 Esnaf Hesabına Doğrudan IBAN / FAST ile Havale';
+    case 'DIRECT_MERCHANT_GATEWAY':
+    case 'PAYTR_POS':
+    case 'IYZICO_POS':
+      return '⚡ Esnafın Kendi Sanal POS\'u (Komisyonsuz Doğrudan Tahsilat)';
+    default:
+      return '💵 Kapıda Doğrudan Esnafa Ödeme';
+  }
+}
+
+export function generateWhatsAppReceiptText(order: HybridOrder): string {
+  const itemsText = order.items.map(it => {
+    let detail = `- ${it.qty}x ${it.title} (₺${(it.price * it.qty).toLocaleString('tr-TR')})`;
+    if (it.variant) detail += ` [Varyant: ${it.variant}]`;
+    if (it.customization?.removedIngredients?.length) {
+      detail += ` (Çıkarılan: ${it.customization.removedIngredients.join(', ')})`;
+    }
+    if (it.customization?.addedIngredients?.length) {
+      detail += ` (+Ekstralar: ${it.customization.addedIngredients.map(a => a.name).join(', ')})`;
+    }
+    return detail;
+  }).join('\n');
+
+  let breakdownText = '';
+  if (order.isMultiStoreOrder && order.multiStoreBreakdown) {
+    breakdownText = `\n\n🏪 *Dükkan Dağılımı (Çoklu Mahalle Sepeti):*\n` +
+      order.multiStoreBreakdown.map(b => `• ${b.storeName} (${b.category}): ₺${b.amount} [${b.items.join(', ')}]`).join('\n') +
+      (order.sharedCourierFee ? `\n🛵 Ortak Mahalle Kuryesi: ₺${order.sharedCourierFee}` : '');
+  }
+
+  let askidaText = '';
+  if (order.suspendedContribution) {
+    askidaText = `\n🥖 *Askıda Dayanışma:* ${order.suspendedContribution.count}x ${order.suspendedContribution.typeName} (+₺${order.suspendedContribution.totalAmount})`;
+  }
+
+  const receipt = `🧾 *TAMPAZAR SİPARİŞ BİLGİ & DOĞRUDAN MUTABAKAT FİŞİ*
+━━━━━━━━━━━━━━━━━━━━
+📌 *Sipariş No:* #${order.orderNumber}
+📅 *Tarih:* ${order.createdAt}
+🏪 *Esnaf / Mağaza:* ${order.storeName}
+
+👤 *Müşteri Bilgileri:*
+• *Ad Soyad:* ${order.customerName}
+• *Telefon:* ${order.customerPhone}
+• *Teslimat Adresi:* ${order.customerAddress}, ${order.district}/${order.city}
+
+🛒 *Sipariş Kalemleri:*
+${itemsText}${askidaText}${breakdownText}
+
+━━━━━━━━━━━━━━━━━━━━
+💰 *Doğrudan Tahsil Edilecek Tutar:* ₺${order.totalAmount.toLocaleString('tr-TR')}
+💳 *Ödeme Yöntemi:* ${formatPaymentMethodText(order.paymentMethod)}
+🛡️ *TamPazar Komisyonu:* %0,00 (Tüm tutar doğrudan esnafın kasasına gider)`;
+
+  return receipt;
+}
+
+export function generateWhatsAppOrderUrl(phone: string, order: HybridOrder): string {
+  const cleanPhone = phone.replace(/\D/g, '');
+  const formattedPhone = cleanPhone.startsWith('90') ? cleanPhone : `90${cleanPhone.replace(/^0/, '')}`;
+  const receipt = generateWhatsAppReceiptText(order);
+  return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(receipt)}`;
+}
+
+// ==========================================
+// 6. ASKIDA MAHALLE & DAYANIŞMA SİSTEMİ VERİ DEPOSU
+// ==========================================
+
+const INITIAL_SUSPENDED_ITEMS: SuspendedItemRecord[] = [
+  {
+    id: 'susp-1',
+    storeId: 'firin-karadeniz',
+    storeName: 'Tarihi Karadeniz Taş Ekmek Fırını',
+    type: 'BREAD',
+    typeName: 'Askıda Sıcak Köy Ekmeği',
+    unitPrice: 15,
+    count: 14,
+    deliveredCount: 42,
+    donorName: 'Mahalle Sakinleri',
+    createdAt: '2026-09-20',
+    updatedAt: '2026-09-24'
+  },
+  {
+    id: 'susp-2',
+    storeId: 'lokanta-lezzet',
+    storeName: 'Yöresel Lezzet Sofrası',
+    type: 'SOUP',
+    typeName: 'Askıda Sıcak Çorba Menüsü',
+    unitPrice: 60,
+    count: 8,
+    deliveredCount: 26,
+    donorName: 'Mahalle Sakinleri',
+    createdAt: '2026-09-21',
+    updatedAt: '2026-09-24'
+  },
+  {
+    id: 'susp-3',
+    storeId: 'pide-salon',
+    storeName: 'Kıymalı & Kaşarlı Pide Fırını',
+    type: 'PIDE',
+    typeName: 'Askıda Açık Kıymalı Pide',
+    unitPrice: 45,
+    count: 6,
+    deliveredCount: 19,
+    donorName: 'Cömert Mahalleli',
+    createdAt: '2026-09-22',
+    updatedAt: '2026-09-24'
+  }
+];
+
+export function getStoredSuspendedItems(): SuspendedItemRecord[] {
+  try {
+    const saved = localStorage.getItem('tampazar_suspended_items');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return INITIAL_SUSPENDED_ITEMS;
+}
+
+export function saveSuspendedItems(items: SuspendedItemRecord[]) {
+  localStorage.setItem('tampazar_suspended_items', JSON.stringify(items));
+  window.dispatchEvent(new CustomEvent('tampazar_suspended_updated'));
+}
+
+export function deliverSuspendedItem(id: string): boolean {
+  const current = getStoredSuspendedItems();
+  const index = current.findIndex(i => i.id === id);
+  if (index !== -1 && current[index].count > 0) {
+    current[index].count -= 1;
+    current[index].deliveredCount += 1;
+    current[index].updatedAt = new Date().toISOString().slice(0, 10);
+    saveSuspendedItems(current);
+    return true;
+  }
+  return false;
+}
+
+export function addSuspendedItemDonation(record: Omit<SuspendedItemRecord, 'id' | 'deliveredCount' | 'createdAt' | 'updatedAt'>) {
+  const current = getStoredSuspendedItems();
+  const existingIndex = current.findIndex(i => i.storeId === record.storeId && i.type === record.type);
+  if (existingIndex !== -1) {
+    current[existingIndex].count += record.count;
+    current[existingIndex].updatedAt = new Date().toISOString().slice(0, 10);
+  } else {
+    current.push({
+      ...record,
+      id: `susp-${Date.now()}`,
+      deliveredCount: 0,
+      createdAt: new Date().toISOString().slice(0, 10),
+      updatedAt: new Date().toISOString().slice(0, 10)
+    });
+  }
+  saveSuspendedItems(current);
+}
+
+// ==========================================
+// 7. TAMUSTA DİJİTAL İŞ PROTOKOLÜ & DOĞRULAMA MOTORU
+// ==========================================
+
+const INITIAL_DIGITAL_PROTOCOLS: DigitalServiceProtocol[] = [
+  {
+    id: 'proto-101',
+    protocolNumber: 'PRT-2026-8801',
+    quoteId: 'quote-101',
+    requestId: 'req-1',
+    serviceTitle: 'Banyo Zemin Kırmadan Termal Kameralı Kaçak Tespiti & Tamir',
+    customerName: 'Cemre Demir',
+    customerPhone: '0532 444 55 66',
+    customerAddress: 'Bahçelievler Mah. 102. Sok. No: 12 D: 4, Altınordu / Ordu',
+    merchantName: 'Kuzey Teknik Su Tesisatı (Mehmet Usta)',
+    merchantPhone: '0532 111 22 33',
+    merchantIban: 'TR44 0006 2000 1234 5678 9012 34',
+    agreedPrice: 1200,
+    agreedDuration: '45-60 Dakika',
+    jobScopeDescription: 'Kırmadan termal cihaz ile kaçak noktasının tespiti, 1 noktada boru lehim onarımı ve sızdırmazlık test raporu teslimi.',
+    directPaymentMethod: 'NAKIT',
+    status: 'COMPLETED_VERIFIED',
+    verifiedAt: '24 Eylül 2026 11:45',
+    ratingGiven: 5,
+    reputationPointsAwarded: 10,
+    tamPazarCertifiedBadge: true,
+    createdAt: '2026-09-24 10:00'
+  }
+];
+
+export function getStoredDigitalProtocols(): DigitalServiceProtocol[] {
+  try {
+    const saved = localStorage.getItem('tampazar_digital_protocols');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return INITIAL_DIGITAL_PROTOCOLS;
+}
+
+export function saveDigitalProtocol(protocol: DigitalServiceProtocol) {
+  const current = getStoredDigitalProtocols();
+  const existingIdx = current.findIndex(p => p.id === protocol.id);
+  if (existingIdx !== -1) {
+    current[existingIdx] = protocol;
+  } else {
+    current.unshift(protocol);
+  }
+  localStorage.setItem('tampazar_digital_protocols', JSON.stringify(current));
+  window.dispatchEvent(new CustomEvent('tampazar_protocols_updated'));
+}
+
+export function confirmServiceProtocolCompletion(protocolId: string, rating: number = 5): DigitalServiceProtocol | null {
+  const current = getStoredDigitalProtocols();
+  const target = current.find(p => p.id === protocolId);
+  if (target) {
+    target.status = 'COMPLETED_VERIFIED';
+    target.verifiedAt = new Date().toLocaleString('tr-TR');
+    target.ratingGiven = rating;
+    target.reputationPointsAwarded = 10;
+    target.tamPazarCertifiedBadge = true;
+    localStorage.setItem('tampazar_digital_protocols', JSON.stringify(current));
+    window.dispatchEvent(new CustomEvent('tampazar_protocols_updated'));
+    return target;
+  }
+  return null;
+}
+

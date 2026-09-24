@@ -8,10 +8,11 @@ import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Link
 import { initialTenants, Tenant } from './data/mockData';
 import BrandLogo from './components/BrandLogo';
 import { applyPageSEO } from './utils/seo';
-import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard, User } from 'lucide-react';
+import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard, User, ShoppingBag } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
 import GlobalUserNav from './components/GlobalUserNav';
+import NeighborhoodMultiCartModal from './components/NeighborhoodMultiCartModal';
 
 const MarketplaceHome = lazy(() => import('./components/MarketplaceHome'));
 const SuperMallHome = lazy(() => import('./components/SuperMallHome'));
@@ -105,6 +106,7 @@ function MainLayout() {
 
   const [activeTenant, setActiveTenant] = useState<Tenant>(tenants[0]);
   const [showTenantDropdown, setShowTenantDropdown] = useState(false);
+  const [showMultiCartModal, setShowMultiCartModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -455,6 +457,34 @@ function MainLayout() {
 
       {/* Global Role-Based Authentication & Registration Modal */}
       <AuthModal />
+
+      {/* TamKurye: Mahalle Çoklu Dükkan Sepeti Modal */}
+      <NeighborhoodMultiCartModal
+        isOpen={showMultiCartModal}
+        onClose={() => setShowMultiCartModal(false)}
+      />
+
+      {/* Floating Mahalle Sepeti Butonu */}
+      <button
+        onClick={() => setShowMultiCartModal(true)}
+        className="fixed bottom-6 right-6 z-40 bg-gradient-to-r from-[#0F4C3A] via-[#0B132B] to-[#0F4C3A] text-white p-3.5 sm:px-5 sm:py-3.5 rounded-full shadow-2xl border-2 border-amber-400/80 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 cursor-pointer group"
+        aria-label="Mahalle Çoklu Sepeti"
+      >
+        <div className="relative">
+          <ShoppingBag className="w-5 h-5 text-amber-400 group-hover:rotate-12 transition-transform" />
+          <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center shadow-xs">
+            3
+          </span>
+        </div>
+        <div className="text-left hidden sm:block">
+          <span className="text-[10px] text-amber-300 font-extrabold uppercase tracking-wider block leading-none">
+            %0 Komisyon · Doğrudan Esnafa
+          </span>
+          <span className="text-xs font-black text-white block">
+            TamKurye Mahalle Sepeti
+          </span>
+        </div>
+      </button>
 
     </div>
   );

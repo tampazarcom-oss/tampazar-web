@@ -8,7 +8,8 @@ import {
   Sparkles, ShieldCheck, Clock, MapPin, Phone, 
   MessageCircle, CheckCircle2, AlertCircle, Plus, 
   ChevronDown, ChevronUp, Star, Check, X, HelpCircle,
-  Truck, Wrench, Hammer, Camera, Package, Key, Layers, ShoppingCart, Send
+  Truck, Wrench, Hammer, Camera, Package, Key, Layers, ShoppingCart, Send,
+  FileCheck2, Award, Wallet, DollarSign, FileText
 } from 'lucide-react';
 import { 
   QuotationRequest, 
@@ -18,6 +19,12 @@ import {
   acceptMerchantQuote, 
   rejectMerchantQuote 
 } from '../data/quotationRequestData';
+import { 
+  DigitalServiceProtocol, 
+  getStoredDigitalProtocols, 
+  saveDigitalProtocol, 
+  confirmServiceProtocolCompletion 
+} from '../data/hybridCommerceData';
 import TamTeklifWizardModal from './TamTeklifWizardModal';
 
 interface CustomerQuotationsTabProps {
@@ -27,6 +34,7 @@ interface CustomerQuotationsTabProps {
 export default function CustomerQuotationsTab({ initialRequestId }: CustomerQuotationsTabProps) {
   const [requests, setRequests] = useState<QuotationRequest[]>([]);
   const [quotes, setQuotes] = useState<MerchantQuote[]>([]);
+  const [protocols, setProtocols] = useState<DigitalServiceProtocol[]>([]);
   const [expandedRequestId, setExpandedRequestId] = useState<string | null>(initialRequestId || null);
   const [showWizardModal, setShowWizardModal] = useState(false);
   
@@ -35,11 +43,19 @@ export default function CustomerQuotationsTab({ initialRequestId }: CustomerQuot
   const [questionText, setQuestionText] = useState('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Hizmet Tamamlama & Doğrulama Modalı
+  const [completionModalProtocol, setCompletionModalProtocol] = useState<DigitalServiceProtocol | null>(null);
+  const [completionRating, setCompletionRating] = useState<number>(5);
+  const [selectedPayMethod, setSelectedPayMethod] = useState<'NAKIT' | 'IBAN' | 'KREDI_KARTI_POS'>('NAKIT');
+  const [completionNote, setCompletionNote] = useState('');
+
   const loadData = () => {
     const allReqs = getStoredQuotationRequests();
     const allQuotes = getStoredMerchantQuotes();
+    const allProtocols = getStoredDigitalProtocols();
     setRequests(allReqs);
     setQuotes(allQuotes);
+    setProtocols(allProtocols);
 
     // If initialRequestId is provided and exists, expand it, otherwise expand first
     if (initialRequestId && allReqs.some(r => r.id === initialRequestId)) {
@@ -61,9 +77,43 @@ export default function CustomerQuotationsTab({ initialRequestId }: CustomerQuot
   const handleAcceptQuote = (quote: MerchantQuote, req: QuotationRequest) => {
     const res = acceptMerchantQuote(quote.id);
     if (res.success) {
+      // Create Digital Work Protocol (İki Taraflı Dijital İş Protokolü)
+      const newProtocol: DigitalServiceProtocol = {
+        id: `proto-${Date.now()}`,
+        protocolNumber: `PRT-2026-${Math.floor(1000 + Math.random() * 9000)}`,
+        quoteId: quote.id,
+        requestId: req.id,
+        serviceTitle: req.title,
+        customerName: req.customer.name,
+        customerPhone: req.customer.maskedPhone || '0532 444 55 66',
+        customerAddress: `${req.location.neighborhood}, ${req.location.district} / ${req.location.city}`,
+        merchantName: quote.merchantName,
+        merchantPhone: quote.phone,
+        merchantIban: 'TR44 0006 2000 1234 5678 9012 34',
+        agreedPrice: quote.price,
+        agreedDuration: quote.duration,
+        jobScopeDescription: quote.note || req.description,
+        directPaymentMethod: 'NAKIT',
+        status: 'PENDING_WORK',
+        reputationPointsAwarded: 10,
+        tamPazarCertifiedBadge: true,
+        createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      };
+
+      saveDigitalProtocol(newProtocol);
       loadData();
-      showToast(`🎉 Tebrikler! ${quote.merchantName} teklifini kabul ettiniz. İletişim bilgileri açıldı.`);
+      showToast(`🎉 Tebrikler! ${quote.merchantName} teklifini kabul ettiniz. İki Taraflı Dijital İş Protokolü oluşturuldu.`);
     }
+  };
+
+  const handleConfirmCompletionSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!completionModalProtocol) return;
+
+    confirmServiceProtocolCompletion(completionModalProtocol.id, completionRating);
+    setCompletionModalProtocol(null);
+    loadData();
+    showToast(`🌟 Hizmet onaylandı! ${completionModalProtocol.merchantName} işletmesine +10 Güvenilirlik Puanı tanımlandı.`);
   };
 
   const handleRejectQuote = (quoteId: string) => {
@@ -394,36 +444,129 @@ export default function CustomerQuotationsTab({ initialRequestId }: CustomerQuot
                                   </div>
                                 )}
 
-                                {/* KABUL EDİLMİŞ DURUMDA İLETİŞİM KARTI */}
-                                {isThisAccepted && (
-                                  <div className="bg-emerald-50 rounded-2xl p-4 border border-emerald-200 space-y-3">
-                                    <div className="flex items-center justify-between">
-                                      <span className="font-black text-emerald-950 flex items-center gap-1.5">
-                                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                        Esnaf ile Anlaşma Sağlandı! Doğrudan İletişime Geçin:
-                                      </span>
-                                    </div>
+                                {/* KABUL EDİLMİŞ DURUMDA İKİ TARAFLI DİJİTAL İŞ PROTOKOLÜ & TEYİT PANELİ */}
+                                {isThisAccepted && (() => {
+                                  const matchingProtocol = protocols.find(p => p.quoteId === q.id || p.requestId === req.id);
+                                  const isCompleted = matchingProtocol?.status === 'COMPLETED_VERIFIED';
 
-                                    <div className="flex flex-col sm:flex-row gap-3 pt-1">
-                                      <a
-                                        href={`tel:${q.phone}`}
-                                        className="flex-1 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-2xs"
-                                      >
-                                        <Phone className="w-4 h-4 text-emerald-600" />
-                                        <span>Telefonla Ara ({q.phone})</span>
-                                      </a>
-                                      <a
-                                        href={`https://wa.me/${q.whatsapp}?text=Merhaba%20${encodeURIComponent(q.merchantName)},%20TamPazar%20üzerinden%20verdiğiniz%20${encodeURIComponent(req.title)}%20için%20${q.price}%20TL%20teklifinizi%20kabul%20ettim.`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-2xs"
-                                      >
-                                        <MessageCircle className="w-4 h-4" />
-                                        <span>WhatsApp İle Konuş</span>
-                                      </a>
+                                  return (
+                                    <div className="bg-emerald-50/70 rounded-3xl p-5 border border-emerald-200 space-y-4">
+                                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-emerald-200/80 pb-3">
+                                        <div className="flex items-center gap-2">
+                                          <span className="p-1.5 rounded-xl bg-emerald-600 text-white font-black">
+                                            <FileCheck2 className="w-4 h-4" />
+                                          </span>
+                                          <div>
+                                            <span className="font-black text-emerald-950 text-sm block">
+                                              İki Taraflı Dijital İş Protokolü
+                                            </span>
+                                            <span className="font-mono text-[10px] text-emerald-700">
+                                              Protokol No: {matchingProtocol?.protocolNumber || `PRT-2026-${q.id.slice(-4)}`}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        <div className="flex items-center gap-2">
+                                          {isCompleted ? (
+                                            <span className="px-3 py-1 bg-emerald-600 text-white font-black text-xs rounded-full flex items-center gap-1 shadow-xs">
+                                              <CheckCircle2 className="w-3.5 h-3.5" />
+                                              Hizmet Eksiksiz Tamamlandı & Doğrulandı
+                                            </span>
+                                          ) : (
+                                            <span className="px-3 py-1 bg-amber-500 text-slate-950 font-black text-xs rounded-full animate-pulse shadow-xs">
+                                              ⚡ İş Sürecinde / Adrese Ulaşım Bekleniyor
+                                            </span>
+                                          )}
+                                        </div>
+                                      </div>
+
+                                      {/* PROTOKOL MADDELERİ & DOĞRUDAN ÖDEME İLKESİ */}
+                                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                                        <div className="bg-white/80 p-3 rounded-2xl border border-emerald-100 space-y-1">
+                                          <span className="text-[10px] font-bold text-slate-500 uppercase block">Anlaşılan Net Tutar</span>
+                                          <span className="font-black text-slate-900 font-mono text-sm">₺{q.price.toLocaleString('tr-TR')}</span>
+                                          <span className="text-[10px] text-emerald-700 font-semibold block">%0 Platform Kesintisi</span>
+                                        </div>
+
+                                        <div className="bg-white/80 p-3 rounded-2xl border border-emerald-100 space-y-1">
+                                          <span className="text-[10px] font-bold text-slate-500 uppercase block">Tahmini Süre</span>
+                                          <span className="font-bold text-slate-900 block">{q.duration}</span>
+                                          <span className="text-[10px] text-slate-500 block">Zamanında Teslim Garantisi</span>
+                                        </div>
+
+                                        <div className="bg-white/80 p-3 rounded-2xl border border-emerald-100 space-y-1">
+                                          <span className="text-[10px] font-bold text-slate-500 uppercase block">Doğrudan Tahsilat</span>
+                                          <span className="font-bold text-slate-900 block">Kapıda Nakit / IBAN / Kendi POS</span>
+                                          <span className="text-[10px] text-indigo-700 font-semibold block">Havuzsuz Doğrudan Ödeme</span>
+                                        </div>
+                                      </div>
+
+                                      {/* Şeffaflık Rozeti */}
+                                      <div className="p-3 bg-white/90 rounded-2xl border border-emerald-200 text-[11px] text-slate-700 flex items-start gap-2.5">
+                                        <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                                        <p className="leading-snug">
+                                          <strong>Sıfır Havuz Güvencesi:</strong> TamPazar paranızı havuzda bekletmez veya komisyon kesmez. İş tamamlandığında ustanın hizmetini onaylayıp ödemenizi doğrudan ustanın kendisine (Nakit/IBAN) yaparsınız.
+                                        </p>
+                                      </div>
+
+                                      {/* DOĞRUDAN İLETİŞİM BUTONLARI & ONAY BUTONU */}
+                                      <div className="flex flex-col sm:flex-row items-center gap-3 pt-1">
+                                        <a
+                                          href={`tel:${q.phone}`}
+                                          className="w-full sm:w-auto flex-1 py-2.5 rounded-xl bg-white hover:bg-slate-100 border border-slate-200 text-slate-900 font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-2xs"
+                                        >
+                                          <Phone className="w-4 h-4 text-emerald-600" />
+                                          <span>Telefonla Ara ({q.phone})</span>
+                                        </a>
+
+                                        <a
+                                          href={`https://wa.me/${q.whatsapp}?text=Merhaba%20${encodeURIComponent(q.merchantName)},%20TamPazar%20üzerinden%20verdiğiniz%20${encodeURIComponent(req.title)}%20için%20${q.price}%20TL%20teklifinizi%20kabul%20ettim.`}
+                                          target="_blank"
+                                          rel="noreferrer"
+                                          className="w-full sm:w-auto flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition shadow-2xs"
+                                        >
+                                          <MessageCircle className="w-4 h-4" />
+                                          <span>WhatsApp İle Konuş</span>
+                                        </a>
+
+                                        {!isCompleted ? (
+                                          <button
+                                            onClick={() => setCompletionModalProtocol(matchingProtocol || {
+                                              id: `proto-${Date.now()}`,
+                                              protocolNumber: `PRT-2026-${q.id.slice(-4)}`,
+                                              quoteId: q.id,
+                                              requestId: req.id,
+                                              serviceTitle: req.title,
+                                              customerName: req.customer.name,
+                                              customerPhone: req.customer.maskedPhone || '0532 444 55 66',
+                                              customerAddress: `${req.location.neighborhood}, ${req.location.district}`,
+                                              merchantName: q.merchantName,
+                                              merchantPhone: q.phone,
+                                              merchantIban: 'TR44 0006 2000 1234 5678 9012 34',
+                                              agreedPrice: q.price,
+                                              agreedDuration: q.duration,
+                                              jobScopeDescription: q.note || req.description,
+                                              directPaymentMethod: 'NAKIT',
+                                              status: 'PENDING_WORK',
+                                              reputationPointsAwarded: 10,
+                                              tamPazarCertifiedBadge: true,
+                                              createdAt: new Date().toISOString().slice(0, 16)
+                                            })}
+                                            className="w-full sm:w-auto px-5 py-2.5 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B132B] font-black text-xs rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                                          >
+                                            <Award className="w-4 h-4" />
+                                            <span>✓ Hizmet Eksiksiz Tamamlandı (İşi Onayla)</span>
+                                          </button>
+                                        ) : (
+                                          <div className="flex items-center gap-1.5 text-emerald-800 font-black text-xs bg-emerald-100/90 px-3.5 py-2 rounded-xl border border-emerald-300">
+                                            <Award className="w-4 h-4 text-amber-600" />
+                                            <span>+10 Güvenilirlik Puanı ve Onaylı Rozet Tanımlandı</span>
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
-                                  </div>
-                                )}
+                                  );
+                                })()}
 
                                 {/* HENÜZ KABUL EDİLMEMİŞSE AKSİYON BUTONLARI */}
                                 {!acceptedQuote && !isThisRejected && (
@@ -528,6 +671,125 @@ export default function CustomerQuotationsTab({ initialRequestId }: CustomerQuot
                 >
                   <Send className="w-3.5 h-3.5 text-amber-400" />
                   <span>Soruyu Gönder</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. MODAL: HİZMET EKSİKSİZ TAMAMLANDI & DOĞRUDAN ÖDEME ONAYI */}
+      {completionModalProtocol && (
+        <div className="fixed inset-0 z-50 bg-[#0B132B]/80 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-4 animate-fade-in text-xs">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-emerald-100 text-emerald-800 font-black">
+                  <Award className="w-5 h-5 text-emerald-600" />
+                </span>
+                <div>
+                  <h4 className="font-black text-slate-900 text-sm">
+                    Hizmet Tamamlama & Doğrudan Teyit
+                  </h4>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    Protokol: #{completionModalProtocol.protocolNumber}
+                  </span>
+                </div>
+              </div>
+              <button 
+                onClick={() => setCompletionModalProtocol(null)}
+                className="p-1 text-slate-400 hover:text-slate-600 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmCompletionSubmit} className="space-y-4">
+              {/* Bilgilendirme */}
+              <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 space-y-2">
+                <span className="font-bold text-emerald-950 block text-xs">
+                  {completionModalProtocol.merchantName} işi eksiksiz teslim etti mi?
+                </span>
+                <p className="text-[11px] text-emerald-900/80 leading-relaxed">
+                  Onayınızla birlikte esnafa platform üzerinde <strong>+10 Güvenilirlik Puanı</strong> ve <strong>TamPazar Onaylı Rozet</strong> tanımlanacaktır.
+                </p>
+                <div className="pt-1 flex items-center justify-between font-mono font-bold text-xs border-t border-emerald-200/60">
+                  <span className="text-slate-700">Doğrudan Ödenecek Tutar:</span>
+                  <span className="text-emerald-900 text-sm">₺{completionModalProtocol.agreedPrice.toLocaleString('tr-TR')}</span>
+                </div>
+              </div>
+
+              {/* Usta Değerlendirme Yıldızları */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">Usta Deneyiminizi Puanlayın *</label>
+                <div className="flex items-center gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setCompletionRating(star)}
+                      className="p-1 text-amber-400 hover:scale-110 transition cursor-pointer"
+                    >
+                      <Star className={`w-6 h-6 ${star <= completionRating ? 'fill-amber-400 text-amber-400' : 'text-slate-300'}`} />
+                    </button>
+                  ))}
+                  <span className="font-black text-slate-900 ml-2 font-mono text-sm">
+                    {completionRating} / 5 Yıldız
+                  </span>
+                </div>
+              </div>
+
+              {/* Doğrudan Ödeme Yöntemi Teyidi */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1.5">Ustaya Nasıl Ödeme Yapacaksınız? *</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { id: 'NAKIT', label: '💵 Elden Nakit' },
+                    { id: 'IBAN', label: '🏦 IBAN / FAST' },
+                    { id: 'KREDI_KARTI_POS', label: '💳 Usta Mobil POS' }
+                  ].map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setSelectedPayMethod(m.id as any)}
+                      className={`p-2.5 rounded-xl border text-center font-bold text-xs transition cursor-pointer ${
+                        selectedPayMethod === m.id
+                          ? 'bg-[#0F4C3A] text-white border-[#0F4C3A] shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                      }`}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Usta İçin Yorum / Deneyim */}
+              <div>
+                <label className="font-bold text-slate-700 block mb-1">Kısa Değerlendirme & Teşekkür Notu (Opsiyonel)</label>
+                <input
+                  type="text"
+                  value={completionNote}
+                  onChange={(e) => setCompletionNote(e.target.value)}
+                  placeholder="Örn: Zamanında geldi, temiz ve titiz çalıştı. Teşekkürler."
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none text-slate-800"
+                />
+              </div>
+
+              <div className="flex gap-2 pt-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setCompletionModalProtocol(null)}
+                  className="w-1/3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
+                >
+                  Vazgeç
+                </button>
+                <button
+                  type="submit"
+                  className="w-2/3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-xl shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  <span>İşi Onayla & Rozet Tanımla</span>
                 </button>
               </div>
             </form>

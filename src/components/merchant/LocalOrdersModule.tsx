@@ -3,12 +3,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Bell, Volume2, Clock, CheckCircle2, Bike, Utensils, 
-  MapPin, Phone, Printer, AlertCircle, Sparkles, Check, ArrowRight 
+  MapPin, Phone, Printer, AlertCircle, Sparkles, Check, ArrowRight,
+  Heart, MessageSquare, ShieldCheck, Wallet, RefreshCw
 } from 'lucide-react';
-import { HybridOrder, playOrderAlertChime } from '../../data/hybridCommerceData';
+import { 
+  HybridOrder, 
+  playOrderAlertChime, 
+  formatPaymentMethodText, 
+  generateWhatsAppOrderUrl,
+  getStoredSuspendedItems,
+  deliverSuspendedItem,
+  SuspendedItemRecord 
+} from '../../data/hybridCommerceData';
 import OrderCustomizationDisplay from './OrderCustomizationDisplay';
 
 interface LocalOrdersModuleProps {
@@ -19,6 +28,31 @@ interface LocalOrdersModuleProps {
 export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: LocalOrdersModuleProps) {
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [testSoundPlayed, setTestSoundPlayed] = useState(false);
+  const [suspendedItems, setSuspendedItems] = useState<SuspendedItemRecord[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  const loadSuspended = () => {
+    setSuspendedItems(getStoredSuspendedItems());
+  };
+
+  useEffect(() => {
+    loadSuspended();
+    window.addEventListener('tampazar_suspended_updated', loadSuspended);
+    return () => window.removeEventListener('tampazar_suspended_updated', loadSuspended);
+  }, []);
+
+  const showToast = (msg: string) => {
+    setToastMessage(msg);
+    setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  const handleDeliverSuspended = (id: string, name: string) => {
+    const ok = deliverSuspendedItem(id);
+    if (ok) {
+      loadSuspended();
+      showToast(`🥖 1 Adet "${name}" ihtiyaç sahibine teslim edildi ve askıdan düşüldü.`);
+    }
+  };
 
   const localOrders = orders.filter(o => o.deliveryType === 'LOCAL_EXPRESS');
 
@@ -43,6 +77,14 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
 
   return (
     <div className="space-y-6">
+      {/* Toast Alert */}
+      {toastMessage && (
+        <div className="fixed top-6 right-6 z-50 bg-[#0B132B] text-white px-5 py-3 rounded-2xl shadow-2xl border border-slate-700 flex items-center gap-3 animate-fade-in text-xs font-bold">
+          <Heart className="w-5 h-5 text-amber-400 shrink-0 fill-amber-400" />
+          <span>{toastMessage}</span>
+        </div>
+      )}
+
       {/* Üst Canlı Zil ve Kontrol Barı */}
       <div className="bg-gradient-to-r from-amber-500 via-amber-400 to-yellow-400 rounded-3xl p-6 text-slate-950 shadow-md flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -78,6 +120,69 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
         </div>
       </div>
 
+      {/* ASKIDA MAHALLE & DAYANIŞMA KASASI PANELİ (Esnaf Yönetimi) */}
+      <div className="bg-white rounded-3xl p-6 border border-amber-200 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center font-black">
+              <Heart className="w-5 h-5 fill-amber-500" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-slate-900 text-base">Askıda Mahalle & Dayanışma Kasası</h3>
+                <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
+                  Direkt Esnaf Mutabakatı
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                Mahalle sakinlerinin sipariş verirken bıraktığı askıdaki ürünler. İhtiyaç sahibine teslim ettikçe düşebilirsiniz.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-slate-500">Toplam Bekleyen Askı:</span>
+            <span className="px-3 py-1 bg-amber-500 text-slate-950 font-black text-sm rounded-xl font-mono">
+              {suspendedItems.reduce((sum, item) => sum + item.count, 0)} Adet
+            </span>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+          {suspendedItems.map((item) => (
+            <div key={item.id} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col justify-between space-y-3">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h4 className="font-black text-slate-900 text-sm">{item.typeName}</h4>
+                  <span className="text-[11px] text-slate-500 block">{item.storeName}</span>
+                </div>
+                <div className="text-right">
+                  <span className="text-xl font-black text-amber-600 font-mono block">{item.count}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase">Askıda Bekleyen</span>
+                </div>
+              </div>
+
+              <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-[11px]">
+                <span className="text-slate-500">
+                  Teslim Edilen: <strong>{item.deliveredCount} Adet</strong>
+                </span>
+                <span className="text-slate-700 font-bold font-mono">₺{item.unitPrice} / Birim</span>
+              </div>
+
+              <button
+                type="button"
+                disabled={item.count <= 0}
+                onClick={() => handleDeliverSuspended(item.id, item.typeName)}
+                className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+              >
+                <Check className="w-3.5 h-3.5" />
+                <span>İhtiyaç Sahibine Teslim Et (Askıdan Düş)</span>
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Sipariş Akış Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {localOrders.length === 0 ? (
@@ -106,7 +211,7 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
               >
                 {/* Durum Rozeti */}
                 <div className="flex items-center justify-between gap-2 mb-3">
-                  <span className="font-mono font-bold text-xs text-slate-900">{order.orderNumber}</span>
+                  <span className="font-mono font-bold text-xs text-slate-900">#{order.orderNumber}</span>
                   {isRinging && (
                     <span className="bg-rose-500 text-white font-black text-[10px] px-2.5 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
@@ -173,14 +278,32 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
                       />
                     </div>
                   ))}
+
+                  {/* Askıda Katkısı Varsa */}
+                  {order.suspendedContribution && (
+                    <div className="p-2 bg-amber-50 rounded-xl border border-amber-200 text-amber-900 font-bold text-[11px] flex items-center justify-between">
+                      <span className="flex items-center gap-1">
+                        <Heart className="w-3 h-3 text-amber-600 fill-amber-500" />
+                        {order.suspendedContribution.count}x {order.suspendedContribution.typeName}
+                      </span>
+                      <span className="font-mono">+₺{order.suspendedContribution.totalAmount}</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Fiyat & Ödeme Tipi */}
-                <div className="pt-3 border-t border-slate-100 flex items-baseline justify-between mb-4">
-                  <span className="text-xs text-slate-500 font-bold">
-                    {order.paymentMethod === 'PAYTR_POS' ? 'Online Ödendi (PayTR)' : 'Kapıda Nakit / POS'}
+                {/* Fiyat & Doğrudan Ödeme Tipi */}
+                <div className="pt-3 border-t border-slate-100 flex flex-col gap-1 mb-4">
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-xs text-emerald-800 font-bold">
+                      {formatPaymentMethodText(order.paymentMethod)}
+                    </span>
+                    <span className="text-lg font-black text-slate-900 font-mono">
+                      ₺{order.totalAmount.toLocaleString('tr-TR')}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-slate-400">
+                    🛡️ TamPazar Komisyonu: %0 (Doğrudan Esnaf Kasası)
                   </span>
-                  <span className="text-lg font-black text-slate-900">₺{order.totalAmount.toLocaleString('tr-TR')}</span>
                 </div>
 
                 {/* Kurye Bilgisi */}
@@ -193,7 +316,7 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
                   </div>
                 )}
 
-                {/* Aksiyon Butonları */}
+                {/* Aksiyon Butonları & WhatsApp Fişi */}
                 <div className="space-y-2">
                   {isRinging && (
                     <button
@@ -225,6 +348,17 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
                     </button>
                   )}
 
+                  {/* WHATSAPP SİPARİŞ FİŞİ SİMÜLATÖRÜ */}
+                  <a
+                    href={generateWhatsAppOrderUrl(order.customerPhone || '905324445566', order)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-black text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>WhatsApp Sipariş Fişi Gönder</span>
+                  </a>
+
                   <button
                     onClick={() => window.print()}
                     className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1"
@@ -240,3 +374,4 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
     </div>
   );
 }
+
