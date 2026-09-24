@@ -123,7 +123,7 @@ export default function AdvancedLedgerAccountModal({
                 <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-100/70 px-2 py-0.5 rounded-full">
                   Ön Muhasebe & ERP
                 </span>
-                <span className="text-[10px] font-bold text-slate-400">BizimHesap & Paraşüt Standardı</span>
+                <span className="text-[10px] font-bold text-slate-400">GİB & E-Fatura Uyumlu</span>
               </div>
               <h2 className="text-base font-black text-slate-900 mt-0.5">
                 Yeni Cari Hesap Kartı Tanımla

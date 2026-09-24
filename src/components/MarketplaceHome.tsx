@@ -324,7 +324,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'cargo',
       title: 'Ulusal Kargo & Pazaryeri Vitrini',
       subtitle: 'Tüm Türkiye’ye %0 komisyonla doğrudan üretici ve butik esnafından kargolu ürünler.',
-      badgeText: 'Trendyol / Amazon Modeli',
+      badgeText: 'TamKargo · Ulusal Dağıtım',
       badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
       icon: Truck,
       cardBadgeColor: 'bg-amber-500 text-slate-950',
@@ -342,7 +342,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'local_food',
       title: 'Sıcak Yerel Sipariş & Mahalle Lezzetleri',
       subtitle: '30-45 dakikada kapınızda! Komisyonsuz doğrudan mahalle fırını, pidecisi ve manavından.',
-      badgeText: 'Yemeksepeti / Getir Modeli · 30-45 Dk',
+      badgeText: 'TamHızlı · 30-45 Dk Ekspres',
       badgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
       icon: Utensils,
       cardBadgeColor: 'bg-rose-600 text-white animate-pulse',
@@ -359,7 +359,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'emergency',
       title: 'Acil Nöbetçi Hizmetler & Yerel Ustalar',
       subtitle: 'En yakın ustayı haritada görün, 15 dakikada kapınıza çağırın veya doğrudan telefonla arayın.',
-      badgeText: 'Armut / Çilingir / Yol Yardım Modeli · En Yakın Usta',
+      badgeText: 'TamUsta · En Yakın Nöbetçi Usta',
       badgeColor: 'bg-red-100 text-red-900 border-red-300',
       icon: Wrench,
       cardBadgeColor: 'bg-red-600 text-white',
@@ -393,7 +393,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'digital',
       title: 'Anında Dijital İndirme',
       subtitle: 'Kargo beklemeden satın alın, lisanslı ZIP, DST, PES, DXF ve STL dosyalarını anında indirin.',
-      badgeText: 'Etsy & Gumroad Modeli · Sıfır Kargo',
+      badgeText: 'TamDijital · Sıfır Kargo Anında İndirme',
       badgeColor: 'bg-cyan-100 text-cyan-900 border-cyan-300',
       icon: FileCode,
       cardBadgeColor: 'bg-cyan-700 text-white',
@@ -410,7 +410,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'session',
       title: 'Uzaktan Canlı Seans & Özel Ders',
       subtitle: 'Google Meet HD üzerinden birebir online psikolojik terapi, yabancı dil eğitimi ve danışmanlık.',
-      badgeText: 'Superpeer & Calendly Modeli · Canlı Görüşme',
+      badgeText: 'TamSeans · Canlı Online Görüşme',
       badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
       icon: Video,
       cardBadgeColor: 'bg-blue-600 text-white',
@@ -430,7 +430,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'restaurant',
       name: 'Restoran & Kafe',
       icon: Utensils,
-      modelBadge: 'Yemeksepeti / Getir Alternatifi · %0 Komisyon',
+      modelBadge: 'TamHızlı Restoran · %0 Komisyon',
       title: 'Kendi Kuryenizle %0 Komisyonla Sıcak Sipariş Alın',
       desc: 'Masaüstü ve tabletler için sesli sipariş uyarı ziliyle siparişleri kaçırmayın. Aracı teslimat şirketlerine cironuzun %35\'ini kaptırmayın.',
       painOld: 'Her 100 ₺ siparişte %35 komisyon + teslimat kesintisi + 30 gün bloke',
@@ -448,7 +448,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'craftsman',
       name: 'Yerel Usta & Servis',
       icon: Wrench,
-      modelBadge: 'Armut / Çilingir / Yol Yardım Alternatifi · %0 Komisyon',
+      modelBadge: 'TamUsta Saha Servisi · %0 Komisyon',
       title: 'Şehrin Haritasında Canlı Konum Bildirin, Komisyonsuz Teklif Toplayın',
       desc: 'Çilingir, oto kurtarıcı, elektrik ve sıhhi tesisat ustaları harita üzerinde 1.2 km yakındaki müşterilere doğrudan telefon ve WhatsApp ile ulaşır.',
       painOld: 'Teklif vermek için peşin para ödemek, aracıya her işten pay vermek',
@@ -466,7 +466,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'retail',
       name: 'Butik & Üretici',
       icon: ShoppingBag,
-      modelBadge: 'Trendyol / Hepsiburada Alternatifi · %0 Komisyon',
+      modelBadge: 'TamKargo Pazaryeri · %0 Komisyon',
       title: 'Tüm Türkiye’ye Kendi Markanız ve Kendi Sanal POS’unuzla Satış',
       desc: 'Ayakkabı, tekstil, mobilya ve yöresel gıda üreticileri için anlaşmalı indirimli kargo, varyant stok yönetimi ve ertesi gün nakit akışı.',
       painOld: '%25 pazaryeri komisyonu, 45 günlük vadeler ve keyfi iade cezaları',
@@ -484,7 +484,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'education',
       name: 'Eğitim & Uzman',
       icon: GraduationCap,
-      modelBadge: 'Superpeer / Calendly Alternatifi · Canlı Görüşme',
+      modelBadge: 'TamSeans Canlı Takvim · Doğrudan Tahsilat',
       title: 'Google Meet HD Canlı Seansları ile Peşin Tahsilatlı Danışmanlık',
       desc: 'Klinik psikologlar, uzman diyetisyenler, dil eğitmenleri ve danışmanlar için takvim yönetimli, peşin ödemeli birebir görüntülü görüşme.',
       painOld: 'Yabancı platformlara yüksek döviz komisyonları ve karmaşık takvimler',
@@ -520,10 +520,10 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       id: 'digital',
       name: 'Dijital Tasarımcı',
       icon: FileCode,
-      modelBadge: 'Etsy & Gumroad Alternatifi · Anında İndirme',
+      modelBadge: 'TamDijital Dosya Dağıtımı · Anında Teslim',
       title: 'Nakış Deseni, CNC Çizimi ve 3D STL Dosyalarınızı Komisyonsuz Satın',
       desc: 'Kargo maliyeti yok, paketleme yok! Satın alındığı anda müşteriye güvenli lisanslı indirme bağlantısı teslim edilir.',
-      painOld: 'Etsy\'nin yüksek komisyonları, PayPal zorunluluğu ve mağaza kapatma riskleri',
+      painOld: 'Klasik pazaryerlerinin yüksek komisyonları, yabancı ödeme zorunlulukları ve gecikmeli hak edişler',
       gainTamPazar: 'Tüm dünyaya kendi Sanal POS\'unuzla ZIP/DST/DXF satın, paranız hemen yatsın.',
       features: [
         'DST, PES, DXF, SVG, STL, PDF ve ZIP güvenli dosya teslimatı',
@@ -600,7 +600,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
             >
               <Layers className="w-3.5 h-3.5 text-amber-400" />
               <span>B2B Toptan & Dropship</span>
-              <span className="bg-[#F59E0B] text-[#0B132B] text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Faire</span>
+              <span className="bg-[#F59E0B] text-[#0B132B] text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Toptan</span>
             </Link>
 
             <button 

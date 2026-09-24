@@ -1204,12 +1204,12 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                     </div>
                   )}
 
-                  {/* E) ETSY MODELİ: CANLI KİŞİSELLEŞTİRME & LAZER BASKI KUTUSU */}
+                  {/* E) CANLI KİŞİSELLEŞTİRME & LAZER BASKI KUTUSU */}
                   <div className="bg-amber-50/70 border border-amber-200 p-4 rounded-2xl space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
                         <Sparkles className="w-4 h-4 text-amber-600" />
-                        <span>Canlı Kişiselleştirme & Zanaatkar Notu (Etsy Modeli)</span>
+                        <span>Canlı Kişiselleştirme & Zanaatkar Notu</span>
                       </div>
                       <span className="text-[10px] bg-amber-200 text-amber-950 px-2 py-0.5 rounded font-black">
                         Lazer / El İşçiliği
@@ -1277,13 +1277,13 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                 </div>
               )}
 
-              {/* G) ALIBABA MODELİ: KADEMELİ FİYAT SKALASI & MOQ */}
+              {/* G) KADEMELİ FİYAT SKALASI & MOQ */}
               {!isDigital && !isSession && (
                 <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
                       <Layers className="w-4 h-4 text-indigo-600" />
-                      <span>Kademeli Toplu Alım İndirimi (Alibaba Modeli)</span>
+                      <span>Kademeli Toplu Alım İndirimi (TamPazar B2B)</span>
                     </div>
                     <span className="text-[10px] bg-indigo-100 text-indigo-900 px-2 py-0.5 rounded font-black">
                       %0 Komisyonlu Toptan
@@ -1524,7 +1524,7 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
         </div>
 
         {/* ========================================================= */}
-        {/* AMAZON MODELİ: ÇAPRAZ SATIŞ ("Mahallede Birlikte İyi Gider") */}
+        {/* ÇAPRAZ SATIŞ ("Mahallede Birlikte İyi Gider") */}
         {/* ========================================================= */}
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 md:p-8 space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-4">
@@ -1534,7 +1534,7 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   <ShoppingBag className="w-4 h-4" />
                 </span>
                 <h3 className="text-lg font-black text-slate-900">
-                  Mahallede Birlikte İyi Gider (Amazon Çapraz Satış Modülü)
+                  Mahallede Birlikte İyi Gider
                 </h3>
               </div>
               <p className="text-xs text-slate-500 mt-1">
@@ -2167,7 +2167,7 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   type="submit"
                   className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-black text-xs rounded-xl shadow-md cursor-pointer transition"
                 >
-                  Numune Talebini Gönder (Alibaba B2B Modeli)
+                  Numune Talebini Gönder (TamPazar B2B)
                 </button>
               </form>
             )}

@@ -92,7 +92,7 @@ export default function AdvancedProductModal({
   const [serviceRadiusKm, setServiceRadiusKm] = useState<number>(25);
   const [isOnSiteService, setIsOnSiteService] = useState(true);
 
-  // TamDijital (Etsy & Gumroad Modeli)
+  // TamDijital Dosya Yapılandırması
   const [digitalFileName, setDigitalFileName] = useState('Nakis_Deseni_Tasarim_v1.zip');
   const [digitalFileSize, setDigitalFileSize] = useState('14.8 MB');
   const [digitalFileUrl, setDigitalFileUrl] = useState('https://storage.tampazar.com/dijital/nakis-deseni-v1.zip');
@@ -100,7 +100,7 @@ export default function AdvancedProductModal({
   const [newFormatInput, setNewFormatInput] = useState('');
   const [licenseType, setLicenseType] = useState<'personal' | 'commercial'>('commercial');
 
-  // TamSeans (Superpeer & Calendly Modeli)
+  // TamSeans Canlı Randevu
   const [sessionDurationMin, setSessionDurationMin] = useState<30 | 45 | 60>(45);
   const [availableDays, setAvailableDays] = useState<string[]>(['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma']);
   const [availableHours, setAvailableHours] = useState<string[]>(['10:00', '11:30', '14:00', '15:30', '17:00']);
@@ -1129,7 +1129,7 @@ export default function AdvancedProductModal({
                     </p>
                   </div>
 
-                  {/* 4. DİJİTAL DOSYA İNDİRME (Etsy & Gumroad Modeli) */}
+                  {/* 4. DİJİTAL DOSYA İNDİRME */}
                   <div
                     onClick={() => setProductType('digital_download')}
                     className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
@@ -1150,7 +1150,7 @@ export default function AdvancedProductModal({
                     </p>
                   </div>
 
-                  {/* 5. UZAKTAN CANLI SEANS (Superpeer Modeli) */}
+                  {/* 5. UZAKTAN CANLI SEANS */}
                   <div
                     onClick={() => setProductType('online_session')}
                     className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
@@ -1305,7 +1305,7 @@ export default function AdvancedProductModal({
                 </div>
               )}
 
-              {/* TamDijital (Etsy & Gumroad Modeli) Detayları */}
+              {/* TamDijital Detayları */}
               {productType === 'digital_download' && (
                 <div className="bg-purple-50/50 p-5 rounded-2xl border border-purple-200 space-y-5 animate-fade-in">
                   <div className="flex items-center justify-between pb-2 border-b border-purple-100">
@@ -1502,7 +1502,7 @@ export default function AdvancedProductModal({
                 </div>
               )}
 
-              {/* TamSeans (Superpeer & Calendly Modeli) Detayları */}
+              {/* TamSeans Detayları */}
               {productType === 'online_session' && (
                 <div className="bg-cyan-50/50 p-5 rounded-2xl border border-cyan-200 space-y-5 animate-fade-in">
                   <div className="flex items-center justify-between pb-2 border-b border-cyan-100">
@@ -1877,7 +1877,7 @@ export default function AdvancedProductModal({
                 )}
               </div>
 
-              {/* 2. Dropshipping'e İzin Ver Toggle (Faire & Spocket Modeli) */}
+              {/* 2. Dropshipping'e İzin Ver Toggle */}
               <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
@@ -2074,7 +2074,7 @@ export default function AdvancedProductModal({
                   <div>
                     <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
                       <Utensils className="w-4 h-4 text-rose-600" />
-                      b) Yemek & Restoran İçin Malzeme Seçici (Yemeksepeti / Döner Modeli)
+                      b) Yemek & Restoran İçin Malzeme Seçici (Menü Özelleştirme)
                     </h4>
                     <p className="text-xs text-slate-500">
                       Müşterinin "Soğansız", "Turşusuz" seçimi yapmasını ve "+Ekstra Kaşar", "+Çift Lavaş" eklemesini sağlar.

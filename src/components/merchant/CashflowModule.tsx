@@ -109,7 +109,7 @@ export default function CashflowModule({ accounts, transactions, onAddTransactio
           <div className={`text-2xl font-black ${netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
             ₺{netProfit.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
           </div>
-          <span className="text-[10px] text-slate-500 block font-medium">BizimHesap/Paraşüt anlık kâr hesabı</span>
+          <span className="text-[10px] text-slate-500 block font-medium">Esnaf anlık kâr hesabı</span>
         </div>
       </div>
 

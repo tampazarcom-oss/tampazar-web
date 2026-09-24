@@ -133,7 +133,7 @@ export default function B2BDropshippingModule({
         <div className="space-y-2 relative z-10">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/20 text-amber-400 text-xs font-black uppercase tracking-wider">
             <Layers className="w-3.5 h-3.5" />
-            Faire & Spocket Modeli
+            TamPazar B2B & Tedarik Ağı
           </div>
           <h2 className="text-2xl font-black text-white">
             B2B Toptan Ticaret & Esnaftan Esnafa Dropshipping Merkezi

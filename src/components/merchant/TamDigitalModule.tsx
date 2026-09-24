@@ -110,7 +110,7 @@ export default function TamDigitalModule({ products, onOpenNewProductModal }: Ta
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/20 text-purple-200 rounded-full text-xs font-bold border border-purple-400/30">
               <Download className="w-3.5 h-3.5 text-purple-300" />
-              <span>TamDijital • Etsy & Gumroad Esnaf Modeli</span>
+              <span>TamDijital • Dijital Dosya & Tasarım Dağıtımı</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
               Dijital Dosya Satışları & İndirme Yönetimi

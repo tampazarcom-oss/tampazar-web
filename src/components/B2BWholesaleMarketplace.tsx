@@ -165,7 +165,7 @@ export default function B2BWholesaleMarketplace() {
     setCustomRetailPrice(product.suggestedRetailPrice || Math.round((product.b2bWholesalePrice || product.price) * 1.5));
   };
 
-  // Execute Dropship Import (Faire / Spocket Model)
+  // Execute Dropship Import (TamPazar B2B Modeli)
   const handleExecuteDropshipImport = () => {
     if (!dropshipModalProduct) return;
 
@@ -549,7 +549,7 @@ export default function B2BWholesaleMarketplace() {
                           <button
                             type="button"
                             onClick={() => {
-                              showToast(`"${product.title}" için 1 adet numune talebiniz üreticiye iletildi. (Alibaba Modeli)`);
+                              showToast(`"${product.title}" için 1 adet numune talebiniz üreticiye iletildi.`);
                             }}
                             className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-[11px] rounded-xl border border-slate-200 transition flex items-center justify-center gap-1.5 cursor-pointer"
                           >

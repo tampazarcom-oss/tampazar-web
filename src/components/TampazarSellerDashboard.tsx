@@ -11,12 +11,12 @@ import {
   TrendingUp, TrendingDown, ArrowUpRight, DollarSign, Euro,
   ChevronDown, PlusCircle, CheckCircle2, ShieldCheck, Download,
   Layers, ArrowLeft, ExternalLink, Sparkles, MessageCircle,
-  Printer, Eye, AlertCircle, RefreshCw, Check, Edit2, Trash2, X, Plus, Filter, Video
+  Printer, Eye, AlertCircle, RefreshCw, Check, Edit2, Trash2, X, Plus, Filter, Video, Heart, Key
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
-  Invoice, LedgerAccount, LedgerTransaction, Product,
-  initialInvoices, initialLedgerAccounts, initialLedgerTransactions, initialProducts 
+  Invoice, LedgerAccount, LedgerTransaction, Product, Tenant,
+  initialInvoices, initialLedgerAccounts, initialLedgerTransactions, initialProducts, initialTenants 
 } from '../data/mockData';
 import {
   HybridOrder, WalletAccount, CashflowTransaction, MerchantSubscription,
@@ -35,6 +35,9 @@ import TamTeklifOpportunitiesModule from './merchant/TamTeklifOpportunitiesModul
 import TamDigitalModule from './merchant/TamDigitalModule';
 import TamSessionModule from './merchant/TamSessionModule';
 import B2BDropshippingModule from './merchant/B2BDropshippingModule';
+import CustomerCrmModule from './merchant/CustomerCrmModule';
+import MerchantIntegrationHub from './merchant/MerchantIntegrationHub';
+import AdminLiveLaunchDashboard from './merchant/AdminLiveLaunchDashboard';
 import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface TampazarSellerDashboardProps {
@@ -46,6 +49,7 @@ export type DashboardTab =
   | 'dashboard' 
   | 'efatura' 
   | 'cariler' 
+  | 'crm'
   | 'kasa' 
   | 'stok' 
   | 'orders_cargo' 
@@ -57,6 +61,8 @@ export type DashboardTab =
   | 'b2b_dropshipping'
   | 'pos' 
   | 'subscription'
+  | 'integrations'
+  | 'admin_launch'
   | 'settings';
 
 export default function TampazarSellerDashboard({
@@ -538,6 +544,23 @@ export default function TampazarSellerDashboard({
           </button>
 
           <button
+            onClick={() => setActiveTab('crm')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'crm' 
+                ? 'bg-[#F59E0B] text-slate-950 font-black shadow-md' 
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Heart className="w-4 h-4 text-rose-400 fill-rose-400/30" />
+              <span>Müşteri CRM & Tercih</span>
+            </div>
+            <span className="text-[10px] bg-rose-500/20 text-rose-300 font-bold px-1.5 py-0.5 rounded border border-rose-500/30">
+              Hafıza
+            </span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('stok')}
             className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition text-left cursor-pointer ${
               activeTab === 'stok' 
@@ -616,7 +639,7 @@ export default function TampazarSellerDashboard({
             </span>
           </button>
 
-          {/* 4. DİJİTAL DOSYA SATIŞI (TamDijital - Etsy Modeli) */}
+          {/* 4. DİJİTAL DOSYA SATIŞI (TamDijital) */}
           <button
             onClick={() => setActiveTab('tamdijital')}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
@@ -634,7 +657,7 @@ export default function TampazarSellerDashboard({
             </span>
           </button>
 
-          {/* 5. UZAKTAN CANLI SEANS (TamSeans - Superpeer Modeli) */}
+          {/* 5. UZAKTAN CANLI SEANS (TamSeans) */}
           <button
             onClick={() => setActiveTab('tamseans')}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
@@ -669,7 +692,7 @@ export default function TampazarSellerDashboard({
             </span>
           </button>
 
-          {/* 6. B2B TOPTAN & DROPSHIPPING (Faire & Spocket Modeli) */}
+          {/* 6. B2B TOPTAN & DROPSHIPPING */}
           <button
             onClick={() => setActiveTab('b2b_dropshipping')}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
@@ -689,19 +712,58 @@ export default function TampazarSellerDashboard({
 
           {/* İŞLETME & ABONELİK */}
           <div className="pt-4 pb-1 px-3 text-[9px] font-black text-slate-400 uppercase tracking-wider">
-            İşletme & SaaS Modeli
+            SaaS Abonelik & Entegrasyonlar
           </div>
 
           <button
             onClick={() => setActiveTab('subscription')}
-            className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
               activeTab === 'subscription' 
-                ? 'bg-indigo-600 text-white font-bold shadow-sm' 
+                ? 'bg-indigo-600 text-white font-black shadow-sm' 
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
             }`}
           >
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Abonelik (%0 Komisyon)</span>
+            <div className="flex items-center gap-3">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span>Abonelik (PayTR SaaS)</span>
+            </div>
+            <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">
+              %0 Komisyon
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('integrations')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'integrations' 
+                ? 'bg-indigo-600 text-white font-black shadow-sm' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Key className="w-4 h-4 text-amber-400" />
+              <span>Entegrasyon Merkezi (BYO)</span>
+            </div>
+            <span className="text-[9px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded border border-amber-500/30">
+              POS/Kargo/E-Fat
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('admin_launch')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'admin_launch' 
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black shadow-sm' 
+                : 'text-emerald-300/80 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Canlıya Geçiş & MRR</span>
+            </div>
+            <span className="text-[9px] bg-emerald-400 text-slate-950 font-black px-1.5 py-0.5 rounded">
+              Süper Admin
+            </span>
           </button>
 
           <button
@@ -713,7 +775,7 @@ export default function TampazarSellerDashboard({
             }`}
           >
             <Settings className="w-4 h-4 text-indigo-400" />
-            <span>Mağaza & Entegrasyon Ayarları</span>
+            <span>Mağaza & Kimlik Ayarları</span>
           </button>
 
           <button
@@ -1044,6 +1106,27 @@ export default function TampazarSellerDashboard({
                       <span className="text-emerald-700 font-bold block">● UBL-TR 2.1 Doğrudan Bağlı</span>
                       <span className="text-slate-400 text-[11px] block">Kalan Kontör: 8.420 Adet</span>
                     </div>
+
+                    <div className="bg-emerald-50/70 border border-emerald-200 rounded-2xl p-3.5 text-xs space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-emerald-950 flex items-center gap-1">
+                          <Heart className="w-3.5 h-3.5 text-emerald-600 fill-emerald-500" />
+                          Müşteri Hafızası (CRM)
+                        </span>
+                        <span className="text-[10px] bg-emerald-200/80 text-emerald-900 font-bold px-1.5 py-0.2 rounded">
+                          Aktif
+                        </span>
+                      </div>
+                      <p className="text-emerald-800 text-[11px] leading-snug">
+                        Müşteri alışkanlıkları, özel kıyma/ekmek tercihleri ve veresiye bağları.
+                      </p>
+                      <button
+                        onClick={() => setActiveTab('crm')}
+                        className="text-emerald-900 font-black underline text-xs cursor-pointer block pt-0.5"
+                      >
+                        CRM Defterini Aç →
+                      </button>
+                    </div>
                   </div>
 
                   <button
@@ -1248,6 +1331,13 @@ export default function TampazarSellerDashboard({
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* TAB: MÜŞTERİ İLİŞKİLERİ (CRM) & ÖZEL TERCİH DEFTERİ */}
+          {activeTab === 'crm' && (
+            <div className="animate-fade-in">
+              <CustomerCrmModule />
             </div>
           )}
 
@@ -1471,7 +1561,7 @@ export default function TampazarSellerDashboard({
             </div>
           )}
 
-          {/* TAB: ULUSAL KARGO VE E-TİCARET SİPARİŞLERİ (TRENDYOL MODELİ) */}
+          {/* TAB: ULUSAL KARGO VE E-TİCARET SİPARİŞLERİ */}
           {activeTab === 'orders_cargo' && (
             <div className="animate-fade-in">
               <CargoOrdersModule
@@ -1481,7 +1571,7 @@ export default function TampazarSellerDashboard({
             </div>
           )}
 
-          {/* TAB: ANLIK YEREL SİPARİŞLER (YEMEKSEPETİ/GETİR - CANLI ZİL) */}
+          {/* TAB: ANLIK YEREL SİPARİŞLER (CANLI ZİL) */}
           {activeTab === 'orders_local' && (
             <div className="animate-fade-in">
               <LocalOrdersModule
@@ -1491,7 +1581,7 @@ export default function TampazarSellerDashboard({
             </div>
           )}
 
-          {/* TAB: SAHA SERVİS TALEPLERİ (ARMUT - HARİTA ROTA) */}
+          {/* TAB: SAHA SERVİS TALEPLERİ (HARİTA ROTA) */}
           {activeTab === 'orders_service' && (
             <div className="animate-fade-in">
               <ServiceOrdersModule
@@ -1501,7 +1591,7 @@ export default function TampazarSellerDashboard({
             </div>
           )}
 
-          {/* TAB: TAMDİJİTAL (ETSY/GUMROAD DOSYA SATIŞLARI & İNDİRMELER) */}
+          {/* TAB: TAMDİJİTAL (DOSYA SATIŞLARI & İNDİRMELER) */}
           {activeTab === 'tamdijital' && (
             <div className="animate-fade-in">
               <TamDigitalModule
@@ -1511,7 +1601,7 @@ export default function TampazarSellerDashboard({
             </div>
           )}
 
-          {/* TAB: TAMSEANS (SUPERPEER/CALENDLY CANLI RANDEVU TAKVİMİ) */}
+          {/* TAB: TAMSEANS (CANLI RANDEVU TAKVİMİ) */}
           {activeTab === 'tamseans' && (
             <div className="animate-fade-in">
               <TamSessionModule
@@ -1531,7 +1621,7 @@ export default function TampazarSellerDashboard({
             </div>
           )}
 
-          {/* TAB: B2B TOPTAN TİCARET & DROPSHIPPING (FAIRE & SPOCKET MODELİ) */}
+          {/* TAB: B2B TOPTAN TİCARET & DROPSHIPPING */}
           {activeTab === 'b2b_dropshipping' && (
             <div className="animate-fade-in">
               <B2BDropshippingModule
@@ -1548,6 +1638,32 @@ export default function TampazarSellerDashboard({
               <SubscriptionTierModal
                 subscription={merchantSubscription}
                 onUpdateTier={handleUpdateTier}
+                currentStoreName={currentStore}
+                onSubscriptionSuccess={(newSub) => {
+                  setMerchantSubscription(newSub);
+                  setToastNotification('Aboneliğiniz başarıyla aktif edildi! Mağazanız canlı vitrine alındı.');
+                  setTimeout(() => setToastNotification(null), 4000);
+                }}
+              />
+            </div>
+          )}
+
+          {/* TAB: ESNAF BAĞIMSIZ ENTEGRASYON MERKEZİ (BYO POS / KARGO / E-FATURA) */}
+          {activeTab === 'integrations' && (
+            <div className="animate-fade-in">
+              <MerchantIntegrationHub />
+            </div>
+          )}
+
+          {/* TAB: SÜPER ADMİN CANLIYA GEÇİŞ & MRR SAYACI */}
+          {activeTab === 'admin_launch' && (
+            <div className="animate-fade-in">
+              <AdminLiveLaunchDashboard 
+                tenants={initialTenants} 
+                onToggleStoreStatus={(id) => {
+                  setToastNotification(`Mağaza (${id}) vitrin statüsü güncellendi.`);
+                  setTimeout(() => setToastNotification(null), 3500);
+                }}
               />
             </div>
           )}
@@ -1795,7 +1911,7 @@ export default function TampazarSellerDashboard({
         </div>
       )}
 
-      {/* 5. MODAL: GELİŞMİŞ TRENDYOL & AMAZON DÜZEYİ ÜRÜN / HİZMET SİHİRBAZI */}
+      {/* 5. MODAL: GELİŞMİŞ ÜRÜN / HİZMET SİHİRBAZI */}
       <AdvancedProductModal
         isOpen={showAddProductModal}
         onClose={() => setShowAddProductModal(false)}
@@ -1804,7 +1920,7 @@ export default function TampazarSellerDashboard({
         storeName={currentStore}
       />
 
-      {/* 6. MODAL: DETAYLI BİZİMHESAP & PARAŞÜT DÜZEYİ CARİ HESAP KARTI */}
+      {/* 6. MODAL: DETAYLI ÖN MUHASEBE CARİ HESAP KARTI */}
       <AdvancedLedgerAccountModal
         isOpen={showAddLedgerAccountModal}
         onClose={() => setShowAddLedgerAccountModal(false)}

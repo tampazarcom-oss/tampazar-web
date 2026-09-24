@@ -133,7 +133,7 @@ export default function TamSessionModule({ products, onOpenNewProductModal }: Ta
           <div className="space-y-2 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-500/20 text-cyan-200 rounded-full text-xs font-bold border border-cyan-400/30">
               <Video className="w-3.5 h-3.5 text-cyan-300" />
-              <span>TamSeans • Superpeer & Calendly Modeli</span>
+              <span>TamSeans • Canlı Randevu & Seans Takvimi</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
               Canlı Seans & Online Danışmanlık Ajandası

@@ -527,7 +527,7 @@ export default function CustomerAccountPage() {
                 <div className="flex flex-wrap items-center gap-3 mt-2 sm:mt-0">
                   <button
                     onClick={() => {
-                      setDownloadSuccessToast(`"${ord.storeName}" siparişinizdeki ${ord.items.length} ürün tek tıkla sepete eklendi! (Amazon Tekrar Sipariş Modeli)`);
+                      setDownloadSuccessToast(`"${ord.storeName}" siparişinizdeki ${ord.items.length} ürün tek tıkla sepete eklendi!`);
                       setTimeout(() => setDownloadSuccessToast(''), 4500);
                     }}
                     className="px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer"

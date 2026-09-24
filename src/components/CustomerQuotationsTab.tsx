@@ -156,7 +156,7 @@ export default function CustomerQuotationsTab({ initialRequestId }: CustomerQuot
             </h2>
           </div>
           <p className="text-xs text-slate-500">
-            Esnaflar birbirinin fiyatını göremez (Armut Modeli). Gelen tüm teklifleri aşağıda karşılaştırabilir, en uygun esnafı seçip doğrudan görüşebilirsiniz.
+            Esnaflar birbirinin fiyatını göremez (Kapalı Devre Güvenli Teklif). Gelen tüm teklifleri aşağıda karşılaştırabilir, en uygun esnafı seçip doğrudan görüşebilirsiniz.
           </p>
         </div>
 

@@ -22,6 +22,13 @@ export interface Tenant {
   quotaLimit: number;
   byoPosConnected: boolean;
   activePos: string | null;
+  isDemoStore?: boolean;
+  subscriptionStatus?: 'active' | 'pending' | 'expired' | 'trial';
+  isVerifiedMerchant?: boolean;
+  posConfigured?: boolean;
+  cargoConfigured?: boolean;
+  eInvoiceConfigured?: boolean;
+  monthlyRecurringRevenue?: number;
 }
 
 export interface Product {
@@ -42,6 +49,7 @@ export interface Product {
   salesCount?: number;
   badge?: string;
   tierPriceNote?: string;
+  isDemoProduct?: boolean;
   
   // Enterprise ERP & TamPazar Kurumsal Nitelikleri
   brand?: string;
@@ -284,6 +292,9 @@ export const initialTenants: Tenant[] = [
   {
     id: 's1',
     name: 'Atölye Zanaat',
+    legalTitle: 'Atölye Zanaat El Sanatları ve Tasarım Ltd. Şti.',
+    taxOffice: 'Beyoğlu V.D.',
+    taxId: '1280948192',
     slug: 'atolye-zanaat',
     logo: '🪵',
     category: 'El Yapımı & Tasarım',
@@ -297,10 +308,20 @@ export const initialTenants: Tenant[] = [
     quotaLimit: 1000,
     byoPosConnected: true,
     activePos: 'iyzico',
+    isDemoStore: false,
+    subscriptionStatus: 'active',
+    isVerifiedMerchant: true,
+    posConfigured: true,
+    cargoConfigured: true,
+    eInvoiceConfigured: true,
+    monthlyRecurringRevenue: 599
   },
   {
     id: 's2',
     name: 'Mega Endüstriyel',
+    legalTitle: 'Mega Endüstriyel Hırdavat ve Yapı Malzemeleri A.Ş.',
+    taxOffice: 'İkitelli V.D.',
+    taxId: '6190284711',
     slug: 'mega-endustriyel',
     logo: '🏭',
     category: 'Toptan & Hırdavat',
@@ -314,10 +335,20 @@ export const initialTenants: Tenant[] = [
     quotaLimit: 10000,
     byoPosConnected: true,
     activePos: 'paytr',
+    isDemoStore: false,
+    subscriptionStatus: 'active',
+    isVerifiedMerchant: true,
+    posConfigured: true,
+    cargoConfigured: true,
+    eInvoiceConfigured: true,
+    monthlyRecurringRevenue: 1490
   },
   {
     id: 's3',
     name: 'FotoSentez Stüdyo',
+    legalTitle: 'FotoSentez Görsel Sanatlar ve Tasarım Tic. Ltd. Şti.',
+    taxOffice: 'Altınordu V.D.',
+    taxId: '3880491029',
     slug: 'fotosentez-studyo',
     logo: '📸',
     category: 'Fotoğraf & Medya Hizmetleri',
@@ -330,11 +361,21 @@ export const initialTenants: Tenant[] = [
     quotaUsed: 88,
     quotaLimit: 500,
     byoPosConnected: true,
-    activePos: 'sipay',
+    activePos: 'paytr',
+    isDemoStore: false,
+    subscriptionStatus: 'active',
+    isVerifiedMerchant: true,
+    posConfigured: true,
+    cargoConfigured: true,
+    eInvoiceConfigured: true,
+    monthlyRecurringRevenue: 499
   },
   {
     id: 'tenant-1',
     name: 'Mert Kundura Ltd.',
+    legalTitle: 'Mert Kundura Deri ve Ayakkabı San. Tic. Ltd. Şti.',
+    taxOffice: 'Gedikpaşa V.D.',
+    taxId: '6182901844',
     slug: 'mert-kundura',
     logo: '👞',
     category: 'Ayakkabı & Çanta',
@@ -348,10 +389,20 @@ export const initialTenants: Tenant[] = [
     quotaLimit: 1000,
     byoPosConnected: true,
     activePos: 'paytr',
+    isDemoStore: false,
+    subscriptionStatus: 'active',
+    isVerifiedMerchant: true,
+    posConfigured: true,
+    cargoConfigured: true,
+    eInvoiceConfigured: true,
+    monthlyRecurringRevenue: 599
   },
   {
     id: 'tenant-2',
     name: 'Yıldız Toptan Gıda A.Ş.',
+    legalTitle: 'Yıldız Toptan Hububat Bakliyat ve Gıda Maddeleri A.Ş.',
+    taxOffice: 'Rami V.D.',
+    taxId: '9840192847',
     slug: 'yildiz-toptan',
     logo: '🌾',
     category: 'Gıda & Tarım Toptancılığı',
@@ -365,10 +416,20 @@ export const initialTenants: Tenant[] = [
     quotaLimit: 10000,
     byoPosConnected: true,
     activePos: 'iyzico',
+    isDemoStore: false,
+    subscriptionStatus: 'active',
+    isVerifiedMerchant: true,
+    posConfigured: true,
+    cargoConfigured: true,
+    eInvoiceConfigured: true,
+    monthlyRecurringRevenue: 1490
   },
   {
     id: 'tenant-3',
     name: 'Bursa Spa & Sağlık',
+    legalTitle: 'Bursa Termal Spa Sağlık ve Masaj Hizmetleri Ltd. Şti.',
+    taxOffice: 'Osmangazi V.D.',
+    taxId: '1892019482',
     slug: 'bursa-spa',
     logo: '🌿',
     category: 'Sağlık & Masaj',
@@ -380,8 +441,42 @@ export const initialTenants: Tenant[] = [
     plan: 'Starter',
     quotaUsed: 42,
     quotaLimit: 100,
-    byoPosConnected: false,
-    activePos: null,
+    byoPosConnected: true,
+    activePos: 'sipay',
+    isDemoStore: false,
+    subscriptionStatus: 'pending',
+    isVerifiedMerchant: false,
+    posConfigured: true,
+    cargoConfigured: false,
+    eInvoiceConfigured: false,
+    monthlyRecurringRevenue: 0
+  },
+  {
+    id: 'demo-market',
+    name: 'TamPazar Demo Market',
+    legalTitle: 'TamPazar Test & Geliştirme İzolasyon Mağazası',
+    taxOffice: 'Test V.D.',
+    taxId: '0000000000',
+    slug: 'tampazar-demo-market',
+    logo: '🧪',
+    category: 'Test & Örnek Ürünler',
+    rating: 5.0,
+    reviews: 99,
+    avatar: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=100&auto=format&fit=crop&q=80',
+    banner: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&auto=format&fit=crop&q=80',
+    typeBadge: '🧪 Test / Demo Mağazası',
+    plan: 'Starter',
+    quotaUsed: 10,
+    quotaLimit: 100,
+    byoPosConnected: true,
+    activePos: 'paytr',
+    isDemoStore: true,
+    subscriptionStatus: 'trial',
+    isVerifiedMerchant: false,
+    posConfigured: true,
+    cargoConfigured: false,
+    eInvoiceConfigured: false,
+    monthlyRecurringRevenue: 0
   }
 ];
 
@@ -1302,7 +1397,7 @@ export const initialProducts: Product[] = [
     }
   },
 
-  // e) Anında Dijital İndirme (Etsy / Gumroad Modeli)
+  // e) Anında Dijital İndirme (TamDijital)
   {
     id: 'prod-hyb-09',
     tenantId: 's1',
@@ -1356,7 +1451,7 @@ export const initialProducts: Product[] = [
     }
   },
 
-  // f) Uzaktan Canlı Seans & Özel Ders (Superpeer Modeli)
+  // f) Uzaktan Canlı Seans & Özel Ders (TamSeans)
   {
     id: 'prod-hyb-11',
     tenantId: 's3',

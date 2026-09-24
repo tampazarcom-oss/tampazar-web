@@ -23,60 +23,57 @@ export interface SubscriptionTier {
 export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
   {
     id: 'starter',
-    name: 'Esnaf Başlangıç (Yerel Paket)',
-    tagline: 'Mahalle esnafı, kafe, butik ve tekil zanaatkarlar için ideal.',
-    monthlyPrice: 490,
-    annualPrice: 4900,
-    invoiceQuota: 50,
+    name: 'Başlangıç / Esnaf',
+    tagline: 'Mahalle esnafı, butik, kafe ve tekil zanaatkarlar için ideal temel paket.',
+    monthlyPrice: 499,
+    annualPrice: 4990,
+    invoiceQuota: -1, // Sınırsız
     color: 'border-slate-300 text-slate-700',
-    badge: 'Yerel Esnaf',
+    badge: 'Esnaf Paketi',
     features: [
-      '%0 TamPazar Komisyonu (Sabit Aidat)',
-      'Ayda 50 GİB e-Fatura / e-Arşiv Kotası',
+      '%0 TamPazar Komisyonu (Sabit Aylık Aidat)',
+      'Sınırsız Ürün & Hizmet Listeleme',
+      'Kendi Sanal/Mobil POS\'unu Bağlama (BYO POS)',
+      'GİB UBL-TR e-Fatura & e-Arşiv Entegrasyonu',
       'Mahalle İçi Anlık Teslimat & Gel-Al',
-      'QR Menü & Masa Sipariş Modülü',
-      'Kendi Mobil/Sanal POS\'unu Bağlama',
-      'Temel Kasa & Gelir-Gider Takibi',
-      'Standart Tüketici Vitrini Listelemesi'
+      'QR Menü & Masaüstü Sipariş Zili',
+      'Doğrulanmış Esnaf Rozeti & Canlı Vitrin Listelemesi'
     ]
   },
   {
     id: 'pro',
-    name: 'Esnaf Pro (Tam Hibrit & Ulusal)',
-    tagline: 'Ulusal pazara açılan, kargo ve anlık servisi birleştiren profesyonel işletmeler.',
-    monthlyPrice: 990,
-    annualPrice: 9900,
+    name: 'Pro / KOBİ',
+    tagline: 'Ulusal pazara açılan, B2B toptan ve kurye havuzuna erişen profesyonel işletmeler.',
+    monthlyPrice: 599,
+    annualPrice: 4990,
     invoiceQuota: -1, // Sınırsız
     recommended: true,
     color: 'border-amber-400 ring-2 ring-amber-400 bg-amber-50/20 text-slate-900',
-    badge: 'En Çok Tercih Edilen',
+    badge: 'Yıllık ₺4.990 (Tavsiye Edilen)',
     features: [
-      '%0 Komisyon Güvencesi (Doğrudan Esnaf Kasası)',
-      'Sınırsız GİB UBL-TR 2.1 e-Fatura & e-Arşiv',
-      'Tüm Ulusal Kargo Entegrasyonları (Yurtiçi, Aras, MNG)',
-      'Tam Ön Muhasebe & ERP (BizimHesap/Paraşüt Kalitesi)',
-      'Cari Hesap Defteri & WhatsApp ile Otomatik Ekstre',
-      'Masaüstü Canlı Sipariş Zili (Yemek & Kurye)',
-      'Saha Hizmetleri & Harita Konumlu Çağrı Takvimi',
-      'Varyantlı Çoklu Depo & Kritik Stok Alarmları',
-      'Arama Sonuçlarında Öne Çıkarılan Vitrin Rozeti'
+      'Tüm Başlangıç Özellikleri Dahil',
+      'TamKurye Ortak Mahalle Havuzu & Çoklu Dükkan Sepeti',
+      'TamPazar B2B Toptan Ticaret & Dropshipping Tedarik Ağı',
+      'Tüm Ulusal Kargo Entegrasyonları (Yurtiçi, Aras, MNG, PTT)',
+      'E-Fatura Otomatik Taslak & Muhasebe Köprüsü (Paraşüt / BizimHesap)',
+      'TamTeklif Kapalı Devre Teklif Havuzuna Katılım',
+      'Öncelikli Arama Sıralaması & AVM Vitrini Tanıtımı'
     ]
   },
   {
     id: 'enterprise',
-    name: 'Kurumsal AVM & Zincir Mağaza',
-    tagline: 'Çok şubeli toptancılar, büyük üreticiler ve kurumsal AVM bayileri.',
-    monthlyPrice: 1890,
-    annualPrice: 18900,
+    name: 'Kurumsal & Çok Şubeli',
+    tagline: 'Çok şubeli toptancılar, kooperatifler ve büyük üreticiler için kurumsal altyapı.',
+    monthlyPrice: 1490,
+    annualPrice: 14900,
     invoiceQuota: -1,
     color: 'border-indigo-600 text-slate-900',
-    badge: 'Çok Şubeli ERP',
+    badge: 'Kurumsal SaaS',
     features: [
       'Tüm Pro Özellikleri Dahil',
       'Sınırsız Şube, Kasa ve Personel Yetkilendirme',
-      'B2B Toptan Fiyat Teklifi & Kademe İndirimleri',
-      'GİB e-İrsaliye ve e-Müstahsil Entegrasyonu',
-      'Gelişmiş Sanal POS Tahsilat & Taksit Matrisi',
+      'GİB e-İrsaliye & e-Müstahsil Entegrasyonu',
+      'Özel REST API & Webhook Entegrasyon Hakları',
       'Özel Muhasebeci / Mali Müşavir Erişim Portali',
       'Öncelikli 7/24 Telefon & WhatsApp Destek Hattı'
     ]
@@ -86,25 +83,29 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
 export interface MerchantSubscription {
   currentTierId: 'starter' | 'pro' | 'enterprise';
   billingCycle: 'monthly' | 'annual';
-  status: 'active' | 'trial' | 'past_due';
+  status: 'active' | 'pending' | 'past_due' | 'trial';
   startedAt: string;
   renewalDate: string;
   invoicesUsedThisMonth: number;
   invoicesLimit: number;
   paymentMethodMask: string;
   lastPaymentAmount: number;
+  paytrSubscriptionId?: string;
+  autoRenew: boolean;
 }
 
 export const initialMerchantSubscription: MerchantSubscription = {
   currentTierId: 'pro',
-  billingCycle: 'monthly',
+  billingCycle: 'annual',
   status: 'active',
   startedAt: '2026-01-15',
-  renewalDate: '2026-10-15',
+  renewalDate: '2027-01-15',
   invoicesUsedThisMonth: 34,
   invoicesLimit: -1, // Sınırsız
-  paymentMethodMask: 'Mastercard ···· 4028 (Otomatik Ödeme)',
-  lastPaymentAmount: 990
+  paymentMethodMask: 'Mastercard ···· 4028 (PayTR Token)',
+  lastPaymentAmount: 4990,
+  paytrSubscriptionId: 'PTR-SUB-892147',
+  autoRenew: true
 };
 
 // ==========================================
