@@ -6,6 +6,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { initialTenants, Tenant } from './data/mockData';
+import BrandLogo from './components/BrandLogo';
 import { updatePageSEO } from './utils/seo';
 import { injectJsonLd } from './utils/jsonLd';
 import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard } from 'lucide-react';
@@ -235,13 +236,7 @@ function MainLayout() {
               ← Vitrine Dön
             </Link>
             <span className="text-slate-300">|</span>
-            <a href="https://tampazar.com/" className="flex items-center cursor-pointer" onClick={(e) => { e.preventDefault(); navigate('/'); }}>
-              <img 
-                src="/logo.png" 
-                alt="TamPazar" 
-                className="h-10 w-auto object-contain block" 
-              />
-            </a>
+            <BrandLogo size="md" />
           </div>
 
           <div className="relative shrink-0">

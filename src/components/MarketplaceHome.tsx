@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, ShoppingBag, ShieldCheck, Zap, 
   Store, Briefcase, ChevronRight, Star, SlidersHorizontal, 
-  X, Check, ArrowRight, Layers, Calendar, Clock, MapPin, Sparkles, Filter
+  X, Check, ArrowRight, Layers, Calendar, Clock, MapPin, Sparkles, Filter, Heart, ChevronLeft, Tag, Percent
 } from 'lucide-react';
 import { Tenant, Product, initialTenants, initialProducts } from '../data/mockData';
+import BrandLogo from './BrandLogo';
 
 interface MarketplaceHomeProps {
   onNavigateToStore?: (storeId: string) => void;
@@ -33,7 +34,9 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedScope, setSelectedScope] = useState<'all' | 'retail' | 'wholesale' | 'service' | 'stores'>('all');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'retail' | 'wholesale' | 'service'>('all');
-  
+  const [activeStoryFilter, setActiveStoryFilter] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<string[]>([]);
+
   // Cart State
   const [cart, setCart] = useState<{ product: Product; qty: number; variant?: string; slot?: string }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -45,6 +48,25 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [modalSize, setModalSize] = useState('');
   const [modalColor, setModalColor] = useState('');
   const [modalSlot, setModalSlot] = useState('');
+
+  // Carousel ref for "Sana Özel Önerilen Ürünler"
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const scrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = direction === 'left' ? -350 : 350;
+      carouselRef.current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
+  const toggleFavorite = (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (favorites.includes(productId)) {
+      setFavorites(favorites.filter(id => id !== productId));
+    } else {
+      setFavorites([...favorites, productId]);
+    }
+  };
 
   // Body scroll lock when cart drawer or product modal is open
   useEffect(() => {
@@ -58,10 +80,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
     };
   }, [isCartOpen, activeModalProduct]);
 
-  // Featured Stores for the Etsy-Style section
-  const featuredStores = tenants.slice(0, 3);
-
-  // Filter products based on search and type
+  // Filter products based on search, scope, type filter, and story filter
   const filteredProducts = products.filter(item => {
     const matchesSearch = searchQuery === '' || 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -78,7 +97,18 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       selectedTypeFilter === 'all' ||
       item.type === selectedTypeFilter;
 
-    return matchesSearch && matchesScope && matchesTypeFilter;
+    let matchesStory = true;
+    if (activeStoryFilter === 'fiyati-dusenler') {
+      matchesStory = item.price < 2000;
+    } else if (activeStoryFilter === 'yemek-lezzetler') {
+      matchesStory = item.category.includes('Gıda') || item.category.includes('Yemek');
+    } else if (activeStoryFilter === 'esnaf-butik') {
+      matchesStory = item.type === 'retail' || Boolean(item.badge?.includes('Zanaat'));
+    } else if (activeStoryFilter === 'kargo-bedava') {
+      matchesStory = Boolean(item.badge?.includes('Kargo')) || item.price > 1000;
+    }
+
+    return matchesSearch && matchesScope && matchesTypeFilter && matchesStory;
   });
 
   const handleOpenProductModal = (product: Product) => {
@@ -134,7 +164,6 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const handleExecuteCheckout = () => {
     if (cart.length === 0) return;
 
-    // Simulate instant BYO POS charge & e-Invoice generation
     const savedInvoices = localStorage.getItem('tampazar_invoices');
     const invoices = savedInvoices ? JSON.parse(savedInvoices) : [];
 
@@ -178,26 +207,23 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
+    <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
       {/* 1. ÜST HEADER: Amazon Arama Gücü + Trendyol Akıcılığı */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-6">
-          {/* Brand Logo */}
-          <a href="https://tampazar.com/" className="flex items-center gap-2 py-1 select-none cursor-pointer group" onClick={(e) => { e.preventDefault(); setSelectedScope('all'); setSelectedTypeFilter('all'); setSearchQuery(''); setActiveModalProduct(null); setIsCartOpen(false); }}>
-            <div className="flex items-center gap-2">
-              {/* Turuncu TP İkonu */}
-              <div className="flex flex-col items-center justify-center">
-                <span className="text-3xl font-black text-[#FF6A00] tracking-tighter leading-none">TP</span>
-                <div className="w-8 h-1.5 bg-[#FF6A00] rounded-full -mt-0.5" style={{ borderRadius: '0 0 10px 10px' }}></div>
-              </div>
-              {/* TamPazar Tipografisi */}
-              <div className="flex items-center text-3xl font-extrabold tracking-tight">
-                <span className="text-[#0B132B]">Tam</span>
-                <span className="text-[#FF6A00]">Pazar</span>
-              </div>
-            </div>
-          </a>
+          
+          <BrandLogo 
+            size="lg" 
+            onClick={() => { 
+              setSelectedScope('all'); 
+              setSelectedTypeFilter('all'); 
+              setActiveStoryFilter(null);
+              setSearchQuery(''); 
+              setActiveModalProduct(null); 
+              setIsCartOpen(false); 
+            }} 
+          />
 
           {/* Akıllı Hibrit Arama Çubuğu */}
           <div className="flex-1 max-w-2xl relative">
@@ -217,18 +243,18 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
                 type="text" 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Milyonlarca ürün, toptan hammadde veya kurumsal hizmet ara..."
+                placeholder="Aradığınız ürün, zanaatkâr esnaf veya hizmeti yazın..."
                 className="w-full px-4 py-2.5 text-sm outline-none bg-transparent placeholder:text-slate-400"
               />
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="px-2 text-slate-400 hover:text-slate-600"
+                  className="px-2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               )}
-              <button className="bg-indigo-900 hover:bg-indigo-800 text-white px-6 flex items-center justify-center transition-colors">
+              <button className="bg-indigo-900 hover:bg-indigo-800 text-white px-6 flex items-center justify-center transition-colors cursor-pointer">
                 <Search className="w-5 h-5" />
               </button>
             </div>
@@ -259,524 +285,477 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
         </div>
       </header>
 
-      {/* 2. TRENDYOL TARZI HIZLI KAMPANYA VE KATEGORİ BANTLARI */}
-      <section className="bg-indigo-950 text-white py-3 border-b border-indigo-900">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between text-xs font-medium overflow-x-auto gap-6 scrollbar-none">
-          <span className="flex items-center gap-1.5 text-amber-400 whitespace-nowrap">
-            <Zap className="w-4 h-4 fill-amber-400" /> Komisyonsuz Doğrudan Satıcı Fiyatları
-          </span>
-          <span className="flex items-center gap-1.5 whitespace-nowrap text-slate-300">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" /> Mağaza Onaylı Doğrudan POS Tahsilatı
-          </span>
-          <span className="flex items-center gap-1.5 whitespace-nowrap text-slate-300">
-            <Briefcase className="w-4 h-4 text-sky-400" /> Kurumsal Şirketlere Anında E-Fatura & Tevkifat
-          </span>
+      {/* 2. ÜST HIZLI KAMPANYA VE KATEGORİ HİKAYELERİ (STORY BAR) */}
+      <div className="bg-white border-b border-slate-200 shadow-xs py-3.5">
+        <div className="max-w-7xl mx-auto px-4 flex items-center gap-6 overflow-x-auto scrollbar-none">
+          {[
+            { id: null, label: 'Ürünleri Keşfet', icon: Sparkles, color: 'bg-indigo-50 text-indigo-900 border-indigo-200' },
+            { id: 'fiyati-dusenler', label: 'Fiyatı Düşenler', icon: Percent, color: 'bg-rose-50 text-rose-700 border-rose-200' },
+            { id: 'yemek-lezzetler', label: 'Yemek & Yerel Lezzetler', icon: Zap, color: 'bg-amber-50 text-amber-800 border-amber-200' },
+            { id: 'esnaf-butik', label: 'Esnaf Sanat & Butik', icon: Store, color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
+            { id: 'kargo-bedava', label: 'Kargo Bedava', icon: ShieldCheck, color: 'bg-sky-50 text-sky-800 border-sky-200' },
+            { id: 'kuponlar', label: 'İndirim Kuponları', icon: Tag, color: 'bg-purple-50 text-purple-800 border-purple-200' },
+          ].map(story => {
+            const Icon = story.icon;
+            const isActive = activeStoryFilter === story.id;
+            return (
+              <button
+                key={story.id || 'all'}
+                onClick={() => {
+                  if (story.id === 'kuponlar') {
+                    alert('TamPazar 250 TL Esnaf İndirim Kuponu Hesabınıza Tanımlandı: TAMPZ250');
+                  } else {
+                    setActiveStoryFilter(story.id);
+                  }
+                }}
+                className={`flex flex-col items-center gap-1.5 min-w-[88px] group cursor-pointer transition-transform hover:scale-105`}
+              >
+                <div className={`w-14 h-14 rounded-2xl border-2 flex items-center justify-center shadow-xs transition-all ${
+                  isActive ? 'border-indigo-900 bg-indigo-900 text-white shadow-md' : `${story.color} group-hover:border-indigo-400`
+                }`}>
+                  <Icon className="w-6 h-6" />
+                </div>
+                <span className={`text-[11px] font-bold text-center whitespace-nowrap ${isActive ? 'text-indigo-900' : 'text-slate-700'}`}>
+                  {story.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </section>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-12 flex-1 w-full">
         
-        {/* Quick Type Filter Pill Buttons */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
-          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1 mr-2">
-            <Filter className="w-3.5 h-3.5" /> Hızlı Filtre:
-          </span>
-          {[
-            { key: 'all', label: 'Tüm Vitrin' },
-            { key: 'retail', label: '🛍️ Perakende Ürünler' },
-            { key: 'wholesale', label: '📦 Toptan / B2B Koli' },
-            { key: 'service', label: '💆 Hizmet & Randevu' }
-          ].map(f => (
-            <button
-              key={f.key}
-              onClick={() => setSelectedTypeFilter(f.key as any)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                selectedTypeFilter === f.key
-                  ? 'bg-indigo-900 text-white shadow-sm'
-                  : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-
-        {/* SÜPER AVM TANITIM BANDI (Dönerciden Çekiciye, Ayakkabıdan Tesisatçıya) */}
-        <div className="bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-900 rounded-3xl p-6 md:p-8 text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl border border-slate-800">
-          <div className="space-y-2 text-center md:text-left">
-            <span className="text-[10px] font-extrabold uppercase tracking-widest text-amber-400 bg-amber-400/10 px-3 py-1 rounded-full border border-amber-400/20 inline-block">
-              Şehrin Komisyonsuz Açık Dijital AVM'si
+        {/* 3. BUGÜNÜN FIRSAT KAMPANYALARI BANNERI */}
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-indigo-950 via-indigo-900 to-slate-900 text-white p-8 md:p-12 shadow-xl flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-4 max-w-xl text-center md:text-left">
+            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-amber-400 text-slate-950 uppercase tracking-widest shadow">
+              <Zap className="w-3.5 h-3.5 fill-slate-950" /> Esnaf Fırsat Haftası
             </span>
-            <h3 className="text-xl md:text-2xl font-black text-white">
-              Dönerciden Çekiciye, Ayakkabıdan Tesisatçıya Doğrudan Esnaf Çağrısı
-            </h3>
-            <p className="text-xs text-slate-300 max-w-xl leading-relaxed">
-              Aracı komisyonu olmadan esnafı doğrudan telefonla arayın, WhatsApp'tan yazın ya da kendi Sanal POS'u ile anında ödeyin.
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight leading-tight">
+              Aracı Komisyonu Yok, Doğrudan Esnaf Fiyatı Var!
+            </h1>
+            <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
+              Milyonlarca ürünü ve yerel esnaf hizmetini %0 komisyonla doğrudan üreticiden veya ustadan sepetinize ekleyin. GİB e-Fatura garantisiyle hemen alışverişe başlayın.
             </p>
-          </div>
-          <button
-            onClick={onNavigateToSuperMall}
-            className="px-6 py-3 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-lg transition-colors shrink-0 flex items-center gap-2 cursor-pointer"
-          >
-            <span>Açık Dijital AVM'ye Gir</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* 3. ETSY TARZI ÖNE ÇIKAN MAĞAZA VE ATÖLYELER */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Öne Çıkan Bağımsız Mağazalar</h2>
-              <p className="text-sm text-slate-500">Aracı komisyonu olmadan doğrudan üreticiden alışveriş yapın</p>
-            </div>
-            <button 
-              onClick={() => onOpenSellerDashboard?.('catalog')}
-              className="text-sm font-semibold text-indigo-700 flex items-center hover:underline cursor-pointer"
-            >
-              Tüm Mağazaları Keşfet <ChevronRight className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredStores.map((store) => (
-              <div 
-                key={store.id} 
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div className="relative w-full h-36 bg-slate-100 overflow-hidden">
-                  <img 
-                    src={store.banner || 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=500&auto=format&fit=crop&q=80'} 
-                    alt={store.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className="absolute top-3 left-3 text-[11px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50/95 backdrop-blur-xs px-2 py-0.5 rounded shadow-xs">
-                    {store.typeBadge || 'Doğrudan Üretici'}
-                  </span>
-                  <div className="absolute -bottom-4 right-4 w-10 h-10 rounded-full border-2 border-white shadow overflow-hidden bg-white flex items-center justify-center text-lg">
-                    {store.logo}
-                  </div>
-                </div>
-
-                <div className="p-5 flex-1 flex flex-col justify-between pt-5">
-                  <div>
-                    <h3 className="font-bold text-lg text-slate-900">{store.name}</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">{store.category}</p>
-                    <p className="text-[11px] text-slate-400 mt-1 line-clamp-1">
-                      Kendi Sanal POS'u ile %0 komisyonsuz doğrudan faturalı satış yapmaktadır.
-                    </p>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-100 text-xs">
-                    <span className="flex items-center gap-1 font-semibold text-slate-700">
-                      <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
-                      {store.rating || 4.9} ({store.reviews || 128} Değerlendirme)
-                    </span>
-                    <button 
-                      onClick={() => onNavigateToStore ? onNavigateToStore(store.slug || store.id) : onOpenSellerDashboard?.('catalog')}
-                      className="font-semibold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-                    >
-                      Mağazayı İncele →
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* 4. HİBRİT ÜRÜN VİTRİNİ (Perakende + Toptan + Hizmet) */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Günün Vitrin Ürünleri & Hizmetleri</h2>
-              <p className="text-sm text-slate-500">Perakende sepet, toptan koli siparişi veya doğrudan hizmet randevusu</p>
-            </div>
-            <div className="flex gap-2">
-              <span className="text-xs font-medium text-slate-500 self-center">
-                {filteredProducts.length} adet listeleniyor
-              </span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredProducts.map((item) => (
-              <div 
-                key={item.id} 
-                onClick={() => handleOpenProductModal(item)}
-                className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-lg transition-all flex flex-col group cursor-pointer"
-              >
-                {/* Ürün Görseli & Rozet */}
-                <div className="relative h-56 w-full bg-slate-100 overflow-hidden">
-                  <img 
-                    src={item.image} 
-                    alt={item.title} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full shadow-sm text-white ${
-                    item.type === 'wholesale' ? 'bg-indigo-600' :
-                    item.type === 'service' ? 'bg-sky-600' : 'bg-emerald-600'
-                  }`}>
-                    {item.badge || (item.type === 'wholesale' ? 'B2B Toptan' : item.type === 'service' ? 'Hizmet & Randevu' : 'Perakende')}
-                  </span>
-                  <span className="absolute bottom-3 right-3 bg-slate-900/80 backdrop-blur-xs text-white text-[10px] font-mono px-2 py-0.5 rounded">
-                    KDV %{item.vatRate}
-                  </span>
-                </div>
-
-                {/* Ürün Detayları */}
-                <div className="p-5 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <span className="text-xs text-slate-400 font-medium block mb-1">
-                      {item.storeName || 'Yetkili Satıcı'}
-                    </span>
-                    <h3 className="font-semibold text-slate-900 text-sm leading-snug line-clamp-2">
-                      {item.title}
-                    </h3>
-                    <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
-                      {item.description}
-                    </p>
-                  </div>
-
-                  {/* Fiyat Alanı: Amazon Usulü Kademeli veya Standart */}
-                  <div className="pt-2 border-t border-slate-100">
-                    <div className="text-xl font-black text-slate-900">
-                      {item.price.toLocaleString('tr-TR')} ₺
-                    </div>
-                    {item.tierPriceNote ? (
-                      <p className="text-xs font-semibold text-indigo-600 mt-0.5">
-                        {item.tierPriceNote}
-                      </p>
-                    ) : item.tieredPrices && item.tieredPrices.length > 0 ? (
-                      <p className="text-xs font-semibold text-indigo-600 mt-0.5">
-                        {item.tieredPrices[0].minQty}+ Adet: {item.tieredPrices[0].pricePerUnit.toLocaleString('tr-TR')} ₺/adet
-                      </p>
-                    ) : null}
-                  </div>
-
-                  {/* Aksiyon Butonu */}
-                  <button 
-                    onClick={(e) => handleQuickAdd(item, e)}
-                    className="w-full py-2.5 px-4 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-indigo-900 transition-colors flex items-center justify-center gap-2 cursor-pointer shadow-xs"
-                  >
-                    {item.type === 'service' ? 'Randevu / Teklif İste' : 
-                     item.type === 'wholesale' ? 'Toptan Sipariş Ver' : 'Sepete Ekle'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {filteredProducts.length === 0 && (
-            <div className="p-12 text-center bg-white rounded-2xl border border-slate-200 text-slate-400 space-y-3 shadow-xs">
-              <Search className="w-10 h-10 mx-auto opacity-40 text-slate-400" />
-              <h3 className="text-base font-bold text-slate-800">Aramanızla eşleşen ürün bulunamadı</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                Lütfen arama teriminizi değiştirin veya filtreleri sıfırlayarak tüm ürünleri görüntüleyin.
-              </p>
+            <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4">
               <button 
-                onClick={() => { setSearchQuery(''); setSelectedScope('all'); setSelectedTypeFilter('all'); }}
-                className="px-4 py-2 bg-indigo-900 text-white rounded-xl text-xs font-bold hover:bg-indigo-800 transition-colors cursor-pointer"
+                onClick={() => { setSelectedTypeFilter('retail'); }}
+                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition cursor-pointer"
               >
-                Filtreleri ve Aramayı Sıfırla
+                Perakende Ürünleri İncele →
+              </button>
+              <button 
+                onClick={() => onNavigateToSuperMall?.()}
+                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer"
+              >
+                Şehrin Açık AVM'sini Gez (Harita)
               </button>
             </div>
+          </div>
+          <div className="w-full md:w-auto shrink-0 text-center">
+            <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 space-y-2">
+              <span className="text-[10px] uppercase font-mono tracking-widest text-amber-400 block font-bold">Anlık Aktif Esnaf</span>
+              <span className="text-4xl font-black">2.095 Dükkân</span>
+              <span className="text-xs text-slate-300 block">7/24 Doğrudan İletişim & POS</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 4. İNDİRİM ORANLARINA GÖRE KEŞFET KUTULARI */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Percent className="w-5 h-5 text-rose-600" /> İndirim Oranlarına Göre Keşfet
+            </h2>
+            <span className="text-xs text-slate-500">Sınırlı Süreli Fırsatlar</span>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            {[
+              { discount: '%10 İndirim', label: 'Seçili Ayakkabı & Giyim', code: 'TAMPZ10', color: 'from-amber-500 to-amber-600' },
+              { discount: '%20 İndirim', label: 'Zanaatkâr Mobilya & Dekor', code: 'TAMPZ20', color: 'from-indigo-600 to-indigo-800' },
+              { discount: '%35 İndirim', label: 'Toptan Koli & Ambalaj', code: 'TAMPZ35', color: 'from-emerald-600 to-teal-700' },
+              { discount: '%50 ve Üzeri', label: 'Büyük Esnaf Tasfiye Sezonu', code: 'TAMPZ50', color: 'from-rose-600 to-pink-700' },
+            ].map((box, idx) => (
+              <div 
+                key={idx}
+                onClick={() => alert(`İndirim Kuponu Kopyalandı: ${box.code} (${box.label} için geçerlidir)`)}
+                className={`bg-gradient-to-br ${box.color} text-white p-5 rounded-2xl shadow-md cursor-pointer hover:scale-[1.02] transition-transform flex flex-col justify-between h-36`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-black tracking-tight">{box.discount}</span>
+                  <Tag className="w-5 h-5 opacity-80" />
+                </div>
+                <div>
+                  <span className="text-xs font-bold block leading-snug">{box.label}</span>
+                  <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-md mt-2 inline-block font-mono">Kupon: {box.code}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* 5. SANA ÖZEL ÖNERİLEN ÜRÜNLER (CAROUSEL) */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-amber-500" /> Sana Özel Önerilen Ürünler & Hizmetler
+            </h2>
+            <div className="flex items-center gap-2">
+              <button 
+                onClick={() => scrollCarousel('left')} 
+                className="w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-100 transition cursor-pointer shadow-xs"
+              >
+                <ChevronLeft className="w-5 h-5 text-slate-700" />
+              </button>
+              <button 
+                onClick={() => scrollCarousel('right')} 
+                className="w-9 h-9 bg-white border border-slate-200 rounded-full flex items-center justify-center hover:bg-slate-100 transition cursor-pointer shadow-xs"
+              >
+                <ChevronRight className="w-5 h-5 text-slate-700" />
+              </button>
+            </div>
+          </div>
+
+          <div 
+            ref={carouselRef}
+            className="flex gap-4 overflow-x-auto scrollbar-none pb-4 pt-1 snap-x scroll-smooth"
+          >
+            {products.slice(0, 6).map((product) => {
+              const oldPrice = Math.round(product.price * 1.25);
+              const discountPercent = 20;
+              const isFav = favorites.includes(product.id);
+
+              return (
+                <div
+                  key={product.id}
+                  onClick={() => onNavigateToProduct?.(product.slug)}
+                  className="min-w-[260px] max-w-[260px] bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer snap-start group overflow-hidden"
+                >
+                  <div className="relative h-56 w-full bg-slate-100 overflow-hidden">
+                    <img 
+                      src={product.image} 
+                      alt={product.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
+                      }}
+                    />
+                    <div className="absolute top-3 left-3 bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg font-black text-[10px] shadow">
+                      {product.badge || 'Kargo Bedava'}
+                    </div>
+
+                    <button 
+                      onClick={(e) => toggleFavorite(product.id, e)}
+                      className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow hover:bg-white transition cursor-pointer"
+                    >
+                      <Heart className={`w-4 h-4 ${isFav ? 'text-rose-600 fill-rose-600' : 'text-slate-600'}`} />
+                    </button>
+
+                    <div className="absolute bottom-2 left-2 bg-rose-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                      %{discountPercent} İndirim
+                    </div>
+                  </div>
+
+                  <div className="p-4 space-y-2.5 flex-1 flex flex-col justify-between">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide block">
+                        {product.storeName || 'TamPazar Esnafı'}
+                      </span>
+                      <h3 className="text-xs font-bold text-slate-800 line-clamp-2 leading-relaxed group-hover:text-indigo-900">
+                        {product.title}
+                      </h3>
+                    </div>
+
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <div className="flex items-center gap-1 text-[11px] text-amber-500 font-bold">
+                        <Star className="w-3.5 h-3.5 fill-amber-400" />
+                        <span className="text-slate-800">{product.rating || 4.8}</span>
+                        <span className="text-slate-400 font-normal">({product.salesCount || 42})</span>
+                      </div>
+
+                      <div className="flex items-baseline justify-between">
+                        <div>
+                          <span className="text-[10px] text-slate-400 line-through block">₺{oldPrice.toLocaleString('tr-TR')}</span>
+                          <span className="text-lg font-black text-slate-900">₺{product.price.toLocaleString('tr-TR')}</span>
+                        </div>
+                        <button
+                          onClick={(e) => handleQuickAdd(product, e)}
+                          className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition cursor-pointer shadow-xs flex items-center gap-1"
+                        >
+                          <ShoppingBag className="w-3.5 h-3.5" /> Ekle
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 6. TÜM ÜRÜNLER / SONSUZ LİSTE (TRENDYOL ÜRÜN GRID) */}
+        <div className="space-y-6 pt-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+            <div>
+              <h2 className="text-xl font-black text-slate-900">Tüm Ürünler & Esnaf Vitrini</h2>
+              <p className="text-xs text-slate-500">Toplam {filteredProducts.length} ürün ve hizmet listeleniyor</p>
+            </div>
+
+            {/* Hızlı Filtre Butonları */}
+            <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0">
+              {[
+                { key: 'all', label: 'Tümü' },
+                { key: 'retail', label: '🛍️ Perakende' },
+                { key: 'wholesale', label: '📦 Toptan' },
+                { key: 'service', label: '💆 Hizmet' }
+              ].map(f => (
+                <button
+                  key={f.key}
+                  onClick={() => setSelectedTypeFilter(f.key as any)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    selectedTypeFilter === f.key
+                      ? 'bg-indigo-900 text-white shadow-sm'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Ürün Grid */}
+          {filteredProducts.length === 0 ? (
+            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+              <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
+                !
+              </div>
+              <h3 className="text-base font-black text-slate-900">Aradığınız kriterde ürün veya hizmet bulunamadı</h3>
+              <p className="text-xs text-slate-500">Lütfen arama teriminizi değiştirin veya filtreleri sıfırlayın.</p>
+              <button
+                onClick={() => { setSearchQuery(''); setSelectedTypeFilter('all'); setSelectedScope('all'); setActiveStoryFilter(null); }}
+                className="px-4 py-2 bg-indigo-900 text-white text-xs font-bold rounded-xl cursor-pointer"
+              >
+                Filtreleri Temizle
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {filteredProducts.map((product) => {
+                const oldPrice = Math.round(product.price * 1.25);
+                const isFav = favorites.includes(product.id);
+
+                return (
+                  <div
+                    key={product.id}
+                    onClick={() => onNavigateToProduct?.(product.slug)}
+                    className="bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between cursor-pointer group overflow-hidden"
+                  >
+                    <div className="relative h-60 w-full bg-slate-100 overflow-hidden">
+                      <img 
+                        src={product.image} 
+                        alt={product.title} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
+                        }}
+                      />
+                      <div className="absolute top-3 left-3 bg-amber-500 text-slate-950 px-2.5 py-1 rounded-lg font-black text-[10px] shadow">
+                        {product.badge || 'Doğrudan Esnaf'}
+                      </div>
+
+                      <button 
+                        onClick={(e) => toggleFavorite(product.id, e)}
+                        className="absolute top-3 right-3 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow hover:bg-white transition cursor-pointer"
+                      >
+                        <Heart className={`w-4 h-4 ${isFav ? 'text-rose-600 fill-rose-600' : 'text-slate-600'}`} />
+                      </button>
+
+                      <div className="absolute bottom-2 left-2 bg-emerald-600 text-white px-2 py-0.5 rounded-md font-bold text-[10px]">
+                        Sepette İndirimli
+                      </div>
+                    </div>
+
+                    <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                      <div className="space-y-1">
+                        <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wide block">
+                          {product.storeName || 'TamPazar Mağazası'}
+                        </span>
+                        <h3 className="text-xs font-bold text-slate-800 line-clamp-2 leading-relaxed group-hover:text-indigo-900">
+                          {product.title}
+                        </h3>
+                      </div>
+
+                      <div className="space-y-2.5 pt-2 border-t border-slate-100">
+                        <div className="flex items-center gap-1 text-[11px] text-amber-500 font-bold">
+                          <Star className="w-3.5 h-3.5 fill-amber-400" />
+                          <span className="text-slate-800">{product.rating || 4.8}</span>
+                          <span className="text-slate-400 font-normal">({product.salesCount || 42} Değerlendirme)</span>
+                        </div>
+
+                        <div className="flex items-baseline justify-between">
+                          <div>
+                            <span className="text-[10px] text-slate-400 line-through block">₺{oldPrice.toLocaleString('tr-TR')}</span>
+                            <span className="text-lg font-black text-slate-900">₺{product.price.toLocaleString('tr-TR')}</span>
+                          </div>
+                          <button
+                            onClick={(e) => handleQuickAdd(product, e)}
+                            className="px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs rounded-xl transition cursor-pointer shadow-xs flex items-center gap-1"
+                          >
+                            <ShoppingBag className="w-3.5 h-3.5" /> Ekle
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           )}
-        </section>
+        </div>
 
       </main>
 
-      {/* Product Interactive Modal (Quick View & Customized Purchase) */}
-      {activeModalProduct && (
-        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-2xl max-w-2xl w-full overflow-hidden shadow-2xl border border-slate-200 flex flex-col md:flex-row max-h-[90vh]">
-            
-            {/* Modal Image */}
-            <div className="md:w-1/2 relative bg-slate-100 min-h-[220px]">
-              <img 
-                src={activeModalProduct.image} 
-                alt={activeModalProduct.title} 
-                className="w-full h-full object-cover"
-              />
-              <span className={`absolute top-3 left-3 text-xs font-bold px-2.5 py-1 rounded-full shadow text-white ${
-                activeModalProduct.type === 'wholesale' ? 'bg-indigo-600' :
-                activeModalProduct.type === 'service' ? 'bg-sky-600' : 'bg-emerald-600'
-              }`}>
-                {activeModalProduct.badge || activeModalProduct.type.toUpperCase()}
-              </span>
+      {/* SEPET / ÇIKIŞ ÇEKMECE (DRAWER) */}
+      {isCartOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex justify-end animate-fade-in">
+          <div className="w-full max-w-md bg-white h-full shadow-2xl flex flex-col justify-between p-6">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="w-5 h-5 text-indigo-900" />
+                <h3 className="text-base font-black text-slate-900">Alışveriş Sepeti ({cart.length})</h3>
+              </div>
+              <button 
+                onClick={() => setIsCartOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* Modal Content */}
-            <div className="md:w-1/2 p-6 flex flex-col justify-between overflow-y-auto space-y-4">
-              <div className="flex justify-between items-start">
-                <div>
-                  <span className="text-xs text-slate-400 font-mono">{activeModalProduct.storeName}</span>
-                  <h3 className="text-base font-bold text-slate-900 mt-0.5">{activeModalProduct.title}</h3>
+            <div className="flex-1 overflow-y-auto py-4 space-y-4">
+              {cart.length === 0 ? (
+                <div className="text-center py-20 space-y-3">
+                  <ShoppingBag className="w-12 h-12 text-slate-300 mx-auto" />
+                  <p className="text-sm font-bold text-slate-700">Sepetiniz henüz boş</p>
+                  <p className="text-xs text-slate-400">Esnaf vitrininden ürün veya hizmet ekleyin.</p>
                 </div>
-                <button 
-                  onClick={() => setActiveModalProduct(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <p className="text-xs text-slate-500 leading-relaxed">
-                {activeModalProduct.description}
-              </p>
-
-              <div>
-                <button
-                  onClick={() => {
-                    setActiveModalProduct(null);
-                    onNavigateToProduct?.(activeModalProduct.slug);
-                  }}
-                  className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-                >
-                  Ürünün Detay Sayfasına Git →
-                </button>
-              </div>
-
-              {/* Retail Variants Selection */}
-              {activeModalProduct.type === 'retail' && activeModalProduct.variants && (
-                <div className="space-y-3 pt-2 border-t border-slate-100">
-                  {activeModalProduct.variants.sizes && (
-                    <div>
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Beden / Ölçü Seçimi</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {activeModalProduct.variants.sizes.map(s => (
-                          <button
-                            key={s}
-                            onClick={() => setModalSize(s)}
-                            className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-colors ${
-                              modalSize === s ? 'bg-indigo-900 text-white border-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-700'
-                            }`}
-                          >
-                            {s}
-                          </button>
-                        ))}
+              ) : (
+                cart.map((item, idx) => {
+                  const unitPrice = getEffectiveUnitPrice(item.product, item.qty);
+                  return (
+                    <div key={idx} className="flex gap-4 p-3 bg-slate-50 border border-slate-200 rounded-2xl items-center">
+                      <img src={item.product.image} alt={item.product.title} className="w-16 h-16 object-cover rounded-xl shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-xs font-bold text-slate-800 truncate">{item.product.title}</h4>
+                        <span className="text-[10px] text-slate-500 block">{item.product.storeName}</span>
+                        {item.variant && <span className="text-[10px] font-mono text-indigo-600 block">Varyant: {item.variant}</span>}
+                        <span className="text-xs font-black text-slate-900 mt-1 block">₺{unitPrice.toLocaleString('tr-TR')} x {item.qty}</span>
                       </div>
+                      <button 
+                        onClick={() => handleRemoveFromCart(idx)}
+                        className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
-                  )}
-
-                  {activeModalProduct.variants.colors && (
-                    <div>
-                      <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Renk</span>
-                      <div className="flex flex-wrap gap-1.5">
-                        {activeModalProduct.variants.colors.map(c => (
-                          <button
-                            key={c}
-                            onClick={() => setModalColor(c)}
-                            className={`px-3 py-1 text-xs font-semibold rounded-lg border transition-colors ${
-                              modalColor === c ? 'bg-indigo-900 text-white border-indigo-900' : 'bg-slate-50 border-slate-200 text-slate-700'
-                            }`}
-                          >
-                            {c}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  );
+                })
               )}
-
-              {/* Wholesale Tiered Quantity */}
-              {activeModalProduct.type === 'wholesale' && (
-                <div className="space-y-3 pt-2 border-t border-slate-100">
-                  <div className="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100 space-y-1 text-xs">
-                    <span className="font-bold text-indigo-900 block">Kademeli B2B Fiyatlandırma</span>
-                    {activeModalProduct.tieredPrices?.map((t, idx) => (
-                      <div key={idx} className="flex justify-between text-slate-600 font-mono text-[11px]">
-                        <span>{t.minQty}{t.maxQty ? `-${t.maxQty}` : '+'} Adet:</span>
-                        <span className="font-bold text-indigo-700">{t.pricePerUnit.toLocaleString('tr-TR')} ₺/adet</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div>
-                    <div className="flex justify-between text-xs font-semibold mb-1">
-                      <span>Sipariş Miktarı:</span>
-                      <span className="text-indigo-900 font-bold">{modalQty} Adet</span>
-                    </div>
-                    <input 
-                      type="range" 
-                      min={activeModalProduct.moq || 1} 
-                      max={150} 
-                      value={modalQty}
-                      onChange={(e) => setModalQty(Number(e.target.value))}
-                      className="w-full accent-indigo-600"
-                    />
-                    <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                      <span>Min: {activeModalProduct.moq}</span>
-                      <span>Mevcut Birim Fiyat: {getEffectiveUnitPrice(activeModalProduct, modalQty)} ₺</span>
-                      <span>Max: 150</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Service Slot Booking */}
-              {activeModalProduct.type === 'service' && activeModalProduct.bookingSlots && (
-                <div className="space-y-3 pt-2 border-t border-slate-100">
-                  <div className="flex items-center gap-3 text-xs text-slate-600">
-                    <span className="flex items-center gap-1 font-semibold">
-                      <Clock className="w-3.5 h-3.5 text-sky-600" /> {activeModalProduct.durationMin} Dk
-                    </span>
-                    <span className="flex items-center gap-1 font-semibold">
-                      <MapPin className="w-3.5 h-3.5 text-sky-600" /> {activeModalProduct.serviceAreaRadiusKm} KM Hizmet Alanı
-                    </span>
-                  </div>
-
-                  <div>
-                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Uygun Randevu Saatleri</span>
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {activeModalProduct.bookingSlots.map(s => (
-                        <button
-                          key={s}
-                          onClick={() => setModalSlot(s)}
-                          className={`py-1.5 px-2 text-center text-xs font-mono rounded-lg border transition-colors ${
-                            modalSlot === s ? 'bg-sky-600 text-white border-sky-600 font-bold' : 'bg-slate-50 border-slate-200 text-slate-700'
-                          }`}
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Modal Footer Price & Action */}
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-4">
-                <div>
-                  <span className="text-[10px] text-slate-400 block font-mono">Toplam Fiyat</span>
-                  <span className="text-xl font-black text-slate-900 font-mono">
-                    {(getEffectiveUnitPrice(activeModalProduct, modalQty) * modalQty).toLocaleString('tr-TR')} ₺
-                  </span>
-                </div>
-
-                <button
-                  onClick={handleAddToCartFromModal}
-                  className="flex-1 py-3 px-4 bg-indigo-900 hover:bg-indigo-800 text-white font-bold text-xs rounded-xl transition-colors flex items-center justify-center gap-2 shadow"
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  Sepete Ekle
-                </button>
-              </div>
-
             </div>
+
+            {cart.length > 0 && (
+              <div className="pt-4 border-t border-slate-200 space-y-4">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-slate-500 font-medium">Toplam Tutar:</span>
+                  <span className="text-xl font-black text-slate-900">₺{calculateCartTotal().toLocaleString('tr-TR')}</span>
+                </div>
+
+                {checkoutSuccess && (
+                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-xs font-semibold flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    Sipariş başarıyla alındı! GİB e-Fatura oluşturuldu ve esnaf kasasına aktarıldı.
+                  </div>
+                )}
+
+                <button
+                  onClick={handleExecuteCheckout}
+                  disabled={checkoutSuccess}
+                  className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <ShieldCheck className="w-4 h-4" />
+                  Doğrudan Esnaf POS ile Öde & Siparişi Tamamla
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Shopping Cart Drawer */}
-      {isCartOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex justify-end animate-fade-in">
-          <div className="bg-white w-full max-w-md h-full shadow-2xl flex flex-col justify-between p-6">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-              <div className="flex items-center gap-2">
-                <ShoppingBag className="w-5 h-5 text-indigo-900" />
-                <h3 className="font-bold text-slate-900 text-base">Alışveriş Sepeti</h3>
-                <span className="bg-indigo-50 text-indigo-900 text-xs px-2 py-0.5 rounded-full font-bold">
-                  {cart.length} Ürün
-                </span>
+      {/* QUICK ADD MODAL (Varyant / Beden / Toptan Miktar) */}
+      {activeModalProduct && (
+        <div className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 md:p-8 shadow-2xl space-y-6 relative">
+            <button 
+              onClick={() => setActiveModalProduct(null)}
+              className="absolute top-6 right-6 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex gap-4 items-center">
+              <img src={activeModalProduct.image} alt={activeModalProduct.title} className="w-20 h-20 object-cover rounded-2xl border" />
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">{activeModalProduct.storeName}</span>
+                <h3 className="text-base font-black text-slate-900 leading-snug">{activeModalProduct.title}</h3>
+                <span className="text-lg font-black text-slate-900 block">₺{activeModalProduct.price.toLocaleString('tr-TR')}</span>
               </div>
-              <button 
-                onClick={() => setIsCartOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
-            {/* Cart Items List */}
-            <div className="flex-1 overflow-y-auto py-4 space-y-4">
-              {cart.map((item, idx) => {
-                const unit = getEffectiveUnitPrice(item.product, item.qty);
-                return (
-                  <div key={idx} className="flex gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100 items-center">
-                    <img 
-                      src={item.product.image} 
-                      alt={item.product.title} 
-                      className="w-14 h-14 object-cover rounded-lg shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-xs font-bold text-slate-900 truncate">{item.product.title}</h4>
-                      <p className="text-[10px] text-slate-400">{item.product.storeName}</p>
-                      {item.variant && (
-                        <p className="text-[10px] text-indigo-600 font-medium">{item.variant}</p>
-                      )}
-                      {item.slot && (
-                        <p className="text-[10px] text-sky-600 font-mono">Randevu: {item.slot}</p>
-                      )}
-                      <div className="flex items-center justify-between mt-1">
-                        <span className="text-xs font-mono font-bold text-slate-900">
-                          {item.qty} x {unit.toLocaleString('tr-TR')} ₺
-                        </span>
-                        <span className="text-xs font-mono font-bold text-indigo-950">
-                          {(unit * item.qty).toLocaleString('tr-TR')} ₺
-                        </span>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => handleRemoveFromCart(idx)}
-                      className="text-slate-400 hover:text-red-600 p-1"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                );
-              })}
-
-              {cart.length === 0 && (
-                <div className="text-center py-12 text-slate-400 space-y-2">
-                  <ShoppingBag className="w-12 h-12 mx-auto opacity-30 text-slate-400" />
-                  <p className="text-sm">Sepetiniz şu anda boş.</p>
-                </div>
-              )}
-            </div>
-
-            {/* Cart Footer */}
-            {cart.length > 0 && (
-              <div className="border-t border-slate-100 pt-4 space-y-3">
-                {checkoutSuccess ? (
-                  <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-xl text-center space-y-1">
-                    <div className="font-bold text-sm">✓ Sipariş ve Tahsilat Tamamlandı!</div>
-                    <p className="text-xs">
-                      Satıcının Kendi Sanal POS'u üzerinden çekim yapıldı. GİB e-Fatura oluşturuldu.
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="space-y-1 text-xs">
-                      <div className="flex justify-between text-slate-500">
-                        <span>Platform Komisyonu:</span>
-                        <span className="text-emerald-600 font-bold">%0 (Sıfır Komisyon)</span>
-                      </div>
-                      <div className="flex justify-between text-slate-500">
-                        <span>Doğrudan POS Tahsilatı:</span>
-                        <span className="font-bold text-slate-700">Satıcı Hesabına Doğrudan</span>
-                      </div>
-                      <div className="flex justify-between text-base font-black text-slate-900 pt-2 border-t border-slate-100">
-                        <span>Toplam Tutar:</span>
-                        <span className="font-mono">{calculateCartTotal().toLocaleString('tr-TR')} ₺</span>
-                      </div>
-                    </div>
-
+            {/* Beden / Varyant */}
+            {activeModalProduct.variants?.sizes && (
+              <div className="space-y-2">
+                <span className="text-xs font-bold text-slate-700 block">Seçenek / Beden:</span>
+                <div className="flex flex-wrap gap-2">
+                  {activeModalProduct.variants.sizes.map(s => (
                     <button
-                      onClick={handleExecuteCheckout}
-                      className="w-full py-3.5 bg-indigo-900 hover:bg-indigo-800 text-white font-bold text-sm rounded-xl transition-colors flex items-center justify-center gap-2 shadow-md cursor-pointer"
+                      key={s}
+                      onClick={() => setModalSize(s)}
+                      className={`px-4 py-2 rounded-xl text-xs font-bold border transition cursor-pointer ${modalSize === s ? 'bg-indigo-900 text-white border-indigo-900' : 'bg-slate-50 text-slate-700 border-slate-200'}`}
                     >
-                      <span>Güvenli Ödeme Yap (BYO POS)</span>
-                      <ArrowRight className="w-4 h-4" />
+                      {s}
                     </button>
-                  </>
-                )}
+                  ))}
+                </div>
               </div>
             )}
 
+            {/* Miktar (Toptan MOQ) */}
+            <div className="space-y-2">
+              <span className="text-xs font-bold text-slate-700 block">Sipariş Miktarı (Adet / Koli):</span>
+              <div className="flex items-center gap-4">
+                <input 
+                  type="number"
+                  min={activeModalProduct.moq || 1}
+                  value={modalQty}
+                  onChange={(e) => setModalQty(Math.max(activeModalProduct.moq || 1, parseInt(e.target.value) || 1))}
+                  className="w-24 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-black text-sm outline-none"
+                />
+                <span className="text-xs text-slate-500">
+                  Birim Fiyat: <strong className="text-slate-900">₺{getEffectiveUnitPrice(activeModalProduct, modalQty).toLocaleString('tr-TR')}</strong>
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleAddToCartFromModal}
+              className="w-full py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-2xl shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              Sepete Ekle (₺{(getEffectiveUnitPrice(activeModalProduct, modalQty) * modalQty).toLocaleString('tr-TR')})
+            </button>
           </div>
         </div>
       )}

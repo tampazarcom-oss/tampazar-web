@@ -438,6 +438,115 @@ export const initialProducts: Product[] = [
     durationMin: 60,
     serviceAreaRadiusKm: 15,
     bookingSlots: ['10:00', '11:30', '13:00', '14:30', '16:00', '17:30', '19:00', '20:30']
+  },
+  {
+    id: 'prod-401',
+    tenantId: 'tenant-1',
+    storeName: 'Mert Kundura Ltd.',
+    type: 'retail',
+    title: 'Oversize Premium Pamuklu Kapşonlu Sweatshirt',
+    slug: 'oversize-premium-pamuklu-kapsonlu-sweatshirt',
+    category: 'Giyim',
+    categorySlug: 'giyim',
+    description: '3 iplik şardonlu %100 organik pamuk kumaş, içi yumuşak polar dokulu, unisex oversize kesim kapşonlu sweatshirt.',
+    price: 1150,
+    sku: 'MKT-SWT-01',
+    vatRate: 20,
+    rating: 4.8,
+    salesCount: 520,
+    badge: 'Kargo Bedava',
+    image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=600',
+    variants: {
+      sizes: ['S', 'M', 'L', 'XL'],
+      colors: ['Antrasit', 'Siyah', 'Melanj Gri']
+    }
+  },
+  {
+    id: 'prod-402',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat',
+    type: 'retail',
+    title: 'El Yapımı Seramik Kahve Fincan Takımı (4lü)',
+    slug: 'el-yapimi-seramik-kahve-fincan-takimi',
+    category: 'Ev & Yaşam',
+    categorySlug: 'ev-yasam',
+    description: 'Yüksek derecede fırınlanmış özel sır kaplamalı, el yapımı seramik Türk kahvesi fincanı ve tabak seti.',
+    price: 890,
+    sku: 'ATZ-SRM-04',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 230,
+    badge: 'Zanaatkâr Ürünü',
+    image: 'https://images.unsplash.com/photo-1514432324607-a09d9b4aefdd?auto=format&fit=crop&q=80&w=600',
+    variants: {
+      sizes: ['Standart (4lü Set)'],
+      colors: ['Toprak', 'Karamel', 'Zeytin Yeşili']
+    }
+  },
+  {
+    id: 'prod-403',
+    tenantId: 's2',
+    storeName: 'Mega Endüstriyel',
+    type: 'wholesale',
+    title: 'Kablosuz Ergonomik Dikey Mouse ve Klavye Seti',
+    slug: 'kablosuz-ergonomik-dikey-mouse-klavye-seti',
+    category: 'Elektronik',
+    categorySlug: 'elektronik',
+    description: 'Bilek ağrılarını önleyen dikey açılı ergonomik mouse ve sessiz tuş dizilimli kablosuz ofis klavye seti.',
+    price: 1950,
+    sku: 'MGA-ERG-99',
+    vatRate: 20,
+    rating: 4.7,
+    salesCount: 310,
+    badge: 'Hızlı Teslimat',
+    image: 'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&q=80&w=600',
+    variants: {
+      sizes: ['Standart'],
+      colors: ['Mat Siyah', 'Uzay Grisi']
+    }
+  },
+  {
+    id: 'prod-404',
+    tenantId: 'tenant-3',
+    storeName: 'Bursa Spa & Sağlık',
+    type: 'retail',
+    title: 'Doğal Keçi Sütü ve Esansiyel Yağlı Sabun Seti',
+    slug: 'dogal-keci-sutu-esansiyel-yagli-sabun-seti',
+    category: 'Kozmetik',
+    categorySlug: 'kozmetik',
+    description: 'Soğuk sıkım zeytinyağı ve taze keçi sütünden üretilmiş, hassas ciltler için nemlendirici doğal sabun koleksiyonu (3lü).',
+    price: 450,
+    sku: 'BSS-SBN-03',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 780,
+    badge: 'Doğal & Organik',
+    image: 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?auto=format&fit=crop&q=80&w=600',
+    variants: {
+      sizes: ['3lü Hediye Kutusu'],
+      colors: ['Doğal Beyaz', 'Lavanta', 'Defne']
+    }
+  },
+  {
+    id: 'prod-405',
+    tenantId: 's3',
+    storeName: 'FotoSentez Stüdyo',
+    type: 'service',
+    title: 'Açık Hava Düğün ve Nişan Klip Çekimi',
+    slug: 'acik-hava-dugun-ve-nisan-klip-cekimi',
+    category: 'Medya & Fotoğraf',
+    categorySlug: 'medya-fotograf',
+    description: '4K sinematik drone çekimleri, profesyonel gimbal ve renk düzenlemeli (Color Grading) 3 dakikalık özet klip.',
+    price: 9500,
+    sku: 'FTS-CIN-02',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 45,
+    badge: 'Özel Rezervasyon',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=600',
+    durationMin: 360,
+    serviceAreaRadiusKm: 100,
+    bookingSlots: ['10:00 - 16:00', '14:00 - 20:00']
   }
 ];
 
