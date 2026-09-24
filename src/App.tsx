@@ -282,7 +282,6 @@ function MainLayout() {
             </Link>
             <span className="text-slate-300">|</span>
             <BrandLogo size="md" />
-            <MegaMenu />
           </div>
 
           <div className="flex items-center gap-3">
