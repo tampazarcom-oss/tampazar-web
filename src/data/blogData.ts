@@ -1035,7 +1035,7 @@ export function getPopularProgrammaticCombinations(limit: number = 30): { title:
 // Interactive Season Calendar Data for interactive tools tab
 export const SEASONAL_CALENDAR_DATA = [
   { month: 'Ocak', season: 'Kış', vegetables: ['Pırasa', 'Ispanak', 'Kereviz', 'Lahana', 'Havuç'], fruits: ['Portakal', 'Mandalina', 'Greyfurt', 'Elma', 'Nar'], fish: ['Hamsi', 'Mezgit', 'Kalkan', 'Lüfer'] },
-  { month: 'Şubat', season: 'Kış', vegetables: ['Brokoli', 'Karnabahar', 'Brüksel Lahanası', 'Pazı'], fruits: ['Portakal', 'Elma', 'Armut'], fish: ['Kalkan', 'Tekir', 'Hamsi', 'Mezgit'] },
+  { month: 'Şubat', season: 'Kış', vegetables: ['Brokoli', 'Karnabahar', 'Brüksel Lahanası', 'Pazı'], fruits: ['Portakal', 'Elma', 'Ayva'], fish: ['Kalkan', 'Tekir', 'Hamsi', 'Mezgit'] },
   { month: 'Mart', season: 'İlkbahar', vegetables: ['Enginar', 'Bakla', 'Ispanak', 'Kuşkonmaz'], fruits: ['Limon', 'Elma', 'Muz'], fish: ['Kefal', 'Levrek', 'Mezgit'] },
   { month: 'Nisan', season: 'İlkbahar', vegetables: ['Enginar', 'Bezelye', 'Taze Sarımsak', 'Semizotu'], fruits: ['Çağla', 'Çilek', 'Can Erik'], fish: ['Kalkan', 'Mercan', 'Levrek'] },
   { month: 'Mayıs', season: 'İlkbahar', vegetables: ['Enginar', 'Bakla', 'Domates', 'Salatalık', 'Taze Fasulye'], fruits: ['Çilek', 'Erik', 'Dut', 'Kiraz'], fish: ['Barbun', 'İstavrit', 'Levrek'] },

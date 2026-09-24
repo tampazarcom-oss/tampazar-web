@@ -395,6 +395,32 @@ function MainLayout() {
               } 
             />
             <Route 
+              path="/yonetim/:subTab" 
+              element={
+                <TampazarSellerDashboard 
+                  onNavigate={(tab) => {
+                    if (tab === 'home') navigate('/');
+                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                    else navigate(`/saas-konsol/${tab}`);
+                  }} 
+                  activeStoreName={activeTenant.name} 
+                />
+              } 
+            />
+            <Route 
+              path="/yonetim/ayarlar/:subTab" 
+              element={
+                <TampazarSellerDashboard 
+                  onNavigate={(tab) => {
+                    if (tab === 'home') navigate('/');
+                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                    else navigate(`/saas-konsol/${tab}`);
+                  }} 
+                  activeStoreName={activeTenant.name} 
+                />
+              } 
+            />
+            <Route 
               path="/saas-konsol/:subTab" 
               element={
                 <SaaSConsoleRouteWrapper 

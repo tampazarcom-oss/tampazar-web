@@ -1,7 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <rect width="512" height="512" rx="112" fill="#0c1222"/>
-  <!-- TP Letters -->
-  <text x="256" y="325" font-family="system-ui, -apple-system, sans-serif" font-size="240" font-weight="900" fill="#f97316" text-anchor="middle" letter-spacing="10">TP</text>
-  <!-- Smile Arc -->
-  <path d="M 120 380 Q 256 460 392 380" fill="none" stroke="#f97316" stroke-width="44" stroke-linecap="round"/>
+  <!-- Zemin Sıcak Amber Yumuşatılmış Kare -->
+  <rect width="512" height="512" rx="112" fill="#F59E0B"/>
+  
+  <!-- Koyu Lacivert TP Harfleri & Dolgulu Gülümseme (#0B132B) -->
+  <g fill="#0B132B">
+    <!-- T Harfi -->
+    <path d="M 96,78 L 254,78 L 254,102 L 189,102 L 189,286 L 161,286 L 161,102 L 96,102 Z"/>
+    
+    <!-- P Harfi -->
+    <path fill-rule="evenodd" d="M 270,78 L 358,78 C 390,78 414,102 414,134 C 414,166 390,190 358,190 L 298,190 L 298,286 L 270,286 Z M 298,102 L 354,102 C 374,102 386,115 386,134 C 386,153 374,166 354,166 L 298,166 Z"/>
+    
+    <!-- Sol Gamze Kapağı -->
+    <path d="M 68,375 C 66,365 82,348 108,346 C 122,346 128,354 126,362 C 112,374 84,382 68,375 Z"/>
+    
+    <!-- Sağ Gamze Kapağı -->
+    <path d="M 444,375 C 446,365 430,348 404,346 C 390,346 384,354 386,362 C 400,374 428,382 444,375 Z"/>
+    
+    <!-- Dolgulu Hilal Gülümsemesi -->
+    <path d="M 112,374 C 148,422 198,448 256,448 C 314,448 364,422 400,374 C 360,405 310,422 256,422 C 202,422 152,405 112,374 Z"/>
+  </g>
 </svg>

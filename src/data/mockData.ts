@@ -157,7 +157,7 @@ export interface MeasurementConfig {
   pricePerUnitMultiplier?: number;
 }
 
-// 2. Yemek & Restoran Malzeme Seçici (Yemeksepeti / Döner Modeli)
+// 2. Yemek & Restoran Malzeme Seçici (TamYemek Modeli)
 export interface FoodRemovableIngredient {
   id: string;
   name: string;
@@ -504,7 +504,7 @@ export const initialPosConfigs: PosConfig[] = [
 ];
 
 export const initialProducts: Product[] = [
-  // 1. YEMEK & RESTORAN (Yemeksepeti / Döner Modeli - Malzeme Çıkarma & Ekstra Ekleme)
+  // 1. YEMEK & RESTORAN (TamYemek Modeli - Malzeme Çıkarma & Ekstra Ekleme)
   {
     id: 'p-doner-hatay',
     tenantId: 's3',
@@ -1190,7 +1190,7 @@ export const initialProducts: Product[] = [
   // ==========================================================
   // 5 HİBRİT TİCARET TÜRÜ ZENGİN ÜRÜN & HİZMET VERİ SETİ
   // ==========================================================
-  // a) Ulusal Kargo & Pazaryeri Vitrini (Trendyol/Amazon Modeli)
+  // a) Ulusal Kargo & Pazaryeri Vitrini (TamPazar Ulusal Kargo)
   {
     id: 'prod-hyb-01',
     tenantId: 'tenant-1',
@@ -1244,7 +1244,7 @@ export const initialProducts: Product[] = [
     }
   },
 
-  // b) Sıcak Yerel Sipariş & Mahalle Lezzetleri (Yemeksepeti Modeli)
+  // b) Sıcak Yerel Sipariş & Mahalle Lezzetleri (TamYemek & TamKurye Modeli)
   {
     id: 'prod-hyb-03',
     tenantId: 's1',
@@ -1293,7 +1293,7 @@ export const initialProducts: Product[] = [
     }
   },
 
-  // c) Acil Nöbetçi Hizmetler & Yerel Ustalar (Armut/Acil Servis Modeli)
+  // c) Acil Nöbetçi Hizmetler & Yerel Ustalar (TamUsta Acil Servis Modeli)
   {
     id: 'prod-hyb-05',
     tenantId: 's1',

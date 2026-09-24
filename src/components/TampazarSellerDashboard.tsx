@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingCart, ArrowDownLeft, FileText, Truck,
   Users, Building2, Package, Wallet, BarChart3, Calculator,
@@ -70,9 +71,42 @@ export default function TampazarSellerDashboard({
   activeStoreName
 }: TampazarSellerDashboardProps) {
   const { user, isAuthenticated, loginAsSeller, openAuthModal, logout } = useAuth();
+  const { subTab } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Tab State
-  const [activeTab, setActiveTab] = useState<DashboardTab>('dashboard');
+  const getTabFromRoute = (tabParam?: string, pathname?: string): DashboardTab => {
+    const p = (tabParam || pathname || '').toLowerCase();
+    if (p.includes('abonelik') || p.includes('subscription')) return 'subscription';
+    if (p.includes('entegrasyon') || p.includes('integration') || p.includes('byo')) return 'integrations';
+    if (p.includes('admin') || p.includes('launch') || p.includes('mrr') || p.includes('canli')) return 'admin_launch';
+    if (p.includes('ayar') || p.includes('setting')) return 'settings';
+    if (p.includes('fatura') || p.includes('efatura') || p.includes('invoice')) return 'efatura';
+    if (p.includes('cari') || p.includes('ledger')) return 'cariler';
+    if (p.includes('crm') || p.includes('musteri')) return 'crm';
+    if (p.includes('kasa') || p.includes('nakit') || p.includes('wallet')) return 'kasa';
+    if (p.includes('stok') || p.includes('urun') || p.includes('stock')) return 'stok';
+    if (p.includes('kargo') || p.includes('orders_cargo')) return 'orders_cargo';
+    if (p.includes('hizli') || p.includes('orders_local')) return 'orders_local';
+    if (p.includes('servis') || p.includes('orders_service')) return 'orders_service';
+    if (p.includes('dijital') || p.includes('tamdijital')) return 'tamdijital';
+    if (p.includes('seans') || p.includes('tamseans')) return 'tamseans';
+    if (p.includes('teklif') || p.includes('tamteklif')) return 'tamteklif';
+    if (p.includes('toptan') || p.includes('b2b')) return 'b2b_dropshipping';
+    if (p.includes('pos')) return 'pos';
+    return 'dashboard';
+  };
+
+  // Tab State with route sync
+  const [activeTab, setActiveTab] = useState<DashboardTab>(() => getTabFromRoute(subTab, location.pathname));
+
+  useEffect(() => {
+    if (subTab || location.pathname.startsWith('/yonetim/')) {
+      const targetTab = getTabFromRoute(subTab, location.pathname);
+      setActiveTab(targetTab);
+    }
+  }, [subTab, location.pathname]);
+
   const [activePeriod, setActivePeriod] = useState<'BU_AY' | 'SON_30' | 'GECEN_AY' | 'BU_YIL'>('BU_AY');
   const [currentStore, setCurrentStore] = useState<string>(user?.storeName || activeStoreName || 'FotoSentez Stüdyo');
   const [quickSearchTerm, setQuickSearchTerm] = useState('');

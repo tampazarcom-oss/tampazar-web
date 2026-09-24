@@ -431,7 +431,7 @@ export const INITIAL_MERCHANT_QUOTES: MerchantQuote[] = [
     price: 8500,
     vatIncluded: true,
     duration: '3 İş Günü',
-    note: 'Dekupe + gölge efekti ve Trendyol/Amazon formatına uygun 1200x1800 px teslimat.',
+    note: 'Dekupe + gölge efekti ve TamPazar dijital vitrin standartlarına uygun 1200x1800 px teslimat.',
     phone: '0535 333 44 11',
     whatsapp: '905353334411',
     createdAt: '2026-09-23 13:10',

@@ -55,7 +55,7 @@ export const SUBSCRIPTION_TIERS: SubscriptionTier[] = [
       'TamKurye Ortak Mahalle Havuzu & Çoklu Dükkan Sepeti',
       'TamPazar B2B Toptan Ticaret & Dropshipping Tedarik Ağı',
       'Tüm Ulusal Kargo Entegrasyonları (Yurtiçi, Aras, MNG, PTT)',
-      'E-Fatura Otomatik Taslak & Muhasebe Köprüsü (Paraşüt / BizimHesap)',
+      'GİB UBL-TR 2.1 E-Fatura & Ön Muhasebe Köprüsü',
       'TamTeklif Kapalı Devre Teklif Havuzuna Katılım',
       'Öncelikli Arama Sıralaması & AVM Vitrini Tanıtımı'
     ]
@@ -246,8 +246,8 @@ export type HybridDeliveryType =
   | 'CARGO'             // 1. TamKargo (Ulusal E-Ticaret & Kargo Gönderimi)
   | 'LOCAL_EXPRESS'     // 2. TamHızlı (30-45 Dk Anlık Yerel Teslimat & Masaüstü Zil)
   | 'FIELD_SERVICE'     // 3. TamUsta (Yerel Hizmet & Saha Servisi)
-  | 'DIGITAL_DOWNLOAD'  // 4. TamDijital (Etsy & Gumroad Modeli Anında Dosya İndirme)
-  | 'ONLINE_SESSION';   // 5. TamSeans (Superpeer & Calendly Modeli Canlı Randevu)
+  | 'DIGITAL_DOWNLOAD'  // 4. TamDijital (Anında Dosya İndirme Modeli)
+  | 'ONLINE_SESSION';   // 5. TamSeans (Canlı Uzman Randevu Modeli)
 
 export type DirectPaymentMethod = 
   | 'CASH_ON_DELIVERY'        // Kapıda Nakit Ödeme (Doğrudan esnafa/kuryeye)
@@ -427,7 +427,7 @@ export interface HybridOrder {
 }
 
 export const initialHybridOrders: HybridOrder[] = [
-  // 1. ÖZELLEŞTİRİLMİŞ YEMEK SİPARİŞİ (Yemeksepeti / Döner Modeli: Malzeme Çıkarma & Ekstra)
+  // 1. ÖZELLEŞTİRİLMİŞ YEMEK SİPARİŞİ (TamYemek Modeli: Malzeme Çıkarma & Ekstra)
   {
     id: 'ord-food-custom-1',
     orderNumber: 'TPZ-YEMEK-2026-0711',

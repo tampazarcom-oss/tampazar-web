@@ -577,8 +577,8 @@ export default function MerchantIntegrationHub() {
             {/* Provider Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
               {[
-                { id: 'parasut', label: 'Paraşüt', desc: 'REST API v4' },
-                { id: 'bizimhesap', label: 'BizimHesap', desc: 'Otomatik e-Fatura' },
+                { id: 'parasut', label: 'Ön Muhasebe API', desc: 'REST API Entegrasyonu' },
+                { id: 'bizimhesap', label: 'Bulut Muhasebe Köprüsü', desc: 'Otomatik e-Fatura & Cari' },
                 { id: 'gib_portal', label: 'GİB e-Arşiv Portal', desc: '5000/30000 Doğrudan' },
                 { id: 'ubl_tr', label: 'UBL-TR Özel Entegratör', desc: 'EDM / Uyumsoft / Foriba' }
               ].map(item => (

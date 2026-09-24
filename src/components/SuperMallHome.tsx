@@ -185,7 +185,7 @@ export const SAMPLE_PRODUCTS: UniversalCardData[] = [
       isPhysicalVerified: true,
     }
   },
-  // 7. TamDijital - Nakış Deseni & Tasarım Dosyası (Etsy/Gumroad Modeli)
+  // 7. TamDijital - Nakış Deseni & Tasarım Dosyası (TamDijital Anında Dosya İndirme)
   {
     id: 'dig-prod-101',
     slug: 'maras-isi-cicekli-nakis-deseni-paketi',
