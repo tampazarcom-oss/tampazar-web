@@ -29,6 +29,7 @@ const CourierOnboardingAndDashboard = lazy(() => import('./components/courier/Co
 const BlogPage = lazy(() => import('./pages/Blog'));
 const BlogSitemap = lazy(() => import('./pages/BlogSitemap'));
 const PazaryeriDiscoveryPage = lazy(() => import('./components/PazaryeriDiscoveryPage'));
+const SellerPortalPage = lazy(() => import('./components/SellerPortalPage'));
 
 const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
 const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
@@ -239,14 +240,14 @@ function MainLayout() {
             📚 Rehber & Blog
           </Link>
           <Link
-            to="/yonetim"
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname === '/yonetim' 
-                ? 'bg-[#10B981] text-[#0B132B] font-black shadow-xs' 
-                : 'text-emerald-400 hover:text-emerald-300 font-semibold'
+            to="/saticipaneli"
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-extrabold ${
+              location.pathname.startsWith('/saticipaneli') 
+                ? 'bg-[#F59E0B] text-[#0B132B] shadow-xs' 
+                : 'bg-[#0F4C3A] text-amber-300 hover:bg-[#0B382B]'
             }`}
           >
-            📊 Esnaf Ön Muhasebe
+            🏪 Satıcı Ol / Giriş
           </Link>
           <Link
             to="/saas-konsol/byopos"
@@ -362,6 +363,14 @@ function MainLayout() {
             <Route 
               path="/pazaryeri/:categorySlug" 
               element={<PazaryeriDiscoveryPage />} 
+            />
+            <Route 
+              path="/saticipaneli" 
+              element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
+              path="/saticipaneli/*" 
+              element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
             />
             <Route 
               path="/dukkan/:slug" 

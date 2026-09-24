@@ -654,6 +654,15 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           {/* Sağ Eylemler: Nefes Payı Açılmış Butonlar */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <Link 
+              to="/saticipaneli"
+              className="hidden xl:flex items-center gap-1.5 bg-[#0F4C3A] hover:bg-[#0B382B] text-white px-3 py-2 rounded-xl font-bold text-[11px] transition-all cursor-pointer shadow-xs border border-emerald-600/40"
+            >
+              <Store className="w-3.5 h-3.5 text-amber-400" />
+              <span>Satıcı Ol / Dükkan Aç</span>
+              <span className="bg-[#F59E0B] text-[#0B132B] text-[8.5px] font-black px-1 py-0.2 rounded uppercase">14 Gün Ücretsiz</span>
+            </Link>
+
+            <Link 
               to="/toptan"
               className="hidden lg:flex items-center gap-1.5 bg-[#0B132B] hover:bg-[#111B38] text-amber-300 px-3 py-2 rounded-xl font-extrabold text-[11px] transition-all cursor-pointer shadow-xs border border-slate-700/80"
             >
@@ -699,6 +708,20 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           setIsTamTeklifModalOpen(true);
         }}
       />
+
+      {/* KATEGORİ BARI ALTI ESNAF KAZANIM MİNİ DÖNÜŞÜM ŞERİDİ */}
+      <div className="bg-[#0F4C3A] text-white py-2 px-4 text-xs font-bold shadow-2xs border-b border-emerald-800 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-center">
+        <span className="bg-[#F59E0B] text-[#0B132B] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-xs">
+          Esnaf mısınız?
+        </span>
+        <span className="text-emerald-100">Kendi Dijital Dükkanınızı & Reyonunuzu 2 Dakikada Açın (%0 Komisyon · Doğrudan Esnaf POS'u)</span>
+        <Link 
+          to="/saticipaneli" 
+          className="bg-white text-[#0F4C3A] hover:bg-[#F59E0B] hover:text-[#0B132B] text-[11px] font-extrabold px-3 py-1 rounded-xl transition-all shadow-xs"
+        >
+          Hemen Mağaza Aç →
+        </Link>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 pt-6 pb-12 space-y-10 flex-1 w-full">
         
@@ -746,6 +769,35 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
               <span className="text-xs text-emerald-200 block font-medium">7/24 Doğrudan İletişim & POS</span>
             </div>
           </div>
+        </div>
+
+        {/* HERO BANNER ALTI STRATEJİK SATICI DÖNÜŞÜM BANTI */}
+        <div className="bg-gradient-to-r from-[#0B132B] via-[#0F4C3A] to-[#0B132B] rounded-3xl p-6 sm:p-8 text-white border border-emerald-800/80 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="space-y-2 text-center md:text-left max-w-2xl">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+              <span className="bg-[#F59E0B] text-[#0B132B] text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+                🛡️ %0 Komisyon Garantisi
+              </span>
+              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                Doğrudan Esnaf IBAN / POS
+              </span>
+            </div>
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
+              Aracı Komisyonu Ödemeyin, Mahallenizin Dijital Dükkanı Olun!
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 font-medium">
+              %0 komisyon, doğrudan esnaf IBAN'ı/POS'u ve 81 ilde anında görünürlük. Satışlarınızdan 1 ₺ bile komisyon kesilmez.
+            </p>
+          </div>
+
+          <Link 
+            to="/saticipaneli"
+            className="bg-[#F59E0B] hover:bg-[#D97706] text-[#0B132B] font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-xl transition-all whitespace-nowrap cursor-pointer transform hover:-translate-y-0.5 shrink-0 flex items-center gap-2"
+          >
+            <Store className="w-4 h-4" />
+            <span>Hemen Mağaza Aç (İlk 14 Gün Ücretsiz)</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* 4. İNDİRİM ORANLARINA GÖRE KEŞFET KUTULARI */}
@@ -1352,6 +1404,77 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
               })}
             </div>
           )}
+
+          {/* FOOTER ÖNCESİ ESNAF KATILIM BLOĞU (3'LÜ BAŞVURU KARTLARI) */}
+          <div className="space-y-5 pt-4">
+            <div className="text-center max-w-2xl mx-auto space-y-1">
+              <span className="text-[11px] font-black text-[#0F4C3A] uppercase tracking-wider bg-emerald-100 px-3 py-0.5 rounded-full inline-block">
+                TamPazar Ailesine Katılın
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-[#0B132B]">
+                Dükkan Sahipleri, Kuryeler ve Ustalar İçin Dijital İşletim Sistemi
+              </h2>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Card 1: Dükkan Sahipleri */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-left space-y-4">
+                <div className="space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-[#0F4C3A] flex items-center justify-center text-xl font-black">
+                    🏪
+                  </div>
+                  <h3 className="text-base font-black text-[#0B132B]">Dükkan Sahipleri & Perakende</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Restoran, Fırın, Kasap, Manav, Butik ve Yapı Marketler için %0 komisyonla doğrudan online sipariş alın.
+                  </p>
+                </div>
+                <Link 
+                  to="/saticipaneli"
+                  className="w-full py-3 bg-[#0F4C3A] hover:bg-[#0B382B] text-white font-extrabold text-xs rounded-xl text-center block transition cursor-pointer shadow-xs"
+                >
+                  Dükkanını 2 Dakikada Aç →
+                </Link>
+              </div>
+
+              {/* Card 2: Bağımsız Kuryeler */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-left space-y-4">
+                <div className="space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-sky-100 text-sky-900 flex items-center justify-center text-xl font-black">
+                    🛵
+                  </div>
+                  <h3 className="text-base font-black text-[#0B132B]">Bağımsız Kuryeler (TamKurye)</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Kendi motorunuz veya aracınızla esnafların siparişlerini taşıyın, teslimat başına net kazanç sağlayın.
+                  </p>
+                </div>
+                <Link 
+                  to="/kurye-ol"
+                  className="w-full py-3 bg-[#0B132B] hover:bg-[#111B38] text-amber-300 font-extrabold text-xs rounded-xl text-center block transition cursor-pointer shadow-xs"
+                >
+                  Kurye Olarak Katıl →
+                </Link>
+              </div>
+
+              {/* Card 3: Yerel Ustalar & Servisler */}
+              <div className="bg-white p-6 rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-md transition-all flex flex-col justify-between text-left space-y-4">
+                <div className="space-y-2">
+                  <div className="w-12 h-12 rounded-2xl bg-purple-100 text-purple-900 flex items-center justify-center text-xl font-black">
+                    🛠️
+                  </div>
+                  <h3 className="text-base font-black text-[#0B132B]">Yerel Ustalar & Saha Servisi</h3>
+                  <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                    Tesisatçı, Elektrikçi, Kombici ve Boyacılar için haritada konum bildirin, komisyonsuz doğrudan teklif toplayın.
+                  </p>
+                </div>
+                <Link 
+                  to="/saticipaneli"
+                  className="w-full py-3 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B132B] font-extrabold text-xs rounded-xl text-center block transition cursor-pointer shadow-xs"
+                >
+                  Usta Profili Oluştur →
+                </Link>
+              </div>
+            </div>
+          </div>
 
           {/* BLOG & REHBER MERKEZİ BANNER ALANI */}
           <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-slate-950 text-white rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
