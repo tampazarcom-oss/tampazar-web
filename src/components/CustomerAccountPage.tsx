@@ -8,8 +8,9 @@ import {
   ShoppingBag, Calendar, Heart, MapPin, Package, Clock, 
   CheckCircle2, Truck, FileText, Phone, MessageCircle, 
   Trash2, Plus, ArrowRight, User, AlertCircle, Sparkles, ExternalLink, ChevronRight, X,
-  Download, Video, HardDrive, FileCode, ShieldCheck, Award, Copy, Check, MessageSquare
+  Download, Video, HardDrive, FileCode, ShieldCheck, Award, Copy, Check, MessageSquare, Gift
 } from 'lucide-react';
+import CustomerLoyaltyCardsTab from './loyalty/CustomerLoyaltyCardsTab';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import CustomerQuotationsTab from './CustomerQuotationsTab';
@@ -67,10 +68,11 @@ export default function CustomerAccountPage() {
   const searchParams = new URLSearchParams(location.search);
   const initialTabFromQuery = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'services' | 'quotes' | 'digital' | 'appointments' | 'favorites' | 'addresses'>(() => {
+  const [activeTab, setActiveTab] = useState<'orders' | 'services' | 'quotes' | 'digital' | 'appointments' | 'favorites' | 'addresses' | 'loyalty'>(() => {
     if (initialTabFromQuery === 'quotes' || location.pathname.includes('/taleplerim')) return 'quotes';
     if (initialTabFromQuery === 'digital' || location.pathname.includes('/dijital-arsivim')) return 'digital';
     if (initialTabFromQuery === 'appointments' || location.pathname.includes('/randevularim')) return 'appointments';
+    if (initialTabFromQuery === 'loyalty' || location.pathname.includes('/sadakat') || location.pathname.includes('/ikramlar')) return 'loyalty';
     return 'orders';
   });
 
@@ -430,6 +432,22 @@ export default function CustomerAccountPage() {
         >
           <Calendar className="w-4 h-4" />
           <span>Saha Randevularım ({serviceBookings.length})</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('loyalty');
+            navigate('/hesabim?tab=loyalty');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+            activeTab === 'loyalty' ? 'bg-[#0F4C3A] text-white shadow-xs' : 'hover:bg-slate-50'
+          }`}
+        >
+          <Gift className="w-4 h-4 text-amber-400" />
+          <span>Mahalle Sadakat Kartlarım & İkramlar</span>
+          <span className="bg-amber-400 text-slate-950 font-black text-[9px] px-1.5 py-0.5 rounded-full">
+            İkram
+          </span>
         </button>
 
         <button
@@ -880,6 +898,11 @@ export default function CustomerAccountPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* TAB E: MAHALLE SADAKAT KARTLARI VE İKRAM MOTORU */}
+      {activeTab === 'loyalty' && (
+        <CustomerLoyaltyCardsTab />
       )}
 
       {/* TAB C: FAVORİLERİM */}

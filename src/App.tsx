@@ -13,6 +13,7 @@ import { AuthProvider } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
 import GlobalUserNav from './components/GlobalUserNav';
 import NeighborhoodMultiCartModal from './components/NeighborhoodMultiCartModal';
+import PWAInstallBanner from './components/pwa/PWAInstallBanner';
 
 const MarketplaceHome = lazy(() => import('./components/MarketplaceHome'));
 const SuperMallHome = lazy(() => import('./components/SuperMallHome'));
@@ -410,7 +411,41 @@ function MainLayout() {
               element={<CustomerAccountPage />} 
             />
             <Route 
+              path="/hesabim/sadakat" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
+              path="/hesabim/ikramlar" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
               path="/yonetim" 
+              element={
+                <TampazarSellerDashboard 
+                  onNavigate={(tab) => {
+                    if (tab === 'home') navigate('/');
+                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                    else navigate(`/saas-konsol/${tab}`);
+                  }} 
+                  activeStoreName={activeTenant.name} 
+                />
+              } 
+            />
+            <Route 
+              path="/yonetim/afis" 
+              element={
+                <TampazarSellerDashboard 
+                  onNavigate={(tab) => {
+                    if (tab === 'home') navigate('/');
+                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                    else navigate(`/saas-konsol/${tab}`);
+                  }} 
+                  activeStoreName={activeTenant.name} 
+                />
+              } 
+            />
+            <Route 
+              path="/yonetim/sadakat" 
               element={
                 <TampazarSellerDashboard 
                   onNavigate={(tab) => {
@@ -517,6 +552,9 @@ function MainLayout() {
         isOpen={showMultiCartModal}
         onClose={() => setShowMultiCartModal(false)}
       />
+
+      {/* PWA: Mobil Ana Ekrana Ekleme Çubuğu & Bannerı */}
+      <PWAInstallBanner />
 
       {/* Floating Mahalle Sepeti Butonu */}
       <button

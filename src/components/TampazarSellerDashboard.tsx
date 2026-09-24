@@ -41,6 +41,8 @@ import CustomerCrmModule from './merchant/CustomerCrmModule';
 import MerchantIntegrationHub from './merchant/MerchantIntegrationHub';
 import AdminLiveLaunchDashboard from './merchant/AdminLiveLaunchDashboard';
 import SystemHealthDashboard from './merchant/SystemHealthDashboard';
+import ShopWindowPosterModule from './merchant/ShopWindowPosterModule';
+import MerchantLoyaltySettingsModule from './merchant/MerchantLoyaltySettingsModule';
 import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface TampazarSellerDashboardProps {
@@ -63,6 +65,8 @@ export type DashboardTab =
   | 'tamseans'
   | 'tamteklif'
   | 'b2b_dropshipping'
+  | 'afis'
+  | 'loyalty'
   | 'pos' 
   | 'subscription'
   | 'integrations'
@@ -99,6 +103,8 @@ export default function TampazarSellerDashboard({
     if (p.includes('seans') || p.includes('tamseans')) return 'tamseans';
     if (p.includes('teklif') || p.includes('tamteklif')) return 'tamteklif';
     if (p.includes('toptan') || p.includes('b2b')) return 'b2b_dropshipping';
+    if (p.includes('afis') || p.includes('poster') || p.includes('vitrin') || p.includes('qr')) return 'afis';
+    if (p.includes('sadakat') || p.includes('ikram') || p.includes('loyalty')) return 'loyalty';
     if (p.includes('pos')) return 'pos';
     return 'dashboard';
   };
@@ -765,6 +771,42 @@ export default function TampazarSellerDashboard({
             </div>
             <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded-full border border-amber-500/30">
               Toptan
+            </span>
+          </button>
+
+          {/* 7. DÜKKAN VİTRİN AFİŞİ & QR OLUŞTURUCU */}
+          <button
+            onClick={() => setActiveTab('afis')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'afis' 
+                ? 'bg-gradient-to-r from-amber-400 to-[#F59E0B] text-slate-950 font-black shadow-md' 
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Printer className="w-4 h-4 text-amber-400" />
+              <span>QR Vitrin Afişi Oluşturucu</span>
+            </div>
+            <span className="text-[9px] bg-amber-400/30 text-amber-300 font-bold px-1.5 py-0.5 rounded">
+              A4/A5 Baskı
+            </span>
+          </button>
+
+          {/* 8. MAHALLE SADAKAT & İKRAM MOTORU */}
+          <button
+            onClick={() => setActiveTab('loyalty')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'loyalty' 
+                ? 'bg-gradient-to-r from-[#0F4C3A] to-emerald-700 text-white font-black shadow-md' 
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Mahalle İkram & Jest Ayarı</span>
+            </div>
+            <span className="text-[9px] bg-emerald-500/20 text-emerald-300 font-bold px-1.5 py-0.5 rounded border border-emerald-500/30">
+              Jest Kuralı
             </span>
           </button>
 
@@ -1757,6 +1799,24 @@ export default function TampazarSellerDashboard({
           {activeTab === 'system_health' && (
             <div className="animate-fade-in">
               <SystemHealthDashboard />
+            </div>
+          )}
+
+          {/* TAB: ESNAF DÜKKAN CAMI QR AFİŞ OLUŞTURUCU */}
+          {activeTab === 'afis' && (
+            <div className="animate-fade-in">
+              <ShopWindowPosterModule 
+                currentStoreName={currentStore}
+                storeSlug={user?.storeId || 'karadeniz-doner'}
+                storeAddress={user?.district ? `${user?.district} Mah. Çarşı İçi No: 12, Ordu` : 'Bucak Mah. Çarşı Cad. No: 14, Ordu'}
+              />
+            </div>
+          )}
+
+          {/* TAB: MAHALLE İKRAM & SADAKAT AYARI */}
+          {activeTab === 'loyalty' && (
+            <div className="animate-fade-in">
+              <MerchantLoyaltySettingsModule currentStoreName={currentStore} />
             </div>
           )}
 

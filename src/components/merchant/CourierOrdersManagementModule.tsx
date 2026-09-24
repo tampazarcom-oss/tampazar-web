@@ -13,6 +13,8 @@ import {
 import { 
   CourierProfile, 
   CourierPoolRequest,
+  MergedRouteOpportunity,
+  findMergedRouteOpportunities,
   getStoredCouriers, 
   getStoredCourierRequests, 
   saveStoredCourierRequests,
@@ -63,6 +65,27 @@ export default function CourierOrdersManagementModule() {
     }
   };
 
+  const handleAcceptMergedRoute = (opp: MergedRouteOpportunity) => {
+    const allReqs = getStoredCourierRequests();
+    const idxA = allReqs.findIndex(r => r.id === opp.requestA.id);
+    const idxB = allReqs.findIndex(r => r.id === opp.requestB.id);
+
+    if (idxA >= 0 && idxB >= 0) {
+      allReqs[idxA].status = 'ASSIGNED';
+      allReqs[idxA].selectedCourierName = 'Mert Aksoy (Birleşik Rota)';
+      allReqs[idxA].finalAgreedPrice = opp.merchantDiscountedCostPerOrder;
+
+      allReqs[idxB].status = 'ASSIGNED';
+      allReqs[idxB].selectedCourierName = 'Mert Aksoy (Birleşik Rota)';
+      allReqs[idxB].finalAgreedPrice = opp.merchantDiscountedCostPerOrder;
+
+      saveStoredCourierRequests(allReqs);
+      setRequests([...allReqs]);
+      showToast(`⚡ Birleşik Rota Başlatıldı! 2 sipariş tek seferde kuryeye atandı (Esnaf başı ₺${opp.savedMerchantAmount / 2} tasarruf).`);
+    }
+  };
+
+  const mergedOpportunities = findMergedRouteOpportunities(requests);
   const availableCouriers = couriers.filter(c => c.status === 'AVAILABLE');
 
   return (
@@ -114,6 +137,70 @@ export default function CourierOrdersManagementModule() {
         
         {/* SOL 2 SÜTUN: ESNAFIN AÇTIĞI VE GELEN TEKLİFLER */}
         <div className="lg:col-span-2 space-y-4">
+          
+          {/* AKILLI ROTA VE GÜZERGAH BİRLEŞTİRİCİ KARTI */}
+          {mergedOpportunities.length > 0 && (
+            <div className="bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-indigo-500/15 rounded-3xl p-5 border-2 border-amber-400/80 shadow-sm space-y-3.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="p-2 bg-amber-400 text-slate-950 rounded-xl font-black text-xs">
+                    ⚡ ROTA EŞLEŞTİ
+                  </span>
+                  <div>
+                    <h4 className="font-black text-slate-900 text-sm">Akıllı Güzergah ve Rota Birleştirici</h4>
+                    <p className="text-[11px] text-slate-600 font-medium">
+                      Aynı cadde ve varış hattındaki 2 aktif paket tespit edildi.
+                    </p>
+                  </div>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                  ₺{mergedOpportunities[0].savedMerchantAmount} Toplam Tasarruf
+                </span>
+              </div>
+
+              {mergedOpportunities.map((opp) => (
+                <div key={opp.id} className="bg-white rounded-2xl p-4 border border-amber-200 shadow-xs space-y-3">
+                  <div className="flex items-start justify-between gap-3 text-xs">
+                    <div className="space-y-1">
+                      <span className="text-[10px] font-black uppercase text-amber-800 tracking-wider">
+                        📍 {opp.matchedZone}
+                      </span>
+                      <p className="text-xs font-bold text-slate-900">
+                        "{opp.requestA.storeName}" + "{opp.requestB.storeName}"
+                      </p>
+                      <div className="text-[11px] text-slate-500 flex items-center gap-2">
+                        <span>🛣️ Toplam Mesafe: ~{opp.totalDistanceKm} km</span>
+                        <span>•</span>
+                        <span>📦 2 Ayrı Teslimat Tek Seferde</span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 line-through block">Ayrı: ₺{opp.individualTotalCost}</span>
+                      <span className="text-base font-black text-emerald-700 font-mono">₺{opp.merchantDiscountedCostPerOrder} / paket</span>
+                      <span className="text-[10px] text-emerald-600 font-bold block">Kurye: ₺{opp.mergedCourierEarning}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-2.5 bg-slate-50 rounded-xl border border-slate-100 text-[11px] text-slate-600 flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 truncate">
+                      <Navigation className="w-3.5 h-3.5 text-[#0F4C3A] shrink-0" />
+                      <span className="truncate"><strong>Adımlar:</strong> {opp.pickupSteps[0].storeName} ➔ {opp.pickupSteps[1].storeName} ➔ Teslimatlar</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleAcceptMergedRoute(opp)}
+                      className="shrink-0 ml-2 py-1.5 px-3 bg-[#0F4C3A] hover:bg-emerald-800 text-white font-bold rounded-lg text-xs transition cursor-pointer flex items-center gap-1"
+                    >
+                      <Zap className="w-3.5 h-3.5 text-[#F59E0B]" />
+                      <span>Birleşik Rota Olarak Başlat</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
               <Layers className="w-4 h-4 text-[#0F4C3A]" />
@@ -128,12 +215,22 @@ export default function CourierOrdersManagementModule() {
             {requests.map((req) => (
               <div
                 key={req.id}
-                className="bg-white rounded-3xl p-5 border border-slate-200 shadow-xs space-y-4 hover:border-[#0F4C3A]/40 transition"
+                className={`bg-white rounded-3xl p-5 border shadow-xs space-y-4 hover:border-[#0F4C3A]/40 transition ${
+                  req.isMergedRouteCandidate ? 'border-amber-300 ring-1 ring-amber-300/40' : 'border-slate-200'
+                }`}
               >
                 <div className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100">
                   <div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="font-mono font-bold text-xs text-slate-900">#{req.orderNumber}</span>
+                      
+                      {req.isMergedRouteCandidate && (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-400 text-slate-950 flex items-center gap-1 shadow-xs">
+                          <Zap className="w-3 h-3" />
+                          <span>Rota Eşleşti! (Çift Paket)</span>
+                        </span>
+                      )}
+
                       <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
                         {req.packageType === 'FOOD' ? '🍔 Sıcak Gıda' : '📦 Perakende Paket'}
                       </span>

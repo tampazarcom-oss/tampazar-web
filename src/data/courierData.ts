@@ -52,6 +52,20 @@ export interface CourierBidOffer {
   createdAt: string;
 }
 
+export interface MergedRouteOpportunity {
+  id: string;
+  requestA: CourierPoolRequest;
+  requestB: CourierPoolRequest;
+  matchedZone: string; // Örn: "Bahçelievler & Akyazı Hattı"
+  totalDistanceKm: number;
+  individualTotalCost: number; // Örn: 75 + 90 = 165
+  mergedCourierEarning: number; // Örn: 135
+  merchantDiscountedCostPerOrder: number; // Esnafa indirimli birleşik paket bedeli
+  savedMerchantAmount: number;
+  pickupSteps: { storeName: string; address: string; orderNo: string }[];
+  deliverySteps: { address: string; orderNo: string; customerName?: string }[];
+}
+
 export interface CourierPoolRequest {
   id: string;
   orderId?: string;
@@ -73,6 +87,8 @@ export interface CourierPoolRequest {
   finalAgreedPrice?: number;
   paymentMethod: 'CASH' | 'IBAN' | 'COURIER_POS';
   createdAt: string;
+  isMergedRouteCandidate?: boolean;
+  mergedRouteWithId?: string;
 }
 
 export const INITIAL_COURIERS: CourierProfile[] = [
@@ -246,6 +262,8 @@ export const INITIAL_COURIER_REQUESTS: CourierPoolRequest[] = [
     targetBudget: 75,
     note: 'Sıcak ekmek ve poğaça kolisi. Dikkatli taşınmalı.',
     status: 'OPEN_FOR_BIDS',
+    isMergedRouteCandidate: true,
+    mergedRouteWithId: 'pool-req-103',
     offers: [
       {
         id: 'off-1',
@@ -262,6 +280,26 @@ export const INITIAL_COURIER_REQUESTS: CourierPoolRequest[] = [
     ],
     paymentMethod: 'CASH',
     createdAt: '12 dk önce'
+  },
+  {
+    id: 'pool-req-103',
+    orderNumber: 'TPZ-EX-8829',
+    storeName: 'Akyazı Doğal Şarküteri & Manav',
+    storePhone: '+90 533 444 88 99',
+    pickupAddress: 'Bucak Mah. Pazar Yolu No: 3',
+    pickupDistrict: 'Altınordu',
+    deliveryAddress: 'Bahçelievler Mah. Gülkent Sitesi B Blok D: 6',
+    deliveryDistrict: 'Altınordu',
+    packageType: 'FOOD',
+    distanceKm: 3.1,
+    targetBudget: 70,
+    note: 'Taze köy peyniri ve zeytinyağı cam kavanoz.',
+    status: 'OPEN_FOR_BIDS',
+    isMergedRouteCandidate: true,
+    mergedRouteWithId: 'pool-req-101',
+    offers: [],
+    paymentMethod: 'CASH',
+    createdAt: '8 dk önce'
   },
   {
     id: 'pool-req-102',
@@ -282,6 +320,52 @@ export const INITIAL_COURIER_REQUESTS: CourierPoolRequest[] = [
     createdAt: '25 dk önce'
   }
 ];
+
+export function findMergedRouteOpportunities(requests: CourierPoolRequest[]): MergedRouteOpportunity[] {
+  const openRequests = requests.filter(r => r.status === 'OPEN_FOR_BIDS');
+  const opportunities: MergedRouteOpportunity[] = [];
+
+  for (let i = 0; i < openRequests.length; i++) {
+    for (let j = i + 1; j < openRequests.length; j++) {
+      const a = openRequests[i];
+      const b = openRequests[j];
+
+      // Match criteria: Same pickup district or same delivery district / neighborhood
+      const samePickupZone = a.pickupAddress.split(' ')[0] === b.pickupAddress.split(' ')[0];
+      const sameDeliveryZone = a.deliveryAddress.split(' ')[0] === b.deliveryAddress.split(' ')[0];
+
+      if (samePickupZone || sameDeliveryZone || (a.isMergedRouteCandidate && a.mergedRouteWithId === b.id)) {
+        const individualTotalCost = a.targetBudget + b.targetBudget;
+        // Joint price: 10-15% discount for merchants, higher total payout for courier in single run
+        const merchantDiscountedCostPerOrder = Math.round((a.targetBudget + b.targetBudget) * 0.42);
+        const mergedCourierEarning = merchantDiscountedCostPerOrder * 2;
+        const savedMerchantAmount = individualTotalCost - mergedCourierEarning;
+
+        opportunities.push({
+          id: `merge-${a.id}-${b.id}`,
+          requestA: a,
+          requestB: b,
+          matchedZone: sameDeliveryZone ? `${a.deliveryAddress.split(' ')[0]} Mah. Ortak Varış Hattı` : 'Bucak & Bahçelievler Birleşik Güzergahı',
+          totalDistanceKm: parseFloat((Math.max(a.distanceKm, b.distanceKm) * 1.25).toFixed(1)),
+          individualTotalCost,
+          mergedCourierEarning,
+          merchantDiscountedCostPerOrder,
+          savedMerchantAmount,
+          pickupSteps: [
+            { storeName: a.storeName, address: a.pickupAddress, orderNo: a.orderNumber || a.id },
+            { storeName: b.storeName, address: b.pickupAddress, orderNo: b.orderNumber || b.id }
+          ],
+          deliverySteps: [
+            { address: a.deliveryAddress, orderNo: a.orderNumber || a.id },
+            { address: b.deliveryAddress, orderNo: b.orderNumber || b.id }
+          ]
+        });
+      }
+    }
+  }
+
+  return opportunities;
+}
 
 // Helper to load and persist couriers
 export function getStoredCouriers(): CourierProfile[] {
