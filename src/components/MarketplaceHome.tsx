@@ -15,6 +15,7 @@ import { HybridOrder, playOrderAlertChime } from '../data/hybridCommerceData';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from './BrandLogo';
 import GlobalUserNav from './GlobalUserNav';
+import TamTeklifWizardModal from './TamTeklifWizardModal';
 
 interface MarketplaceHomeProps {
   onNavigateToStore?: (storeId: string) => void;
@@ -40,6 +41,10 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'retail' | 'wholesale' | 'service'>('all');
   const [activeStoryFilter, setActiveStoryFilter] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  // TamTeklif Wizard State
+  const [isTamTeklifModalOpen, setIsTamTeklifModalOpen] = useState(false);
+  const [tamTeklifCategory, setTamTeklifCategory] = useState<string | undefined>(undefined);
 
   // Cart State
   const [cart, setCart] = useState<{ product: Product; qty: number; variant?: string; slot?: string }[]>([]);
@@ -333,6 +338,18 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
 
           {/* Sağ Eylemler */}
           <div className="flex items-center gap-3">
+            <button 
+              onClick={() => {
+                setTamTeklifCategory(undefined);
+                setIsTamTeklifModalOpen(true);
+              }}
+              className="hidden md:flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 px-3.5 py-2.5 rounded-xl font-black text-xs transition-all transform hover:scale-102 cursor-pointer shadow-xs border border-amber-300"
+            >
+              <Sparkles className="w-3.5 h-3.5 fill-slate-950" />
+              <span>Ücretsiz Fiyat Teklifi Al</span>
+              <span className="bg-slate-950 text-amber-300 text-[9px] font-mono px-1 rounded uppercase">TamTeklif</span>
+            </button>
+
             <GlobalUserNav />
 
             <button 
@@ -404,18 +421,28 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
             <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
               Milyonlarca ürünü ve yerel esnaf hizmetini %0 komisyonla doğrudan üreticiden veya ustadan sepetinize ekleyin. GİB e-Fatura garantisiyle hemen alışverişe başlayın.
             </p>
-            <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4">
+            <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
               <button 
                 onClick={() => { setSelectedTypeFilter('retail'); }}
-                className="px-6 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition cursor-pointer"
+                className="px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-lg transition cursor-pointer"
               >
                 Perakende Ürünleri İncele →
               </button>
               <button 
-                onClick={() => onNavigateToSuperMall?.()}
-                className="px-6 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer"
+                onClick={() => {
+                  setTamTeklifCategory(undefined);
+                  setIsTamTeklifModalOpen(true);
+                }}
+                className="px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs rounded-xl shadow-lg transition cursor-pointer flex items-center gap-2 border border-emerald-400/30"
               >
-                Şehrin Açık AVM'sini Gez (Harita)
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Ücretsiz Fiyat Teklifi Al (TamTeklif)</span>
+              </button>
+              <button 
+                onClick={() => onNavigateToSuperMall?.()}
+                className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer"
+              >
+                Şehrin Açık AVM'sini Gez
               </button>
             </div>
           </div>
@@ -589,6 +616,45 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
                   {f.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          {/* KAPALI DEVRE FİYAT TEKLİFİ TOPLAMA BANNERI (TAMTEKLİF) */}
+          <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-7 shadow-lg border border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+            <div className="absolute -right-10 -bottom-10 w-48 h-48 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <div className="flex items-start gap-4 relative z-10">
+              <div className="p-3.5 bg-amber-400 text-slate-950 rounded-2xl shrink-0 font-black shadow-md">
+                <Sparkles className="w-6 h-6 fill-slate-950" />
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[10px] font-black uppercase tracking-wider bg-amber-400/20 text-amber-300 px-2 py-0.5 rounded border border-amber-400/30">
+                    Kapalı Teklif Sistemi · TamTeklif
+                  </span>
+                  <span className="text-[10px] text-slate-300 font-bold">%0 Komisyon · Esnaflar Birbirini Göremez</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-white">
+                  Özel Hizmet, Oto Kurtarma, Usta ya da Toptan Ürün Teklifi mi Lazım?
+                </h3>
+                <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
+                  İhtiyacınızı ve konumunuzu 1 dakikada belirtin. Bölgenizdeki onaylı esnaflar gizli tekliflerini iletsin, fiyatları karşılaştırıp en uygun olanı tek tıkla seçin.
+                </p>
+              </div>
+            </div>
+
+            <div className="relative z-10 shrink-0 flex flex-col sm:flex-row md:flex-col gap-2">
+              <button
+                onClick={() => {
+                  setTamTeklifCategory(undefined);
+                  setIsTamTeklifModalOpen(true);
+                }}
+                className="px-6 py-3.5 bg-gradient-to-r from-amber-500 to-amber-400 hover:from-amber-400 hover:to-amber-300 text-slate-950 font-black text-xs rounded-xl shadow-lg transition flex items-center justify-center gap-2 cursor-pointer transform hover:scale-102"
+              >
+                <Sparkles className="w-4 h-4 fill-slate-950" />
+                <span>Ücretsiz Fiyat Teklifi Al →</span>
+              </button>
+              <span className="text-[10px] text-slate-400 text-center font-medium">Ortalama 15 dk içinde ilk teklifler gelir</span>
             </div>
           </div>
 
@@ -907,6 +973,13 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           </div>
         </div>
       )}
+
+      {/* 8. TAMTEKLİF SİHİRBAZI MODAL */}
+      <TamTeklifWizardModal
+        isOpen={isTamTeklifModalOpen}
+        onClose={() => setIsTamTeklifModalOpen(false)}
+        defaultCategoryId={tamTeklifCategory}
+      />
 
     </div>
   );

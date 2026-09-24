@@ -10,7 +10,9 @@ import {
   Trash2, Plus, ArrowRight, User, AlertCircle, Sparkles, ExternalLink, ChevronRight, X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
+import CustomerQuotationsTab from './CustomerQuotationsTab';
+import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface CustomerOrder {
   id: string;
@@ -51,8 +53,23 @@ interface AddressItem {
 export default function CustomerAccountPage() {
   const { user, isAuthenticated, loginAsBuyer, openAuthModal } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams();
+  const searchParams = new URLSearchParams(location.search);
+  const initialTabFromQuery = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'services' | 'favorites' | 'addresses'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'services' | 'quotes' | 'favorites' | 'addresses'>(() => {
+    if (initialTabFromQuery === 'quotes' || location.pathname.includes('/taleplerim')) return 'quotes';
+    return 'orders';
+  });
+
+  const [quotationRequests, setQuotationRequests] = useState(() => getStoredQuotationRequests());
+
+  useEffect(() => {
+    if (initialTabFromQuery === 'quotes' || location.pathname.includes('/taleplerim')) {
+      setActiveTab('quotes');
+    }
+  }, [initialTabFromQuery, location.pathname]);
 
   // Load orders from local storage or mock
   const [orders, setOrders] = useState<CustomerOrder[]>([
@@ -267,6 +284,10 @@ export default function CustomerAccountPage() {
             <span className="text-[10px] font-bold text-slate-400">Hizmet / Çağrı</span>
           </div>
           <div className="px-3">
+            <span className="text-lg font-black text-amber-600 font-mono block">{quotationRequests.length}</span>
+            <span className="text-[10px] font-bold text-slate-400">TamTeklif</span>
+          </div>
+          <div className="px-3">
             <span className="text-lg font-black text-rose-600 font-mono block">{favorites.length}</span>
             <span className="text-[10px] font-bold text-slate-400">Favori</span>
           </div>
@@ -283,6 +304,19 @@ export default function CustomerAccountPage() {
         >
           <ShoppingBag className="w-4 h-4" />
           <span>Siparişlerim ({orders.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('quotes')}
+          className={`flex items-center gap-2 px-5 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+            activeTab === 'quotes' ? 'bg-indigo-900 text-white shadow-xs' : 'hover:bg-slate-50 text-slate-700'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>Fiyat Taleplerim & Teklifler ({quotationRequests.length})</span>
+          <span className="bg-amber-400 text-slate-950 font-black text-[9px] px-1.5 py-0.5 rounded-full">
+            TamTeklif
+          </span>
         </button>
 
         <button
@@ -615,6 +649,11 @@ export default function CustomerAccountPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* TAB E: FİYAT TALEPLERİM & TEKLİFLER (TAMTEKLİF) */}
+      {activeTab === 'quotes' && (
+        <CustomerQuotationsTab initialRequestId={params.id} />
       )}
 
     </div>

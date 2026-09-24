@@ -31,6 +31,8 @@ import SubscriptionTierModal from './merchant/SubscriptionTierModal';
 import AdvancedProductModal from './merchant/AdvancedProductModal';
 import AdvancedLedgerAccountModal from './merchant/AdvancedLedgerAccountModal';
 import StoreSettingsModule from './merchant/StoreSettingsModule';
+import TamTeklifOpportunitiesModule from './merchant/TamTeklifOpportunitiesModule';
+import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface TampazarSellerDashboardProps {
   onNavigate?: (tab: string, subParam?: any) => void;
@@ -46,6 +48,7 @@ export type DashboardTab =
   | 'orders_cargo' 
   | 'orders_local' 
   | 'orders_service' 
+  | 'tamteklif'
   | 'pos' 
   | 'subscription'
   | 'settings';
@@ -61,6 +64,7 @@ export default function TampazarSellerDashboard({
   const [activePeriod, setActivePeriod] = useState<'BU_AY' | 'SON_30' | 'GECEN_AY' | 'BU_YIL'>('BU_AY');
   const [currentStore, setCurrentStore] = useState<string>(user?.storeName || activeStoreName || 'FotoSentez Stüdyo');
   const [quickSearchTerm, setQuickSearchTerm] = useState('');
+  const [quotationRequestsCount, setQuotationRequestsCount] = useState(() => getStoredQuotationRequests().length);
 
   // 1. Invoices & e-Fatura State
   const [invoices, setInvoices] = useState<Invoice[]>(() => {
@@ -603,6 +607,23 @@ export default function TampazarSellerDashboard({
             </div>
             <span className="text-[10px] bg-amber-950/80 text-amber-300 font-bold px-1.5 py-0.5 rounded">
               {hybridOrders.filter(o => o.deliveryType === 'FIELD_SERVICE').length}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('tamteklif')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'tamteklif' 
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-700 text-white font-black shadow-md' 
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-4 h-4 text-amber-400" />
+              <span>TamTeklif (İş Fırsatları)</span>
+            </div>
+            <span className="text-[10px] bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded-full">
+              {quotationRequestsCount} Fırsat
             </span>
           </button>
 
@@ -1416,6 +1437,16 @@ export default function TampazarSellerDashboard({
               <ServiceOrdersModule
                 orders={hybridOrders}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
+              />
+            </div>
+          )}
+
+          {/* TAB: TAMTEKLİF (İŞ FIRSATLARI & KAPALI DEVRE TEKLİF TOPLAMA) */}
+          {activeTab === 'tamteklif' && (
+            <div className="animate-fade-in">
+              <TamTeklifOpportunitiesModule
+                currentMerchantId={user?.id || 'store-kuzey-teknik'}
+                currentStoreName={activeStoreName || user?.storeName || 'Kuzey Teknik Tesisat & Mühendislik'}
               />
             </div>
           )}

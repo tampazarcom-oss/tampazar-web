@@ -355,6 +355,14 @@ function MainLayout() {
               element={<CustomerAccountPage />} 
             />
             <Route 
+              path="/hesabim/taleplerim" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
+              path="/hesabim/taleplerim/:id" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
               path="/yonetim" 
               element={
                 <TampazarSellerDashboard 

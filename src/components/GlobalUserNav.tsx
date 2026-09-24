@@ -116,6 +116,14 @@ export default function GlobalUserNav() {
                   <span>SaaS Esnaf Yönetim Paneli</span>
                 </Link>
                 <Link
+                  to="/yonetim"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>TamTeklif (İş Fırsatları)</span>
+                </Link>
+                <Link
                   to="/saas-konsol/byopos"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
@@ -134,6 +142,14 @@ export default function GlobalUserNav() {
               </>
             ) : (
               <>
+                <Link
+                  to="/hesabim/taleplerim"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-slate-900 bg-amber-50/60 hover:bg-amber-100/60 font-black"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span>Fiyat Taleplerim & Teklifler</span>
+                </Link>
                 <Link
                   to="/hesabim"
                   onClick={() => setDropdownOpen(false)}
