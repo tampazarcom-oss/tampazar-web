@@ -80,7 +80,7 @@ export interface Product {
     digitalFormats?: string[];
     licenseType?: 'personal' | 'commercial';
     // TamSeans Alanları
-    sessionDurationMin?: 30 | 45 | 60;
+    sessionDurationMin?: 30 | 45 | 50 | 60 | number;
     availableDays?: string[];
     availableHours?: string[];
     sessionChannel?: 'google_meet' | 'zoom' | 'whatsapp_phone';
@@ -754,6 +754,376 @@ export const initialProducts: Product[] = [
       sessionChannel: 'google_meet',
       meetingLink: 'https://meet.google.com/tpz-diyet-zeynep',
       expertTitle: 'Uzman Klinik Diyetisyen'
+    }
+  },
+
+  // ==========================================================
+  // 5 HİBRİT TİCARET TÜRÜ ZENGİN ÜRÜN & HİZMET VERİ SETİ
+  // ==========================================================
+  // a) Ulusal Kargo & Pazaryeri Vitrini (Trendyol/Amazon Modeli)
+  {
+    id: 'prod-hyb-01',
+    tenantId: 'tenant-1',
+    storeName: 'Mert Kundura Ltd.',
+    type: 'retail',
+    title: 'Hakiki Deri El Yapımı Oxford Ayakkabı',
+    slug: 'hakiki-deri-el-yapimi-oxford-ayakkabi',
+    category: 'Ayakkabı & Giyim',
+    categorySlug: 'ayakkabi',
+    description: 'Usta ellerde şekillendirilmiş %100 dana derisi, nefes alan astar ve dayanıklı kösele tabanlı klasik Oxford ayakkabı.',
+    price: 1450,
+    sku: 'MKT-OXF-1450',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 380,
+    badge: 'Kargo Bedava',
+    image: 'https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&q=80&w=800',
+    variants: {
+      sizes: ['40', '41', '42', '43', '44'],
+      colors: ['Klasik Siyah', 'Koyu Taba']
+    },
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'Yurtiçi Kargo',
+      isFreeShipping: true,
+      desi: 2
+    }
+  },
+  {
+    id: 'prod-hyb-02',
+    tenantId: 'tenant-2',
+    storeName: 'Yıldız Doğal Ürünler',
+    type: 'retail',
+    title: 'Giresun/Ordu Taş Kırma Doğal Çifte Kavrulmuş Fındık 1 KG',
+    slug: 'giresun-ordu-dogal-cifte-kavrulmus-findik-1kg',
+    category: 'Yöresel Gıda',
+    categorySlug: 'yoresel-gida',
+    description: 'Karadeniz dağlarından taze hasat, taş kırma yöntemiyle ayıklanmış ve odun ateşinde çifte kavrulmuş yağlı Giresun kalite fındık.',
+    price: 380,
+    sku: 'YDG-FND-1KG',
+    vatRate: 1,
+    rating: 4.9,
+    salesCount: 890,
+    badge: 'Sepette %10 İndirim',
+    image: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'Aras Kargo',
+      isFreeShipping: true,
+      desi: 1
+    }
+  },
+
+  // b) Sıcak Yerel Sipariş & Mahalle Lezzetleri (Yemeksepeti Modeli)
+  {
+    id: 'prod-hyb-03',
+    tenantId: 's1',
+    storeName: 'Tarihi Karadeniz Pide Salonu',
+    type: 'retail',
+    title: 'Odun Ateşinde Kıymalı Kaşarlı Pide Menü',
+    slug: 'odun-atesinde-kiymali-kasarli-pide-menu',
+    category: 'Sıcak Yemek & Pide',
+    categorySlug: 'sicak-lezzet',
+    description: 'Geleneksel taş fırında odun ateşinde pişen çıtır kıymalı kaşarlı kapalı pide, yanında yayık ayranı ve közlenmiş biber salatası ile.',
+    price: 220,
+    sku: 'KRD-PDE-01',
+    vatRate: 10,
+    rating: 4.9,
+    salesCount: 540,
+    badge: '30-45 Dk Kapında',
+    image: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'local_express',
+      localDeliveryTime: '30-45 Dk',
+      minBasketAmount: 150,
+      isTakeawayAllowed: true
+    }
+  },
+  {
+    id: 'prod-hyb-04',
+    tenantId: 'tenant-2',
+    storeName: 'Mahalle Çarşı Manavı',
+    type: 'retail',
+    title: 'Günlük Taze Meyve & Şarküteri Paketi',
+    slug: 'gunluk-taze-meyve-sarkuteri-paketi',
+    category: 'Taze Market & Şarküteri',
+    categorySlug: 'taze-market',
+    description: 'Amasya elması, yerli muz, köy tereyağı, sepet peyniri ve taze mevsim yeşilliklerinden oluşan günlük vitamin & kahvaltı sepeti.',
+    price: 290,
+    sku: 'MHL-MNV-01',
+    vatRate: 1,
+    rating: 4.8,
+    salesCount: 310,
+    badge: 'Sıcak Teslimat',
+    image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'local_express',
+      localDeliveryTime: '25-35 Dk',
+      minBasketAmount: 100
+    }
+  },
+
+  // c) Acil Nöbetçi Hizmetler & Yerel Ustalar (Armut/Acil Servis Modeli)
+  {
+    id: 'prod-hyb-05',
+    tenantId: 's1',
+    storeName: 'Kale Nöbetçi Çilingir & Kilit',
+    type: 'service',
+    title: '7/24 Acil Çilingir & Kapı Açma',
+    slug: '7-24-acil-cilingir-kapi-acma',
+    category: 'Acil Servis & Çilingir',
+    categorySlug: 'acil-servis',
+    description: 'Çelik kapı, oto kapısı ve kasa kilitleri için 15 dakika içinde adrese ulaşım, rozetli bilyalı kilit değişimi ve hasarsız açma garantisi.',
+    price: 500,
+    sku: 'CLN-724-01',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 420,
+    badge: 'En Yakın Usta (1.2 km)',
+    image: 'https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80&w=800',
+    durationMin: 20,
+    serviceAreaRadiusKm: 25,
+    deliveryOptions: {
+      type: 'field_service',
+      fixedServiceFee: 500,
+      serviceRadiusKm: 25,
+      isOnSiteService: true
+    }
+  },
+  {
+    id: 'prod-hyb-06',
+    tenantId: 's2',
+    storeName: 'Özdemir 7/24 Yol Yardım',
+    type: 'service',
+    title: '7/24 Şehir İçi Oto Çekici & Kurtarma',
+    slug: '7-24-sehir-ici-oto-cekici-kurtarma',
+    category: 'Oto Kurtarma & Çekici',
+    categorySlug: 'oto-kurtarma',
+    description: 'Kaza, arıza veya akü takviyesi durumunda anında GPS konumuna yönlendirilen kayar platformlu modern çekici araç filosu.',
+    price: 1200,
+    sku: 'CKC-724-02',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 650,
+    badge: 'Nöbetçi Çekici (15 Dk)',
+    image: 'https://images.unsplash.com/photo-1619642751034-765dfdf7c58e?auto=format&fit=crop&q=80&w=800',
+    durationMin: 30,
+    serviceAreaRadiusKm: 80,
+    deliveryOptions: {
+      type: 'field_service',
+      fixedServiceFee: 1200,
+      serviceRadiusKm: 80,
+      isOnSiteService: true
+    }
+  },
+
+  // d) Mekan & Etkinlik Rezervasyonları
+  {
+    id: 'prod-hyb-07',
+    tenantId: 's3',
+    storeName: 'Yalı Garden Davet & Balo',
+    type: 'service',
+    title: 'Panoramik Deniz Manzaralı Kır Düğün & Davet Salonu',
+    slug: 'panoramik-deniz-manzarali-kir-dugun-salonu',
+    category: 'Mekan & Rezervasyon',
+    categorySlug: 'mekan-davet',
+    description: '750 kişilik çim alan, ses-ışık orkestra sistemi, gelin odası, profesyonel yemek servisi ve fotoğraf/video çekim dahil lüks kır düğünü paketi.',
+    price: 45000,
+    sku: 'DAV-KIR-01',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 78,
+    badge: 'Tarih Seç / Randevulu',
+    image: 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&q=80&w=800',
+    durationMin: 300,
+    serviceAreaRadiusKm: 150,
+    deliveryOptions: {
+      type: 'field_service',
+      isOnSiteService: true
+    }
+  },
+  {
+    id: 'prod-hyb-08',
+    tenantId: 's2',
+    storeName: 'TSE Onaylı Lider Oto Ekspertiz',
+    type: 'service',
+    title: 'Garantili Bilgisayarlı Oto Ekspertiz Paketi',
+    slug: 'garantili-bilgisayarli-oto-ekspertiz-paketi',
+    category: 'Oto Servis & Ekspertiz',
+    categorySlug: 'oto-ekspertiz',
+    description: 'Dyno motor testi, kaporta-boya mikron ölçümü, OBD beyin arıza taraması, süspansiyon testi ve 1 yıl garantili noter geçerli resmi rapor.',
+    price: 1250,
+    sku: 'EXP-FUL-01',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 510,
+    badge: 'Tarih Seç / Randevulu',
+    image: 'https://images.unsplash.com/photo-1486006920555-c77dce18193b?auto=format&fit=crop&q=80&w=800',
+    durationMin: 45,
+    serviceAreaRadiusKm: 30,
+    deliveryOptions: {
+      type: 'field_service',
+      isOnSiteService: true
+    }
+  },
+
+  // e) Anında Dijital İndirme (Etsy / Gumroad Modeli)
+  {
+    id: 'prod-hyb-09',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat Nakış',
+    type: 'digital',
+    title: 'Geleneksel Maraş İşi & Çiçek Nakış Deseni Paketi (DST, PES, JEF)',
+    slug: 'maras-isi-cicek-nakis-deseni-paketi',
+    category: 'Dijital Tasarım & Nakış',
+    categorySlug: 'dijital-tasarim',
+    description: 'Tüm endüstriyel ve ev tipi nakış makineleri için sıfır kayma garantili simetri çiçek bordür deseni. Anında ZIP indirilebilir.',
+    price: 140,
+    sku: 'DIG-MRS-140',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 380,
+    badge: 'Anında Dijital İndir (ZIP/DST/PES)',
+    image: 'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'digital_download',
+      digitalFileName: 'Maras_Isi_Cicek_Nakis_Paketi.zip',
+      digitalFileSize: '12.4 MB',
+      digitalFormats: ['DST', 'PES', 'JEF', 'EXP', 'PDF Renk Kartı'],
+      licenseType: 'commercial',
+      digitalFileUrl: '#download-maras-cicek'
+    }
+  },
+  {
+    id: 'prod-hyb-10',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat Vektör',
+    type: 'digital',
+    title: 'Lazer Kesim & CNC Ahşap Dekoratif Saat Çizimi (DXF, SVG)',
+    slug: 'lazer-kesim-cnc-ahsap-dekoratif-saat-cizimi',
+    category: 'Lazer & Vektör Çizim',
+    categorySlug: 'dijital-tasarim',
+    description: '3mm ve 4mm ahşap, pleksi veya mdf kesimler için test edilmiş katmanlı Roma rakamlı duvar saati şablonu.',
+    price: 95,
+    sku: 'DIG-SAT-95',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 460,
+    badge: 'Anında Dijital İndir (DXF/SVG)',
+    image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'digital_download',
+      digitalFileName: 'Dekoratif_Ahsap_Saat_DXF_SVG.zip',
+      digitalFileSize: '6.2 MB',
+      digitalFormats: ['DXF', 'SVG', 'CDR', 'AI', 'PDF'],
+      licenseType: 'commercial',
+      digitalFileUrl: '#download-cnc-clock'
+    }
+  },
+
+  // f) Uzaktan Canlı Seans & Özel Ders (Superpeer Modeli)
+  {
+    id: 'prod-hyb-11',
+    tenantId: 's3',
+    storeName: 'Uzman Klinik Psikoloji',
+    type: 'consultation',
+    title: 'Yetişkin Bireysel Online Psikolojik Danışmanlık (50 Dk)',
+    slug: 'yetiskin-bireysel-online-psikolojik-danismanlik',
+    category: 'Online Seans & Terapi',
+    categorySlug: 'online-seans',
+    description: 'Google Meet HD üzerinden uçtan uca şifreli, gizlilik ilkelerine tam bağlı bireysel psikoterapi ve bilişsel davranışçı seans.',
+    price: 850,
+    sku: 'SNS-PSK-850',
+    vatRate: 10,
+    rating: 5.0,
+    salesCount: 190,
+    badge: 'Online Seans (Google Meet)',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'online_session',
+      sessionDurationMin: 50,
+      availableDays: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'],
+      availableHours: ['10:00', '13:00', '15:30', '17:00', '19:00'],
+      sessionChannel: 'google_meet',
+      meetingLink: 'https://meet.google.com/tpz-psikolog-seans',
+      expertTitle: 'Uzman Klinik Psikolog'
+    }
+  },
+  {
+    id: 'prod-hyb-12',
+    tenantId: 's3',
+    storeName: 'Global Language Academy',
+    type: 'consultation',
+    title: 'Birebir Konuşma Odaklı İleri Seviye İngilizce Dersi (45 Dk)',
+    slug: 'birebir-konusma-ileri-seviye-ingilizce-dersi',
+    category: 'Online Eğitim & Dil',
+    categorySlug: 'online-seans',
+    description: 'İş İngilizcesi mülakatları, sunum hazırlıkları ve akıcı konuşma (Fluency) odaklı anadili İngilizce olan eğitmenle birebir seans.',
+    price: 450,
+    sku: 'SNS-ENG-450',
+    vatRate: 10,
+    rating: 4.9,
+    salesCount: 280,
+    badge: 'Online Seans (Google Meet)',
+    image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'online_session',
+      sessionDurationMin: 45,
+      availableDays: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cumartesi'],
+      availableHours: ['11:00', '14:00', '16:00', '18:30', '20:00'],
+      sessionChannel: 'google_meet',
+      meetingLink: 'https://meet.google.com/tpz-english-live',
+      expertTitle: 'Kıdemli IELTS/TOEFL Eğitmeni'
+    }
+  },
+  {
+    id: 'prod-hyb-13',
+    tenantId: 's1',
+    storeName: 'Tarihi Karadeniz Dönercisi',
+    type: 'retail',
+    title: 'Odun Ateşinde Yaprak Et Döner Dürüm Menü',
+    slug: 'odun-atesinde-et-doner-menu',
+    category: 'Sıcak Yemek & Döner',
+    categorySlug: 'sicak-lezzet',
+    description: 'Özel terbiye edilmiş dana yaprak et döner, tırnak pide veya lavaş arası, yanında çıtır patates ve bol köpüklü ayran ile.',
+    price: 240,
+    sku: 'DNR-MEN-01',
+    vatRate: 10,
+    rating: 4.8,
+    salesCount: 680,
+    badge: '20-30 Dk Kapında',
+    image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'local_express',
+      localDeliveryTime: '20-30 Dk',
+      minBasketAmount: 120,
+      isTakeawayAllowed: true
+    }
+  },
+  {
+    id: 'prod-hyb-14',
+    tenantId: 's1',
+    storeName: 'Kuzey Teknik Tesisat',
+    type: 'service',
+    title: 'Termal Cihazla Kırmadan Su Kaçağı Tespiti + Resmi Rapor',
+    slug: 'termal-su-kacagi-tespiti',
+    category: 'Sıhhi Tesisat & Keşif',
+    categorySlug: 'sihhi-tesisat',
+    description: 'Akustik dinleme ve termal kamera ile noktasal su kaçağı tespiti, sigorta ve belediye geçerli resmi teknik raporlama.',
+    price: 1200,
+    sku: 'TSS-TRM-01',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 310,
+    badge: 'Yerinde Keşif (1.5 km)',
+    image: 'https://images.unsplash.com/photo-1581244277943-fe4a9c777189?auto=format&fit=crop&q=80&w=800',
+    durationMin: 60,
+    serviceAreaRadiusKm: 30,
+    deliveryOptions: {
+      type: 'field_service',
+      fixedServiceFee: 1200,
+      serviceRadiusKm: 30,
+      isOnSiteService: true
     }
   }
 ];

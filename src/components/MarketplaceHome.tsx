@@ -8,7 +8,7 @@ import {
   Search, ShoppingBag, ShieldCheck, Zap, 
   Store, Briefcase, ChevronRight, Star, SlidersHorizontal, 
   X, Check, ArrowRight, Layers, Calendar, Clock, MapPin, Sparkles, Filter, Heart, ChevronLeft, Tag, Percent,
-  Truck, Bike, Wrench
+  Truck, Bike, Wrench, Utensils, Download, Video, GraduationCap, Building, FileCode, Phone, MessageCircle, ArrowUpRight
 } from 'lucide-react';
 import { Tenant, Product, initialTenants, initialProducts } from '../data/mockData';
 import { HybridOrder, playOrderAlertChime } from '../data/hybridCommerceData';
@@ -32,8 +32,22 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   });
 
   const [products] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('tampazar_products');
-    return saved ? JSON.parse(saved) : initialProducts;
+    try {
+      const saved = localStorage.getItem('tampazar_products');
+      if (saved) {
+        const parsed: Product[] = JSON.parse(saved);
+        const missing = initialProducts.filter(ip => !parsed.some(p => p.id === ip.id || p.slug === ip.slug));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem('tampazar_products', JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
+      }
+    } catch {
+      // fallback to initialProducts
+    }
+    return initialProducts;
   });
 
   // Search & Filter State
@@ -42,6 +56,12 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'retail' | 'wholesale' | 'service'>('all');
   const [activeStoryFilter, setActiveStoryFilter] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  // 5 Hibrit Ticaret Vitrini Tab Filtresi
+  const [activeCommerceModelTab, setActiveCommerceModelTab] = useState<'all' | 'cargo' | 'local_food' | 'emergency' | 'venue' | 'digital' | 'session'>('all');
+
+  // Sektörünü Seç Satıcı Kazanım CTA State
+  const [selectedSectorCTA, setSelectedSectorCTA] = useState<string>('restaurant');
 
   // TamTeklif Wizard State
   const [isTamTeklifModalOpen, setIsTamTeklifModalOpen] = useState(false);
@@ -292,6 +312,230 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
     }, 2500);
   };
 
+  // 5 Hibrit Ticaret Modeli Ürün Çözümleyicisi
+  const getProductBySlug = (slug: string): Product | undefined => {
+    return products.find(p => p.slug === slug || p.id === slug) || initialProducts.find(p => p.slug === slug || p.id === slug);
+  };
+
+  const HYBRID_COMMERCE_MODELS = [
+    {
+      id: 'cargo',
+      title: 'Ulusal Kargo & Pazaryeri Vitrini',
+      subtitle: 'Tüm Türkiye’ye %0 komisyonla doğrudan üretici ve butik esnafından kargolu ürünler.',
+      badgeText: 'Trendyol / Amazon Modeli',
+      badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+      icon: Truck,
+      cardBadgeColor: 'bg-amber-500 text-slate-950',
+      actionText: 'Sepete Ekle',
+      actionIcon: ShoppingBag,
+      actionBtnClass: 'bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold',
+      slugs: [
+        'hakiki-deri-el-yapimi-oxford-ayakkabi',
+        'giresun-ordu-dogal-cifte-kavrulmus-findik-1kg',
+        'oversize-premium-pamuklu-kapsonlu-sweatshirt',
+        'el-yapimi-seramik-kahve-fincan-takimi'
+      ]
+    },
+    {
+      id: 'local_food',
+      title: 'Sıcak Yerel Sipariş & Mahalle Lezzetleri',
+      subtitle: '30-45 dakikada kapınızda! Komisyonsuz doğrudan mahalle fırını, pidecisi ve manavından.',
+      badgeText: 'Yemeksepeti / Getir Modeli · 30-45 Dk',
+      badgeColor: 'bg-rose-100 text-rose-900 border-rose-300',
+      icon: Utensils,
+      cardBadgeColor: 'bg-rose-600 text-white animate-pulse',
+      actionText: 'Sipariş Ver (Kapında)',
+      actionIcon: Bike,
+      actionBtnClass: 'bg-rose-600 hover:bg-rose-500 text-white font-bold',
+      slugs: [
+        'odun-atesinde-kiymali-kasarli-pide-menu',
+        'gunluk-taze-meyve-sarkuteri-paketi',
+        'odun-atesinde-et-doner-menu'
+      ]
+    },
+    {
+      id: 'emergency',
+      title: 'Acil Nöbetçi Hizmetler & Yerel Ustalar',
+      subtitle: 'En yakın ustayı haritada görün, 15 dakikada kapınıza çağırın veya doğrudan telefonla arayın.',
+      badgeText: 'Armut / Çilingir / Yol Yardım Modeli · En Yakın Usta',
+      badgeColor: 'bg-red-100 text-red-900 border-red-300',
+      icon: Wrench,
+      cardBadgeColor: 'bg-red-600 text-white',
+      actionText: 'Konuma Çağır / Hemen Ara',
+      actionIcon: Phone,
+      actionBtnClass: 'bg-red-600 hover:bg-red-500 text-white font-bold',
+      slugs: [
+        '7-24-acil-cilingir-kapi-acma',
+        '7-24-sehir-ici-oto-cekici-kurtarma',
+        'termal-su-kacagi-tespiti'
+      ]
+    },
+    {
+      id: 'venue',
+      title: 'Mekan & Etkinlik Rezervasyonları',
+      subtitle: 'Kır düğünü, davet salonları ve oto ekspertiz merkezleri için tarih sorgulayın ve randevu alın.',
+      badgeText: 'Rezervasyon & Tarih Bazlı Satış Modeli',
+      badgeColor: 'bg-purple-100 text-purple-900 border-purple-300',
+      icon: Building,
+      cardBadgeColor: 'bg-purple-700 text-white',
+      actionText: 'Tarih Seç / Randevu Al',
+      actionIcon: Calendar,
+      actionBtnClass: 'bg-purple-700 hover:bg-purple-600 text-white font-bold',
+      slugs: [
+        'panoramik-deniz-manzarali-kir-dugun-salonu',
+        'garantili-bilgisayarli-oto-ekspertiz-paketi',
+        'acik-hava-dugun-ve-nisan-klip-cekimi'
+      ]
+    },
+    {
+      id: 'digital',
+      title: 'Anında Dijital İndirme',
+      subtitle: 'Kargo beklemeden satın alın, lisanslı ZIP, DST, PES, DXF ve STL dosyalarını anında indirin.',
+      badgeText: 'Etsy & Gumroad Modeli · Sıfır Kargo',
+      badgeColor: 'bg-cyan-100 text-cyan-900 border-cyan-300',
+      icon: FileCode,
+      cardBadgeColor: 'bg-cyan-700 text-white',
+      actionText: 'Hemen İndir',
+      actionIcon: Download,
+      actionBtnClass: 'bg-cyan-700 hover:bg-cyan-600 text-white font-bold',
+      slugs: [
+        'maras-isi-cicek-nakis-deseni-paketi',
+        'lazer-kesim-cnc-ahsap-dekoratif-saat-cizimi',
+        '3d-yazici-mitolojik-heykel-stl-modeli'
+      ]
+    },
+    {
+      id: 'session',
+      title: 'Uzaktan Canlı Seans & Özel Ders',
+      subtitle: 'Google Meet HD üzerinden birebir online psikolojik terapi, yabancı dil eğitimi ve danışmanlık.',
+      badgeText: 'Superpeer & Calendly Modeli · Canlı Görüşme',
+      badgeColor: 'bg-blue-100 text-blue-900 border-blue-300',
+      icon: Video,
+      cardBadgeColor: 'bg-blue-600 text-white',
+      actionText: 'Seans Saati Seç',
+      actionIcon: Clock,
+      actionBtnClass: 'bg-blue-600 hover:bg-blue-500 text-white font-bold',
+      slugs: [
+        'yetiskin-bireysel-online-psikolojik-danismanlik',
+        'birebir-konusma-ileri-seviye-ingilizce-dersi',
+        'bireysel-kariyer-eticaret-danismanligi'
+      ]
+    }
+  ];
+
+  const SECTORS_CTA_LIST = [
+    {
+      id: 'restaurant',
+      name: 'Restoran & Kafe',
+      icon: Utensils,
+      modelBadge: 'Yemeksepeti / Getir Alternatifi · %0 Komisyon',
+      title: 'Kendi Kuryenizle %0 Komisyonla Sıcak Sipariş Alın',
+      desc: 'Masaüstü ve tabletler için sesli sipariş uyarı ziliyle siparişleri kaçırmayın. Aracı teslimat şirketlerine cironuzun %35\'ini kaptırmayın.',
+      painOld: 'Her 100 ₺ siparişte %35 komisyon + teslimat kesintisi + 30 gün bloke',
+      gainTamPazar: '%0 komisyon. 100 ₺ siparişin 100 ₺\'si ertesi gün kendi banka hesabınızda.',
+      features: [
+        'Masaüstü sesli sipariş zili (anlık mutfak uyarısı)',
+        'Kendi moto-kuryenizle dağıtım veya Gel-Al sipariş modu',
+        'GİB onaylı e-Adisyon ve e-Arşiv faturası otomatik kesilir',
+        'PayTR / iyzico ile ertesi gün hesabınıza doğrudan geçiş'
+      ],
+      savings: 'Aylık Ortalama ~₺32.000 Komisyon Tasarrufu',
+      ctaText: 'Restoran Mağazanızı 2 Dakikada Açın'
+    },
+    {
+      id: 'craftsman',
+      name: 'Yerel Usta & Servis',
+      icon: Wrench,
+      modelBadge: 'Armut / Çilingir / Yol Yardım Alternatifi · %0 Komisyon',
+      title: 'Şehrin Haritasında Canlı Konum Bildirin, Komisyonsuz Teklif Toplayın',
+      desc: 'Çilingir, oto kurtarıcı, elektrik ve sıhhi tesisat ustaları harita üzerinde 1.2 km yakındaki müşterilere doğrudan telefon ve WhatsApp ile ulaşır.',
+      painOld: 'Teklif vermek için peşin para ödemek, aracıya her işten pay vermek',
+      gainTamPazar: 'Müşteri haritadan doğrudan arar veya WhatsApp ile konum atar. Sıfır aracı payı.',
+      features: [
+        'Haritada 7/24 nöbetçi canlı konum ve rota paylaşımı',
+        'Müşteriden doğrudan telefonla arama ve WhatsApp konum desteği',
+        'Sabit taban servis bedeli veya kapalı devre TamTeklif teklifi',
+        'Cep telefonundan anında GİB e-Fatura / e-SMM düzenleme'
+      ],
+      savings: 'Teklif Başına Kredi Yakmaya Son · %100 Doğrudan Müşteri',
+      ctaText: 'Usta Mağazanızı 2 Dakikada Açın'
+    },
+    {
+      id: 'retail',
+      name: 'Butik & Üretici',
+      icon: ShoppingBag,
+      modelBadge: 'Trendyol / Hepsiburada Alternatifi · %0 Komisyon',
+      title: 'Tüm Türkiye’ye Kendi Markanız ve Kendi Sanal POS’unuzla Satış',
+      desc: 'Ayakkabı, tekstil, mobilya ve yöresel gıda üreticileri için anlaşmalı indirimli kargo, varyant stok yönetimi ve ertesi gün nakit akışı.',
+      painOld: '%25 pazaryeri komisyonu, 45 günlük vadeler ve keyfi iade cezaları',
+      gainTamPazar: '%0 komisyon. Kendi Sanal POS\'unuz ile ertesi iş günü kasada.',
+      features: [
+        'Yurtiçi, Aras, MNG indirimli kargo entegrasyonu ve otomatik barkod',
+        'Sipariş tesliminde otomatik GİB e-Fatura / e-Arşiv üretimi',
+        'Perakende ve toptan (B2B) kademeli iskonto tek dükkânda',
+        'Gelişmiş numara, beden ve renk varyant matrisi'
+      ],
+      savings: '45 Gün Vade Beklemeden Ertesi Gün Nakit Kasa',
+      ctaText: 'Üretici Mağazanızı 2 Dakikada Açın'
+    },
+    {
+      id: 'education',
+      name: 'Eğitim & Uzman',
+      icon: GraduationCap,
+      modelBadge: 'Superpeer / Calendly Alternatifi · Canlı Görüşme',
+      title: 'Google Meet HD Canlı Seansları ile Peşin Tahsilatlı Danışmanlık',
+      desc: 'Klinik psikologlar, uzman diyetisyenler, dil eğitmenleri ve danışmanlar için takvim yönetimli, peşin ödemeli birebir görüntülü görüşme.',
+      painOld: 'Yabancı platformlara yüksek döviz komisyonları ve karmaşık takvimler',
+      gainTamPazar: 'Danışan seans saatini seçer, peşin öder; Meet linki iki tarafa anında gider.',
+      features: [
+        'Otomatik Google Meet HD video konferans linki üretimi',
+        'Kişiselleştirilebilir haftalık seans takvimi ve saat aralıkları',
+        'Seans öncesi %100 peşin güvenli tahsilat garantisi',
+        'Otomatik SMS ve e-posta randevu hatırlatıcıları'
+      ],
+      savings: 'Peşin Tahsilatlı Canlı Görüşme & Sıfır Takvim Karmaşası',
+      ctaText: 'Uzman Danışman Profilinizi Açın'
+    },
+    {
+      id: 'venue',
+      name: 'Düğün & Mekan',
+      icon: Building,
+      modelBadge: 'Tarih & Randevu Bazlı Satış',
+      title: 'Düğün Salonları, Özel Mekanlar ve Oto Ekspertiz Merkezleri',
+      desc: 'Gelin ve damat adaylarından tarih ve kişi sayısı bazlı online teklif toplayın, oto ekspertiz randevularını online kapora ile kesinleştirin.',
+      painOld: 'Telefonla randevu takibi ve yüksek yıllık mekan rehberi aidatları',
+      gainTamPazar: 'Müşteriler tarihi sorgular, menü paketini seçer ve kapora ile randevusunu alır.',
+      features: [
+        'Canlı tarih müsaitlik kontrolü ve online takvim ajandası',
+        'Tarih bazlı fiyatlandırma ve online kapora tahsilatı',
+        'Fotoğraf galerisi, paket menü ve sözleşme onayı',
+        'TSE onaylı resmi oto ekspertiz raporu entegrasyonu'
+      ],
+      savings: 'Kapora Garantili Dijital Rezervasyon Ajandası',
+      ctaText: 'Mekan Sayfanızı 2 Dakikada Açın'
+    },
+    {
+      id: 'digital',
+      name: 'Dijital Tasarımcı',
+      icon: FileCode,
+      modelBadge: 'Etsy & Gumroad Alternatifi · Anında İndirme',
+      title: 'Nakış Deseni, CNC Çizimi ve 3D STL Dosyalarınızı Komisyonsuz Satın',
+      desc: 'Kargo maliyeti yok, paketleme yok! Satın alındığı anda müşteriye güvenli lisanslı indirme bağlantısı teslim edilir.',
+      painOld: 'Etsy\'nin yüksek komisyonları, PayPal zorunluluğu ve mağaza kapatma riskleri',
+      gainTamPazar: 'Tüm dünyaya kendi Sanal POS\'unuzla ZIP/DST/DXF satın, paranız hemen yatsın.',
+      features: [
+        'DST, PES, DXF, SVG, STL, PDF ve ZIP güvenli dosya teslimatı',
+        'Ödeme tamamlandığı an tetiklenen güvenli tek kullanımlık lisans',
+        'Kişisel veya Ticari kullanım lisans sözleşmesi',
+        'Sıfır kargo ve paketleme maliyetiyle %100 net kâr'
+      ],
+      savings: '%100 Net Kâr Marjı · Sıfır Kargo ve Paketleme',
+      ctaText: 'Dijital Dükkânınızı 2 Dakikada Açın'
+    }
+  ];
+
+  const currentSectorData = SECTORS_CTA_LIST.find(s => s.id === selectedSectorCTA) || SECTORS_CTA_LIST[0];
+
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
@@ -499,7 +743,199 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           </div>
         </div>
 
-        {/* 5. SANA ÖZEL ÖNERİLEN ÜRÜNLER (CAROUSEL) */}
+        {/* 5. HİBRİT TİCARET TÜRÜ DİNAMİK VİTRİN BÖLÜMÜ */}
+        <section className="space-y-8 bg-slate-50/80 -mx-4 px-4 py-8 rounded-3xl border border-slate-200/60">
+          <div className="space-y-3">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div>
+                <span className="text-[11px] font-black uppercase tracking-wider text-indigo-700 bg-indigo-50 border border-indigo-200 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+                  <Layers className="w-3.5 h-3.5 text-indigo-600" />
+                  5+1 Hibrit Ticaret Ekosistemi
+                </span>
+                <h2 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight mt-1.5">
+                  5 Hibrit Ticaret Modeliyle TamPazar Vitrini
+                </h2>
+                <p className="text-xs md:text-sm text-slate-500 max-w-3xl">
+                  Türkiye’nin ilk ve tek komisyonsuz hibrit pazaryeri: Fiziksel Kargo, Sıcak Mahalle Lezzeti, Acil Nöbetçi Usta, Mekan Rezervasyonu, Anında Dijital İndirme ve Canlı Uzman Seansları tek çatı altında.
+                </p>
+              </div>
+
+              {/* Model Filtre Butonları */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+                <button
+                  onClick={() => setActiveCommerceModelTab('all')}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
+                    activeCommerceModelTab === 'all'
+                      ? 'bg-slate-900 text-white shadow-xs'
+                      : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                  }`}
+                >
+                  ✨ Tüm Modeller
+                </button>
+                {HYBRID_COMMERCE_MODELS.map(m => {
+                  const Icon = m.icon;
+                  return (
+                    <button
+                      key={m.id}
+                      onClick={() => setActiveCommerceModelTab(m.id as any)}
+                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                        activeCommerceModelTab === m.id
+                          ? 'bg-indigo-900 text-white shadow-xs'
+                          : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      <span>{m.title.split('&')[0]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+
+          {/* Modellerin Dinamik Listesi */}
+          <div className="space-y-10">
+            {HYBRID_COMMERCE_MODELS
+              .filter(model => activeCommerceModelTab === 'all' || activeCommerceModelTab === model.id)
+              .map(model => {
+                const ModelIcon = model.icon;
+                const ActionIcon = model.actionIcon;
+
+                return (
+                  <div key={model.id} className="space-y-4 bg-white p-5 md:p-6 rounded-2xl border border-slate-200/80 shadow-xs">
+                    {/* Model Alt Başlığı & Rozeti */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+                      <div className="flex items-start sm:items-center gap-3">
+                        <div className="p-2.5 bg-slate-100 text-slate-900 rounded-xl">
+                          <ModelIcon className="w-5 h-5 text-indigo-700" />
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base sm:text-lg font-black text-slate-900">
+                              {model.title}
+                            </h3>
+                            <span className={`text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border ${model.badgeColor}`}>
+                              {model.badgeText}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mt-0.5">
+                            {model.subtitle}
+                          </p>
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          if (model.id === 'cargo') setSelectedTypeFilter('retail');
+                          else if (model.id === 'emergency' || model.id === 'venue' || model.id === 'session') setSelectedTypeFilter('service');
+                          else setSelectedScope('all');
+                        }}
+                        className="text-xs font-bold text-indigo-700 hover:text-indigo-900 flex items-center gap-1 self-start sm:self-auto cursor-pointer"
+                      >
+                        Tümünü İncele <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+
+                    {/* Model Ürün Kartları Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      {model.slugs.map(slug => {
+                        const product = getProductBySlug(slug);
+                        if (!product) return null;
+
+                        const isFav = favorites.includes(product.id);
+                        const oldPrice = Math.round(product.price * 1.2);
+
+                        return (
+                          <div
+                            key={product.id}
+                            onClick={() => {
+                              if (onNavigateToProduct) onNavigateToProduct(product.slug);
+                              else setActiveModalProduct(product);
+                            }}
+                            className="bg-white rounded-2xl border border-slate-200 hover:border-indigo-300 shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col justify-between cursor-pointer group overflow-hidden"
+                          >
+                            <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
+                              <img
+                                src={product.image}
+                                alt={`${product.title} - TamPazar`}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                onError={(e) => {
+                                  (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
+                                }}
+                              />
+                              <div className={`absolute top-2.5 left-2.5 px-2.5 py-1 rounded-lg font-black text-[10px] shadow-sm ${model.cardBadgeColor}`}>
+                                {product.badge || model.badgeText}
+                              </div>
+
+                              <button
+                                onClick={(e) => toggleFavorite(product.id, e)}
+                                className="absolute top-2.5 right-2.5 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center shadow-xs hover:bg-white transition cursor-pointer"
+                              >
+                                <Heart className={`w-4 h-4 ${isFav ? 'text-rose-600 fill-rose-600' : 'text-slate-600'}`} />
+                              </button>
+                            </div>
+
+                            <div className="p-4 space-y-3 flex-1 flex flex-col justify-between">
+                              <div className="space-y-1">
+                                <span className="text-[10px] font-bold text-indigo-700 uppercase tracking-wide block truncate">
+                                  {product.storeName || 'TamPazar Esnafı'}
+                                </span>
+                                <h4 className="text-xs font-bold text-slate-800 line-clamp-2 leading-relaxed group-hover:text-indigo-900">
+                                  {product.title}
+                                </h4>
+                              </div>
+
+                              <div className="space-y-2 pt-2 border-t border-slate-100">
+                                <div className="flex items-center justify-between text-[11px]">
+                                  <div className="flex items-center gap-1 text-amber-500 font-bold">
+                                    <Star className="w-3.5 h-3.5 fill-amber-400" />
+                                    <span className="text-slate-800">{product.rating || 4.9}</span>
+                                    <span className="text-slate-400 font-normal">({product.salesCount || 120})</span>
+                                  </div>
+                                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.5 rounded">
+                                    %0 Komisyon
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center justify-between pt-1">
+                                  <div>
+                                    <span className="text-[10px] text-slate-400 line-through block leading-none">
+                                      ₺{oldPrice.toLocaleString('tr-TR')}
+                                    </span>
+                                    <span className="text-base font-black text-slate-950">
+                                      ₺{product.price.toLocaleString('tr-TR')}
+                                    </span>
+                                  </div>
+
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (model.id === 'cargo') {
+                                        handleQuickAdd(product, e);
+                                      } else {
+                                        if (onNavigateToProduct) onNavigateToProduct(product.slug);
+                                        else setActiveModalProduct(product);
+                                      }
+                                    }}
+                                    className={`px-3 py-2 rounded-xl text-xs transition cursor-pointer shadow-xs flex items-center gap-1.5 shrink-0 ${model.actionBtnClass}`}
+                                  >
+                                    <ActionIcon className="w-3.5 h-3.5" />
+                                    <span>{model.actionText}</span>
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        </section>
+
+        {/* 6. SANA ÖZEL ÖNERİLEN ÜRÜNLER (CAROUSEL) */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-black text-slate-900 flex items-center gap-2">
@@ -598,7 +1034,128 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           </div>
         </div>
 
-        {/* 6. TÜM ÜRÜNLER / SONSUZ LİSTE (TRENDYOL ÜRÜN GRID) */}
+        {/* 7. İNTERAKTİF "SEKTÖRÜNÜ SEÇ, %0 KOMİSYONLA HEMEN BAŞLA" (SATICI KAZANIM CTA) */}
+        <section className="bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-indigo-900/50 relative overflow-hidden space-y-6">
+          <div className="absolute -right-20 -top-20 w-80 h-80 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -left-20 -bottom-20 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          {/* Başlık ve Açıklama */}
+          <div className="relative z-10 space-y-2">
+            <span className="text-[11px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/10 border border-amber-400/20 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
+              <Store className="w-3.5 h-3.5 text-amber-400" />
+              Komisyonsuz Esnaf & İşletme Kazanım Merkezi
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              Sektörünü Seç, %0 Komisyonla Hemen Başla
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-300 max-w-2xl">
+              Aracı şirketlerin %35'e varan komisyon ve 45 günlük bloke vadelerine son verin. Sektörünüzü seçin, kendi Sanal POS'unuzla hemen satışa başlayın.
+            </p>
+          </div>
+
+          {/* Sektör Seçici Butonlar */}
+          <div className="relative z-10 flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
+            {SECTORS_CTA_LIST.map((sector) => {
+              const SectorIcon = sector.icon;
+              const isSelected = selectedSectorCTA === sector.id;
+
+              return (
+                <button
+                  key={sector.id}
+                  onClick={() => setSelectedSectorCTA(sector.id)}
+                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 ${
+                    isSelected
+                      ? 'bg-amber-400 text-slate-950 font-black shadow-lg scale-105'
+                      : 'bg-white/10 hover:bg-white/15 text-slate-200 border border-white/10'
+                  }`}
+                >
+                  <SectorIcon className={`w-4 h-4 ${isSelected ? 'text-slate-950' : 'text-amber-400'}`} />
+                  <span>{sector.name}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Seçilen Sektöre Göre Dinamik Avantaj & Başvuru Paneli */}
+          <div className="relative z-10 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-sm grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+            {/* Sol Taraf: Özellikler ve Kıyaslama */}
+            <div className="md:col-span-7 space-y-4">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-wider text-amber-400 bg-amber-400/20 px-2.5 py-0.5 rounded border border-amber-400/30">
+                  {currentSectorData.modelBadge}
+                </span>
+                <h3 className="text-lg sm:text-xl font-black text-white mt-1">
+                  {currentSectorData.title}
+                </h3>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {currentSectorData.desc}
+                </p>
+              </div>
+
+              {/* Eski Model vs TamPazar Farkı Kıyaslama Kutusu */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                <div className="bg-rose-950/40 border border-rose-800/40 p-3 rounded-xl space-y-1">
+                  <span className="text-[10px] font-black text-rose-400 uppercase tracking-wider block">
+                    ❌ Geleneksel Aracı Pazaryerleri
+                  </span>
+                  <p className="text-[11px] text-rose-200/90 leading-snug">
+                    {currentSectorData.painOld}
+                  </p>
+                </div>
+                <div className="bg-emerald-950/40 border border-emerald-800/40 p-3 rounded-xl space-y-1">
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-wider block">
+                    ✅ TamPazar BYOPOS Modeli
+                  </span>
+                  <p className="text-[11px] text-emerald-200/90 leading-snug">
+                    {currentSectorData.gainTamPazar}
+                  </p>
+                </div>
+              </div>
+
+              {/* 4 Madde Özellikler Listesi */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
+                {currentSectorData.features.map((feature, fIdx) => (
+                  <div key={fIdx} className="flex items-start gap-2 text-xs text-slate-200">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{feature}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Sağ Taraf: Kazanç / Tasarruf ve Hızlı Başvuru Kartı */}
+            <div className="md:col-span-5 bg-gradient-to-br from-indigo-900/60 to-slate-900/90 border border-indigo-500/30 rounded-2xl p-6 text-center space-y-4 shadow-inner">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase font-bold text-amber-300 tracking-wider">
+                  Sektörel Kazanç & Tasarruf
+                </span>
+                <div className="text-xl font-black text-white">
+                  {currentSectorData.savings}
+                </div>
+                <p className="text-[11px] text-slate-300">
+                  PayTR / iyzico entegrasyonuyla cironuz doğrudan sizin banka hesabınıza akar.
+                </p>
+              </div>
+
+              <div className="pt-2 border-t border-white/10 space-y-3">
+                <button
+                  onClick={() => onOpenSellerDashboard ? onOpenSellerDashboard('byopos') : undefined}
+                  className="w-full py-3.5 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-slate-950 font-black text-sm rounded-xl transition-all shadow-lg hover:shadow-amber-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <Store className="w-4 h-4" />
+                  <span>{currentSectorData.ctaText}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+
+                <p className="text-[10px] text-slate-400">
+                  Kredi kartı gerekmez · 2 dakikada kurulum · Kurumsal e-Fatura hazır
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* 8. TÜM ÜRÜNLER / SONSUZ LİSTE (TRENDYOL ÜRÜN GRID) */}
         <div className="space-y-6 pt-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <div>
