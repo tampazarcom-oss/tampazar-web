@@ -11,6 +11,8 @@ import {
   LocateFixed, ArrowUpDown, RefreshCw, Send, Check
 } from 'lucide-react';
 import UniversalProductCard, { UniversalCardData } from './UniversalProductCard';
+import BrandLogo from './BrandLogo';
+import GlobalUserNav from './GlobalUserNav';
 import { 
   calculateDistance, 
   formatDistance, 
@@ -570,6 +572,24 @@ export default function SuperMallHome({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-16">
+      
+      {/* 0. ÜST HEADER */}
+      <header className="bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-50">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <BrandLogo size="md" onClick={onBackToMarketplace} />
+            <button
+              onClick={onBackToMarketplace}
+              className="text-xs font-semibold text-slate-500 hover:text-slate-900 transition flex items-center gap-1 cursor-pointer"
+            >
+              ← Vitrine Dön
+            </button>
+          </div>
+          <div className="flex items-center gap-3">
+            <GlobalUserNav />
+          </div>
+        </div>
+      </header>
       
       {/* 1. ÜST AKILLI KONUM VE MESAFE ÇUBUĞU (GEOLOCATION BAR) */}
       <div className="bg-slate-950 text-white border-b border-slate-800 py-2.5 px-4 sticky top-0 z-40 shadow-md">

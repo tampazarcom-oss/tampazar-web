@@ -7,10 +7,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, ShoppingBag, ShieldCheck, Zap, 
   Store, Briefcase, ChevronRight, Star, SlidersHorizontal, 
-  X, Check, ArrowRight, Layers, Calendar, Clock, MapPin, Sparkles, Filter, Heart, ChevronLeft, Tag, Percent
+  X, Check, ArrowRight, Layers, Calendar, Clock, MapPin, Sparkles, Filter, Heart, ChevronLeft, Tag, Percent,
+  Truck, Bike, Wrench
 } from 'lucide-react';
 import { Tenant, Product, initialTenants, initialProducts } from '../data/mockData';
+import { HybridOrder, playOrderAlertChime } from '../data/hybridCommerceData';
+import { useAuth } from '../context/AuthContext';
 import BrandLogo from './BrandLogo';
+import GlobalUserNav from './GlobalUserNav';
 
 interface MarketplaceHomeProps {
   onNavigateToStore?: (storeId: string) => void;
@@ -43,6 +47,9 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
 
   // Active Product Modal (Detail & Quick Action)
+  const { user } = useAuth();
+  const [selectedDeliveryType, setSelectedDeliveryType] = useState<'CARGO' | 'LOCAL_EXPRESS' | 'FIELD_SERVICE'>('CARGO');
+  const [deliveryAddress, setDeliveryAddress] = useState('Moda Cad. No:44 Kadıköy / İstanbul');
   const [activeModalProduct, setActiveModalProduct] = useState<Product | null>(null);
   const [modalQty, setModalQty] = useState(1);
   const [modalSize, setModalSize] = useState('');
@@ -164,6 +171,10 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const handleExecuteCheckout = () => {
     if (cart.length === 0) return;
 
+    const orderNumber = 'ORD-2026-' + Math.floor(100000 + Math.random() * 900000);
+    const totalOrderAmount = calculateCartTotal();
+
+    // 1. GİB e-Fatura Kayıtları
     const savedInvoices = localStorage.getItem('tampazar_invoices');
     const invoices = savedInvoices ? JSON.parse(savedInvoices) : [];
 
@@ -176,12 +187,12 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       const newInv = {
         id: 'inv-' + Math.floor(Math.random() * 1000000),
         invoiceNumber: 'GIB2026000000' + Math.floor(100 + Math.random() * 899),
-        orderId: 'ord-' + Math.floor(Math.random() * 1000000),
+        orderId: orderNumber,
         tenantId: item.product.tenantId,
-        customerName: 'Pazaryeri Müşterisi (Web Siparişi)',
+        customerName: user?.name || 'Pazaryeri Müşterisi',
         customerTaxOffice: 'Kadıköy VD',
-        customerTaxId: '1049204910',
-        customerEmail: 'musteri@tampazar.com',
+        customerTaxId: user?.taxId || '1049204910',
+        customerEmail: user?.email || 'musteri@tampazar.com',
         date: new Date().toISOString().split('T')[0],
         amount: clean,
         vatAmount: vat,
@@ -193,6 +204,66 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       };
       invoices.push(newInv);
     });
+
+    // 2. Üçlü Hibrit Sipariş Kaydı (Ulusal Kargo, Yerel Express veya Saha Servisi)
+    const newHybridOrder: HybridOrder = {
+      id: 'hyb-' + Date.now(),
+      orderNumber,
+      tenantId: cart[0]?.product.tenantId || 's3',
+      storeName: cart[0]?.product.storeName || 'TamPazar Esnafı',
+      customerName: user?.name || 'Müşteri (Web)',
+      customerPhone: user?.phone || '0532 555 44 33',
+      customerAddress: deliveryAddress,
+      city: 'İstanbul',
+      district: 'Kadıköy',
+      deliveryType: selectedDeliveryType,
+      status: selectedDeliveryType === 'LOCAL_EXPRESS' ? 'RINGING' : selectedDeliveryType === 'FIELD_SERVICE' ? 'NEW' : 'DISPATCH_WAITING',
+      items: cart.map(c => ({
+        productId: c.product.id,
+        title: c.product.title,
+        qty: c.qty,
+        price: getEffectiveUnitPrice(c.product, c.qty),
+        sku: c.product.sku,
+        variant: c.variant
+      })),
+      totalAmount: totalOrderAmount,
+      paymentMethod: 'PAYTR_POS',
+      paymentStatus: 'PAID',
+      createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+      cargoDetails: selectedDeliveryType === 'CARGO' ? {
+        carrier: 'Yurtiçi Kargo',
+        trackingNumber: '',
+        barcode: 'YK-' + Math.floor(100000000 + Math.random() * 900000000),
+        despatchNumber: 'IRS-2026-' + Math.floor(10000 + Math.random() * 90000)
+      } : undefined,
+      localDeliveryDetails: selectedDeliveryType === 'LOCAL_EXPRESS' ? {
+        deliverySubtype: 'COURIER_30MIN',
+        etaMinutes: 30,
+        courierName: 'Kurye Caner (TamPazar Express)',
+        courierPhone: '0533 111 22 33',
+        preparationStartedAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      } : undefined,
+      serviceDetails: selectedDeliveryType === 'FIELD_SERVICE' ? {
+        serviceCategory: 'Saha Servisi',
+        scheduledTime: 'Bugün 14:00 - 16:00',
+        technicianName: 'Saha Ustası Hasan Usta',
+        technicianPhone: '0535 777 88 99',
+        isEmergency: true,
+        issueDescription: 'Web üzerinden konum servis talebi oluşturuldu.'
+      } : undefined
+    };
+
+    try {
+      const savedHybrid = localStorage.getItem('tampazar_hybrid_orders');
+      const hybridList: HybridOrder[] = savedHybrid ? JSON.parse(savedHybrid) : [];
+      hybridList.unshift(newHybridOrder);
+      localStorage.setItem('tampazar_hybrid_orders', JSON.stringify(hybridList));
+    } catch (e) {}
+
+    // Yerel sipariş ise esnaf sesli zilini anında çal
+    if (selectedDeliveryType === 'LOCAL_EXPRESS') {
+      playOrderAlertChime();
+    }
 
     localStorage.setItem('tampazar_invoices', JSON.stringify(invoices));
     window.dispatchEvent(new Event('tampazar_accounting_updated'));
@@ -261,20 +332,15 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
           </div>
 
           {/* Sağ Eylemler */}
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => onOpenSellerDashboard?.('byopos')}
-              className="hidden lg:flex flex-col text-right text-xs group cursor-pointer"
-            >
-              <span className="font-bold text-amber-600 group-hover:text-amber-700 transition-colors">%0 Komisyonla Satış Yap</span>
-              <span className="text-slate-500">Mağazanı Aç & POS'unu Bağla</span>
-            </button>
+          <div className="flex items-center gap-3">
+            <GlobalUserNav />
+
             <button 
               onClick={() => setIsCartOpen(true)}
               className="relative flex items-center gap-2 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-xl font-medium text-sm transition-colors cursor-pointer"
             >
               <ShoppingBag className="w-4 h-4 text-indigo-900" />
-              <span>Sepet</span>
+              <span className="hidden sm:inline">Sepet</span>
               {cart.length > 0 && (
                 <span className="absolute -top-1.5 -right-1.5 bg-amber-500 text-indigo-950 font-bold text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow">
                   {cart.length}
@@ -668,7 +734,89 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
 
             {cart.length > 0 && (
               <div className="pt-4 border-t border-slate-200 space-y-4">
-                <div className="flex items-center justify-between text-sm">
+                
+                {/* TESLİMAT MODELİ SEÇİMİ (3'lü Hibrit Mimari) */}
+                <div className="space-y-2">
+                  <span className="text-[11px] font-black text-slate-900 uppercase tracking-wider block">
+                    Teslimat & Servis Yöntemi Seçin:
+                  </span>
+                  
+                  <div className="grid grid-cols-1 gap-2">
+                    {/* 1. Kargo */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeliveryType('CARGO')}
+                      className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition cursor-pointer ${
+                        selectedDeliveryType === 'CARGO' 
+                          ? 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-500/20' 
+                          : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Truck className={`w-4 h-4 mt-0.5 shrink-0 ${selectedDeliveryType === 'CARGO' ? 'text-indigo-600' : 'text-slate-500'}`} />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-xs font-bold text-slate-900">Kargo ile Adrese Teslim</strong>
+                          <span className="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-1.5 py-0.2 rounded">Tüm Türkiye</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Yurtiçi / Aras / MNG anlaşmalı kargo ile 1-2 iş gününde teslim.</p>
+                      </div>
+                    </button>
+
+                    {/* 2. Yerel Express */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeliveryType('LOCAL_EXPRESS')}
+                      className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition cursor-pointer ${
+                        selectedDeliveryType === 'LOCAL_EXPRESS' 
+                          ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-400/20' 
+                          : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Bike className={`w-4 h-4 mt-0.5 shrink-0 ${selectedDeliveryType === 'LOCAL_EXPRESS' ? 'text-amber-600' : 'text-slate-500'}`} />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-xs font-bold text-slate-900">Mahallemden Hemen Getir</strong>
+                          <span className="text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.2 rounded animate-pulse">30-45 Dk</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Esnaf masaüstü zili çalar; moto-kurye anında kapınıza getirir.</p>
+                      </div>
+                    </button>
+
+                    {/* 3. Saha Servisi */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedDeliveryType('FIELD_SERVICE')}
+                      className={`p-2.5 rounded-xl border text-left flex items-start gap-2.5 transition cursor-pointer ${
+                        selectedDeliveryType === 'FIELD_SERVICE' 
+                          ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/20' 
+                          : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100'
+                      }`}
+                    >
+                      <Wrench className={`w-4 h-4 mt-0.5 shrink-0 ${selectedDeliveryType === 'FIELD_SERVICE' ? 'text-emerald-600' : 'text-slate-500'}`} />
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <strong className="text-xs font-bold text-slate-900">Hizmeti Konuma Çağır</strong>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded">Armut Modeli</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-0.5">Usta harita konumuza yönlendirilir, randevulu veya acil servis verilir.</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Teslimat Adresi */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-700 block">Teslimat / Servis Adresi:</label>
+                  <input
+                    type="text"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs outline-none font-medium text-slate-800"
+                    placeholder="Açık adresinizi giriniz..."
+                  />
+                </div>
+
+                <div className="flex items-center justify-between text-sm pt-2 border-t border-slate-100">
                   <span className="text-slate-500 font-medium">Toplam Tutar:</span>
                   <span className="text-xl font-black text-slate-900">₺{calculateCartTotal().toLocaleString('tr-TR')}</span>
                 </div>

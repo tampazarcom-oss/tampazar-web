@@ -9,7 +9,10 @@ import { initialTenants, Tenant } from './data/mockData';
 import BrandLogo from './components/BrandLogo';
 import { updatePageSEO } from './utils/seo';
 import { injectJsonLd } from './utils/jsonLd';
-import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard } from 'lucide-react';
+import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard, User } from 'lucide-react';
+import { AuthProvider } from './context/AuthContext';
+import AuthModal from './components/AuthModal';
+import GlobalUserNav from './components/GlobalUserNav';
 
 const MarketplaceHome = lazy(() => import('./components/MarketplaceHome'));
 const SuperMallHome = lazy(() => import('./components/SuperMallHome'));
@@ -17,6 +20,7 @@ const StoreProfilePage = lazy(() => import('./components/StoreProfilePage'));
 const ProductDetailPage = lazy(() => import('./components/ProductDetailPage'));
 const LegalPages = lazy(() => import('./components/LegalPages'));
 const TampazarSellerDashboard = lazy(() => import('./components/TampazarSellerDashboard'));
+const CustomerAccountPage = lazy(() => import('./components/CustomerAccountPage'));
 
 const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
 const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
@@ -213,6 +217,26 @@ function MainLayout() {
             🏛️ Şehrin Açık AVM'si
           </Link>
           <Link
+            to="/hesabim"
+            className={`px-2.5 py-1 rounded transition-colors ${
+              location.pathname === '/hesabim' 
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            👤 Tüketici Hesabım
+          </Link>
+          <Link
+            to="/yonetim"
+            className={`px-2.5 py-1 rounded transition-colors ${
+              location.pathname === '/yonetim' 
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                : 'text-amber-300 hover:text-amber-200'
+            }`}
+          >
+            📊 Esnaf Ön Muhasebe
+          </Link>
+          <Link
             to="/saas-konsol/byopos"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname.startsWith('/saas-konsol')
@@ -220,7 +244,7 @@ function MainLayout() {
                 : 'text-slate-400 hover:text-white'
             }`}
           >
-            ⚙️ SaaS Satıcı & Mimari Konsol
+            ⚙️ Mimari Konsol
           </Link>
         </div>
       </div>
@@ -239,16 +263,19 @@ function MainLayout() {
             <BrandLogo size="md" />
           </div>
 
-          <div className="relative shrink-0">
-            <button
-              aria-label="Kiracı / Esnaf Seçim Menüsü"
-              onClick={() => setShowTenantDropdown(!showTenantDropdown)}
-              className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white shadow-xs transition-colors cursor-pointer"
-            >
-              <span className="text-sm">{activeTenant.logo}</span>
-              <span className="truncate max-w-[120px]">{activeTenant.name}</span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-            </button>
+          <div className="flex items-center gap-3">
+            <GlobalUserNav />
+
+            <div className="relative shrink-0">
+              <button
+                aria-label="Kiracı / Esnaf Seçim Menüsü"
+                onClick={() => setShowTenantDropdown(!showTenantDropdown)}
+                className="flex items-center gap-2 px-3 py-1.5 border border-slate-200 hover:border-slate-300 rounded-lg text-xs font-semibold text-slate-700 bg-white shadow-xs transition-colors cursor-pointer"
+              >
+                <span className="text-sm">{activeTenant.logo}</span>
+                <span className="truncate max-w-[120px]">{activeTenant.name}</span>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+              </button>
 
             {showTenantDropdown && (
               <div className="absolute right-0 mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-50 animate-fade-in divide-y divide-slate-100">
@@ -280,6 +307,7 @@ function MainLayout() {
                 </div>
               </div>
             )}
+            </div>
           </div>
         </header>
       )}
@@ -323,10 +351,18 @@ function MainLayout() {
               element={<ProductDetailRouteWrapper />} 
             />
             <Route 
+              path="/hesabim" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
               path="/yonetim" 
               element={
                 <TampazarSellerDashboard 
-                  onNavigate={(tab) => navigate(`/saas-konsol/${tab}`)} 
+                  onNavigate={(tab) => {
+                    if (tab === 'home') navigate('/');
+                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                    else navigate(`/saas-konsol/${tab}`);
+                  }} 
                   activeStoreName={activeTenant.name} 
                 />
               } 
@@ -388,6 +424,9 @@ function MainLayout() {
         </div>
       </footer>
 
+      {/* Global Role-Based Authentication & Registration Modal */}
+      <AuthModal />
+
     </div>
   );
 }
@@ -395,7 +434,9 @@ function MainLayout() {
 export default function App() {
   return (
     <BrowserRouter>
-      <MainLayout />
+      <AuthProvider>
+        <MainLayout />
+      </AuthProvider>
     </BrowserRouter>
   );
 }
