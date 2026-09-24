@@ -24,7 +24,7 @@ export default function AuthModal() {
   } = useAuth();
 
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'buyer' | 'seller'>(authModalInitialTab);
+  const [activeTab, setActiveTab] = useState<'buyer' | 'seller' | 'courier' | 'admin'>(authModalInitialTab);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   // Buyer Form State

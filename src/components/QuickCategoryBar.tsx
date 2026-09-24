@@ -31,6 +31,7 @@ export interface QuickCategoryItem {
   subCategories?: SubCategoryItem[];
   flyoutTitle?: string;
   flyoutDescription?: string;
+  footerBtnText?: string;
 }
 
 export const QUICK_CATEGORIES: QuickCategoryItem[] = [
@@ -46,14 +47,15 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/pazaryeri',
     flyoutTitle: 'Keşfet & Hızlı Erişim',
     flyoutDescription: 'Tüm pazaryeri kategorileri, toptan ve bağımsız kurye ağı.',
+    footerBtnText: 'Tüm Kategorileri Keşfet',
     subCategories: [
-      { title: 'Mahalle & Hızlı Tüketim', route: '/pazaryeri?kategori=mahalle-hizli-tuketim', badge: '30 Dk' },
-      { title: 'Moda & Giyim & Zanaat', route: '/pazaryeri?kategori=moda-giyim-zanaat', badge: 'Butik' },
-      { title: 'Ev, Yaşam & Yapı Market', route: '/pazaryeri?kategori=ev-yasam-yapi-market', badge: 'Usta' },
-      { title: 'Hizmet & Ustalık & Bakım', route: '/pazaryeri?kategori=hizmet-ustalik-bakim', badge: 'Teklif' },
-      { title: 'Dijital Varlıklar & Şablonlar', route: '/pazaryeri?kategori=tamdijital', badge: 'İndir' },
-      { title: 'B2B Kapalı Devre Toptan', route: '/toptan', badge: '%0 Kom' },
-      { title: 'TamKurye: Bağımsız Kuryeler', route: '/kuryeler', badge: 'Canlı' }
+      { title: 'Mahalle Alışverişi', route: '/pazaryeri?kategori=mahalle-hizli-tuketim', badge: '30 Dk' },
+      { title: 'Zanaat & Butik', route: '/pazaryeri?kategori=moda-giyim-zanaat', badge: 'Butik' },
+      { title: 'Ev & Bahçe', route: '/pazaryeri?kategori=ev-yasam-yapi-market', badge: 'Usta' },
+      { title: 'Hizmet & Usta', route: '/pazaryeri?kategori=hizmet-ustalik-bakim', badge: 'Teklif' },
+      { title: 'Toptan Tedarik', route: '/toptan', badge: '%0 Kom' },
+      { title: 'Dijital Pazaryeri', route: '/pazaryeri?kategori=tamdijital', badge: 'İndir' },
+      { title: 'Kurye Çağır', route: '/kuryeler', badge: 'Canlı' }
     ]
   },
   {
@@ -68,12 +70,13 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/pazaryeri?kategori=mahalle-hizli-tuketim',
     flyoutTitle: 'Hızlı Mahalle Esnafı',
     flyoutDescription: 'Mahallenizin kasabı, manavı, fırını ve şarküterisinden kapınıza.',
+    footerBtnText: 'Tüm Mahalle Ürünlerini Gör',
     subCategories: [
       { title: 'Kasap & Şarküteri', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=kasap' },
-      { title: 'Manav & Taze Yeşillik', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=manav' },
+      { title: 'Taze Meyve & Sebze', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=manav' },
       { title: 'Sıcak Fırın & Ekmek', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=firin' },
-      { title: 'Su & İçecek', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=su' },
-      { title: 'Mandıra', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=mandira' }
+      { title: 'Damacana Su & İçecek', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=su' },
+      { title: 'Mandıra & Şarküteri', route: '/pazaryeri?kategori=mahalle-hizli-tuketim&sub=mandira' }
     ]
   },
   {
@@ -88,12 +91,13 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/pazaryeri?kategori=moda-giyim-zanaat',
     flyoutTitle: 'Butik & Zanaat Tasarımları',
     flyoutDescription: 'Yerel üreticilerden özgün giyim, hakiki deri ve zanaat ürünleri.',
+    footerBtnText: 'Tüm Moda & Zanaat Ürünlerini Gör',
     subCategories: [
-      { title: 'Kadın Butik', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=kadin' },
+      { title: 'Kadın Butik Giyim', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=kadin' },
       { title: 'Erkek Giyim', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=erkek' },
-      { title: 'El Emeği Zanaat', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=zanaat' },
-      { title: 'Hakiki Deri & Ayakkabı', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=ayakkabi' },
-      { title: 'Aksesuar', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=aksesuar' }
+      { title: 'Atölye & El Emeği Zanaat', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=zanaat' },
+      { title: 'Hakiki Deri Ayakkabı & Çanta', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=ayakkabi' },
+      { title: 'Takı & Aksesuar', route: '/pazaryeri?kategori=moda-giyim-zanaat&sub=aksesuar' }
     ]
   },
   {
@@ -108,11 +112,13 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/pazaryeri?kategori=ev-yasam-yapi-market',
     flyoutTitle: 'Ev & Yapı Gereçleri',
     flyoutDescription: 'Mutfak eşyalarından hırdavat ve bahçe gereçlerine kadar.',
+    footerBtnText: 'Tüm Ev & Yapı Ürünlerini Gör',
     subCategories: [
-      { title: 'Mutfak & Züccaciye', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=mutfak' },
-      { title: 'Hırdavat & El Aletleri', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=hirdavat' },
+      { title: 'Mutfak Eşyaları & Züccaciye', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=mutfak' },
+      { title: 'Elektrikli El Aletleri', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=aletler' },
       { title: 'Ev Tekstili', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=tekstil' },
-      { title: 'Bahçe & Çiçek', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=bahce' }
+      { title: 'Hırdavat & Nalburiye', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=hirdavat' },
+      { title: 'Çiçek & Bahçe', route: '/pazaryeri?kategori=ev-yasam-yapi-market&sub=bahce' }
     ]
   },
   {
@@ -128,12 +134,13 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     isTamTeklifTrigger: true,
     flyoutTitle: 'Saha Ustaları & Servis',
     flyoutDescription: 'Harita konumlu acil ustalar ve kapalı devre fiyat teklifleri.',
+    footerBtnText: 'Tüm Hizmet Tekliflerini Gör',
     subCategories: [
-      { title: 'Acil Su Tesisatçısı', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=tesisat' },
-      { title: 'Elektrik & Aydınlatma', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=elektrik' },
+      { title: 'Acil Sıhhi Tesisat', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=tesisat' },
       { title: 'Kombi & Klima Bakımı', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=klima' },
-      { title: 'Ev Boyama', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=boyama' },
-      { title: 'Fotoğrafçı', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=fotograf' }
+      { title: 'Elektrikçi', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=elektrik' },
+      { title: 'Ev & Koltuk Temizliği', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=temizlik' },
+      { title: 'Fotoğraf & Kamera Çekimi', route: '/pazaryeri?kategori=hizmet-ustalik-bakim&sub=fotograf' }
     ]
   },
   {
@@ -148,11 +155,12 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/pazaryeri?kategori=tamdijital',
     flyoutTitle: 'Dijital Dosya Marketi',
     flyoutDescription: 'Anında lisanslı indirme: ZIP, DST, DXF, STL ve sosyal şablonlar.',
+    footerBtnText: 'Tüm Dijital Varlıkları Gör',
     subCategories: [
-      { title: 'CNC / Lazer Kesim Dosyaları', route: '/pazaryeri?kategori=tamdijital&sub=cnc' },
-      { title: 'Sosyal Medya Şablonları', route: '/pazaryeri?kategori=tamdijital&sub=sosyal' },
-      { title: 'Vektör Çizimler', route: '/pazaryeri?kategori=tamdijital&sub=vektor' },
-      { title: 'E-Kitap', route: '/pazaryeri?kategori=tamdijital&sub=ekitap' }
+      { title: 'CNC & Lazer Kesim Dosyaları', route: '/pazaryeri?kategori=tamdijital&sub=cnc' },
+      { title: 'Sosyal Medya Tasarım Kitleri', route: '/pazaryeri?kategori=tamdijital&sub=sosyal' },
+      { title: 'Vektörel Çizimler', route: '/pazaryeri?kategori=tamdijital&sub=vektor' },
+      { title: 'E-Kitap & Rehberler', route: '/pazaryeri?kategori=tamdijital&sub=ekitap' }
     ]
   },
   {
@@ -167,11 +175,12 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/toptan',
     flyoutTitle: 'B2B Toptan Depo',
     flyoutDescription: 'Kademeli iskonto, çuvallı gıda, ambalaj ve koli satışı.',
+    footerBtnText: 'Tüm Toptan Fırsatlarını Gör',
     subCategories: [
       { title: 'Koli Bandı & Ambalaj', route: '/toptan?sub=ambalaj' },
-      { title: 'Çuvallı Bakliyat', route: '/toptan?sub=bakliyat' },
-      { title: 'Horeca Temizlik & Hijyen', route: '/toptan?sub=temizlik' },
-      { title: 'Seri Tekstil', route: '/toptan?sub=tekstil' }
+      { title: 'Çuvallı Bakliyat & Gıda', route: '/toptan?sub=bakliyat' },
+      { title: 'Horeca & Temizlik', route: '/toptan?sub=temizlik' },
+      { title: 'Seri Üretim Tekstil', route: '/toptan?sub=tekstil' }
     ]
   },
   {
@@ -186,6 +195,7 @@ export const QUICK_CATEGORIES: QuickCategoryItem[] = [
     route: '/kuryeler',
     flyoutTitle: 'Bağımsız Kurye Ağı',
     flyoutDescription: 'Mahallenizde anında moto kurye çağırın veya kurye başvurusu yapın.',
+    footerBtnText: 'Tüm Kurye Hizmetlerini Gör',
     subCategories: [
       { title: 'Müsait Kuryeleri Çağır', route: '/kuryeler?action=cagir' },
       { title: 'Saatlik Tahsis Fiyatları', route: '/kuryeler?action=fiyat' },
@@ -220,17 +230,20 @@ export default function QuickCategoryBar({ onOpenTamTeklif }: QuickCategoryBarPr
       className="bg-white border-b border-slate-200/80 py-3 shadow-2xs relative z-30"
     >
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex items-start justify-start md:justify-center gap-3 sm:gap-5 overflow-x-auto scrollbar-none pb-2 pt-1">
+        <div className="flex items-start justify-start md:justify-center gap-3 sm:gap-5 overflow-x-auto md:overflow-visible scrollbar-none pb-2 pt-1">
           {QUICK_CATEGORIES.map((cat, idx) => {
             const IconComponent = cat.icon;
             const isFirst = idx === 0;
 
             // Positioning class for flyout
             let flyoutPositionClass = 'left-0';
+            let pointerPositionClass = 'left-10';
             if (idx >= 2 && idx <= 4) {
               flyoutPositionClass = 'left-1/2 -translate-x-1/2';
+              pointerPositionClass = 'left-1/2 -translate-x-1/2';
             } else if (idx >= 5) {
               flyoutPositionClass = 'right-0';
+              pointerPositionClass = 'right-10';
             }
 
             return (
@@ -275,10 +288,13 @@ export default function QuickCategoryBar({ onOpenTamTeklif }: QuickCategoryBarPr
 
                 {/* HOVER FLYOUT SUB-CATEGORY PANEL */}
                 <div 
-                  className={`absolute top-full mt-2.5 ${flyoutPositionClass} w-[260px] sm:w-[290px] bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 text-left opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-4`}
+                  className={`absolute top-full mt-2.5 ${flyoutPositionClass} w-[280px] sm:w-[310px] min-w-[280px] max-w-[340px] bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 z-50 text-left opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-4`}
                 >
+                  {/* Pointer Arrow */}
+                  <div className={`absolute -top-1.5 w-3 h-3 bg-white border-t border-l border-slate-100 rotate-45 z-10 ${pointerPositionClass}`} />
+
                   {/* Flyout Header */}
-                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2.5">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100 mb-2.5 relative z-20">
                     <div>
                       <h4 className="text-xs font-black text-[#0B132B] tracking-tight flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-[#F59E0B] inline-block"></span>
@@ -294,7 +310,7 @@ export default function QuickCategoryBar({ onOpenTamTeklif }: QuickCategoryBarPr
 
                   {/* Subcategories List */}
                   {cat.subCategories && cat.subCategories.length > 0 && (
-                    <div className="space-y-1 mb-3">
+                    <div className="space-y-1 mb-3 relative z-20">
                       {cat.subCategories.map((sub, sIdx) => (
                         <button
                           key={sIdx}
@@ -322,10 +338,10 @@ export default function QuickCategoryBar({ onOpenTamTeklif }: QuickCategoryBarPr
                   {/* Bottom Footer Action */}
                   <button
                     onClick={() => handleItemClick(cat)}
-                    className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-[#0B132B] text-slate-800 hover:text-white rounded-xl text-[11px] font-extrabold transition-all cursor-pointer border border-slate-100 group/footer"
+                    className="w-full flex items-center justify-between px-3 py-2 bg-slate-50 hover:bg-[#0B132B] text-slate-800 hover:text-white rounded-xl text-[11px] font-extrabold transition-all cursor-pointer border border-slate-100 group/footer relative z-20"
                   >
                     <span>
-                      {isFirst ? "A'dan Z'ye Pazaryerine Git" : `${cat.name.split('&')[0]} Tümünü Gör`}
+                      {cat.footerBtnText || (isFirst ? "A'dan Z'ye Pazaryerine Git" : `${cat.name.split('&')[0]} Tümünü Gör`)}
                     </span>
                     <ArrowRight className="w-3.5 h-3.5 text-[#F59E0B] group-hover/footer:translate-x-1 transition-transform" />
                   </button>

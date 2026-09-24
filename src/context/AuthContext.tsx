@@ -5,7 +5,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-export type UserRole = 'buyer' | 'seller';
+export type UserRole = 'customer' | 'merchant' | 'courier' | 'admin' | 'buyer' | 'seller';
 
 export interface AuthUser {
   id: string;
@@ -22,6 +22,9 @@ export interface AuthUser {
   district?: string;
   posPreference?: string;
   avatar?: string;
+  courierStatus?: 'available' | 'busy' | 'offline';
+  courierVehicle?: string;
+  courierRating?: number;
 }
 
 export interface SellerRegisterData {
@@ -47,19 +50,37 @@ export interface BuyerRegisterData {
   password?: string;
 }
 
+export interface CourierRegisterData {
+  name: string;
+  email: string;
+  phone: string;
+  city: string;
+  district: string;
+  vehicleType: string;
+  tcNo: string;
+}
+
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   loginAsBuyer: (email?: string) => void;
+  loginAsCustomer: (email?: string) => void;
   loginAsSeller: (email?: string, storeName?: string) => void;
+  loginAsMerchant: (email?: string, storeName?: string) => void;
+  loginAsCourier: (email?: string) => void;
+  loginAsAdmin: (email?: string) => void;
   registerBuyer: (data: BuyerRegisterData) => void;
   registerSeller: (data: SellerRegisterData) => void;
+  registerCourier: (data: CourierRegisterData) => void;
   logout: () => void;
   switchRole: (newRole: UserRole) => void;
-  openAuthModal: (initialTab?: 'buyer' | 'seller') => void;
+  openAuthModal: (initialTab?: 'buyer' | 'seller' | 'courier' | 'admin') => void;
   closeAuthModal: () => void;
   isAuthModalOpen: boolean;
-  authModalInitialTab: 'buyer' | 'seller';
+  authModalInitialTab: 'buyer' | 'seller' | 'courier' | 'admin';
+  getNormalizedRole: () => 'customer' | 'merchant' | 'courier' | 'admin';
+  getRoleRedirectPath: (role?: UserRole) => string;
+  updateCourierStatus: (status: 'available' | 'busy' | 'offline') => void;
 }
 
 const DEFAULT_BUYER: AuthUser = {
@@ -67,7 +88,7 @@ const DEFAULT_BUYER: AuthUser = {
   name: 'Ahmet Yılmaz',
   email: 'ahmet.yilmaz@tampazar.com',
   phone: '+90 532 555 12 34',
-  role: 'buyer',
+  role: 'customer',
   city: 'Ordu',
   district: 'Altınordu',
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
@@ -78,7 +99,7 @@ const DEFAULT_SELLER: AuthUser = {
   name: 'Serkan Koç (Foto Sentez)',
   email: 'serkan@fotosentez.com',
   phone: '+90 530 777 88 99',
-  role: 'seller',
+  role: 'merchant',
   storeId: 's3',
   storeName: 'FotoSentez Stüdyo',
   legalTitle: 'FotoSentez Prodüksiyon ve Medya Ltd. Şti.',
@@ -88,6 +109,31 @@ const DEFAULT_SELLER: AuthUser = {
   district: 'Altınordu',
   posPreference: 'Sipay Gateway (Doğrudan POS)',
   avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80'
+};
+
+const DEFAULT_COURIER: AuthUser = {
+  id: 'courier-1',
+  name: 'Murat Yıldız',
+  email: 'kurye.murat@tampazar.com',
+  phone: '+90 541 222 33 44',
+  role: 'courier',
+  city: 'Ordu',
+  district: 'Altınordu',
+  courierStatus: 'available',
+  courierVehicle: 'Motosiklet (125cc)',
+  courierRating: 4.9,
+  avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80'
+};
+
+const DEFAULT_ADMIN: AuthUser = {
+  id: 'admin-1',
+  name: 'Süper Admin (Platform Yetkilisi)',
+  email: 'admin@tampazar.com',
+  phone: '+90 850 300 00 00',
+  role: 'admin',
+  city: 'İstanbul',
+  district: 'Maslak',
+  avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -103,7 +149,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   });
 
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [authModalInitialTab, setAuthModalInitialTab] = useState<'buyer' | 'seller'>('buyer');
+  const [authModalInitialTab, setAuthModalInitialTab] = useState<'buyer' | 'seller' | 'courier' | 'admin'>('buyer');
 
   useEffect(() => {
     if (user) {
@@ -115,22 +161,65 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [user]);
 
+  const getNormalizedRole = (): 'customer' | 'merchant' | 'courier' | 'admin' => {
+    if (!user) return 'customer';
+    if (user.role === 'buyer' || user.role === 'customer') return 'customer';
+    if (user.role === 'seller' || user.role === 'merchant') return 'merchant';
+    if (user.role === 'courier') return 'courier';
+    if (user.role === 'admin') return 'admin';
+    return 'customer';
+  };
+
+  const getRoleRedirectPath = (targetRole?: UserRole): string => {
+    const roleToUse = targetRole || (user ? user.role : 'customer');
+    if (roleToUse === 'merchant' || roleToUse === 'seller') return '/yonetim';
+    if (roleToUse === 'courier') return '/kurye/panel';
+    if (roleToUse === 'admin') return '/sistem-admin';
+    return '/hesabim';
+  };
+
   const loginAsBuyer = (email = 'ahmet.yilmaz@tampazar.com') => {
-    const buyerUser = {
+    const buyerUser: AuthUser = {
       ...DEFAULT_BUYER,
-      email
+      email,
+      role: 'customer'
     };
     setUser(buyerUser);
     setIsAuthModalOpen(false);
   };
 
+  const loginAsCustomer = loginAsBuyer;
+
   const loginAsSeller = (email = 'serkan@fotosentez.com', storeName = 'FotoSentez Stüdyo') => {
-    const sellerUser = {
+    const sellerUser: AuthUser = {
       ...DEFAULT_SELLER,
       email,
-      storeName
+      storeName,
+      role: 'merchant'
     };
     setUser(sellerUser);
+    setIsAuthModalOpen(false);
+  };
+
+  const loginAsMerchant = loginAsSeller;
+
+  const loginAsCourier = (email = 'kurye.murat@tampazar.com') => {
+    const courierUser: AuthUser = {
+      ...DEFAULT_COURIER,
+      email,
+      role: 'courier'
+    };
+    setUser(courierUser);
+    setIsAuthModalOpen(false);
+  };
+
+  const loginAsAdmin = (email = 'admin@tampazar.com') => {
+    const adminUser: AuthUser = {
+      ...DEFAULT_ADMIN,
+      email,
+      role: 'admin'
+    };
+    setUser(adminUser);
     setIsAuthModalOpen(false);
   };
 
@@ -140,7 +229,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       name: data.name,
       email: data.email,
       phone: data.phone,
-      role: 'buyer',
+      role: 'customer',
       city: data.city || 'Ordu',
       district: data.district || 'Altınordu',
       avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
@@ -156,7 +245,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       name: `${data.storeName} Yetkilisi`,
       email: data.email,
       phone: data.phone,
-      role: 'seller',
+      role: 'merchant',
       storeId: newSellerId,
       storeName: data.storeName,
       legalTitle: data.legalTitle || data.storeName,
@@ -168,7 +257,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80'
     };
 
-    // Save as new tenant in tenants storage if available
     try {
       const storedTenants = localStorage.getItem('tampazar_tenants');
       const tenantsList = storedTenants ? JSON.parse(storedTenants) : [];
@@ -197,33 +285,43 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthModalOpen(false);
   };
 
+  const registerCourier = (data: CourierRegisterData) => {
+    const newCourier: AuthUser = {
+      id: 'courier-' + Date.now(),
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      role: 'courier',
+      city: data.city,
+      district: data.district,
+      courierStatus: 'available',
+      courierVehicle: data.vehicleType,
+      courierRating: 5.0,
+      avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80'
+    };
+    setUser(newCourier);
+    setIsAuthModalOpen(false);
+  };
+
+  const updateCourierStatus = (status: 'available' | 'busy' | 'offline') => {
+    if (user && (user.role === 'courier')) {
+      setUser({ ...user, courierStatus: status });
+    }
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('tampazar_auth_user');
   };
 
   const switchRole = (newRole: UserRole) => {
-    if (!user) {
-      if (newRole === 'buyer') loginAsBuyer();
-      else loginAsSeller();
-      return;
-    }
-    if (newRole === 'seller') {
-      setUser({
-        ...DEFAULT_SELLER,
-        name: user.name,
-        email: user.email
-      });
-    } else {
-      setUser({
-        ...DEFAULT_BUYER,
-        name: user.name,
-        email: user.email
-      });
-    }
+    if (newRole === 'merchant' || newRole === 'seller') loginAsSeller();
+    else if (newRole === 'courier') loginAsCourier();
+    else if (newRole === 'admin') loginAsAdmin();
+    else loginAsBuyer();
   };
 
-  const openAuthModal = (initialTab: 'buyer' | 'seller' = 'buyer') => {
+  const openAuthModal = (initialTab: 'buyer' | 'seller' | 'courier' | 'admin' = 'buyer') => {
     setAuthModalInitialTab(initialTab);
     setIsAuthModalOpen(true);
   };
@@ -238,15 +336,23 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         user,
         isAuthenticated: Boolean(user),
         loginAsBuyer,
+        loginAsCustomer,
         loginAsSeller,
+        loginAsMerchant,
+        loginAsCourier,
+        loginAsAdmin,
         registerBuyer,
         registerSeller,
+        registerCourier,
         logout,
         switchRole,
         openAuthModal,
         closeAuthModal,
         isAuthModalOpen,
-        authModalInitialTab
+        authModalInitialTab,
+        getNormalizedRole,
+        getRoleRedirectPath,
+        updateCourierStatus
       }}
     >
       {children}

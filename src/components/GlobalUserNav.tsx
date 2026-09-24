@@ -6,13 +6,13 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   User, Store, LogOut, ChevronDown, Sparkles, ShoppingBag, 
-  FileText, ShieldCheck, Heart, MapPin, Calculator, PlusCircle
+  ShieldCheck, Heart, MapPin, Calculator, Bike, BarChart3, Lock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 
 export default function GlobalUserNav() {
-  const { user, isAuthenticated, logout, openAuthModal, switchRole } = useAuth();
+  const { user, isAuthenticated, logout, openAuthModal, switchRole, getNormalizedRole } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -28,29 +28,60 @@ export default function GlobalUserNav() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // 1. UNAUTHENTICATED STATE
   if (!isAuthenticated || !user) {
     return (
       <div className="flex items-center gap-2">
-        <button
-          onClick={() => openAuthModal('seller')}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-xl transition cursor-pointer"
+        <Link
+          to="/saticipaneli"
+          className="hidden sm:flex items-center gap-1.5 px-3 py-2 text-xs font-black text-[#0B132B] bg-[#F59E0B] hover:bg-amber-400 rounded-xl transition cursor-pointer shadow-xs border border-amber-500/30"
         >
-          <Store className="w-3.5 h-3.5 text-amber-600" />
-          <span>Esnaf Mağazası Aç</span>
-        </button>
+          <Store className="w-3.5 h-3.5 text-[#0B132B]" />
+          <span>Satıcı Ol / Dükkan Aç</span>
+        </Link>
 
-        <button
-          onClick={() => openAuthModal('buyer')}
+        <Link
+          to="/giris"
           className="flex items-center gap-1.5 px-4 py-2 text-xs font-black text-white bg-indigo-900 hover:bg-indigo-800 rounded-xl shadow-xs transition cursor-pointer"
         >
           <User className="w-3.5 h-3.5" />
-          <span>Giriş Yap / Kayıt Ol</span>
-        </button>
+          <span>Giriş Yap / Üye Ol</span>
+        </Link>
       </div>
     );
   }
 
-  const isSeller = user.role === 'seller';
+  // 2. AUTHENTICATED STATE
+  const currentRole = getNormalizedRole();
+
+  const roleConfigs = {
+    merchant: {
+      label: 'Esnaf Satıcı',
+      badgeColor: 'bg-amber-100 text-amber-900 border-amber-300',
+      tagColor: 'text-amber-600',
+      avatarFallback: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100'
+    },
+    customer: {
+      label: 'Müşteri / Tüketici',
+      badgeColor: 'bg-indigo-100 text-indigo-900 border-indigo-300',
+      tagColor: 'text-indigo-600',
+      avatarFallback: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100'
+    },
+    courier: {
+      label: 'TamKurye Sürücü',
+      badgeColor: 'bg-emerald-100 text-emerald-900 border-emerald-300',
+      tagColor: 'text-emerald-600',
+      avatarFallback: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100'
+    },
+    admin: {
+      label: 'Süper Admin',
+      badgeColor: 'bg-slate-900 text-amber-400 border-amber-400',
+      tagColor: 'text-amber-500',
+      avatarFallback: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100'
+    }
+  };
+
+  const config = roleConfigs[currentRole] || roleConfigs.customer;
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -59,9 +90,7 @@ export default function GlobalUserNav() {
         className="flex items-center gap-2 p-1.5 pr-2.5 rounded-2xl border border-slate-200 bg-white hover:bg-slate-50 transition cursor-pointer shadow-xs"
       >
         <img 
-          src={user.avatar || (isSeller 
-            ? "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100" 
-            : "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100")} 
+          src={user.avatar || config.avatarFallback} 
           alt={user.name} 
           className="w-8 h-8 rounded-xl object-cover border border-slate-200"
         />
@@ -69,10 +98,8 @@ export default function GlobalUserNav() {
           <div className="text-xs font-black text-slate-900 leading-tight truncate max-w-[120px]">
             {user.name.split(' ')[0]}
           </div>
-          <span className={`text-[9px] font-extrabold uppercase tracking-wider block ${
-            isSeller ? 'text-amber-600' : 'text-indigo-600'
-          }`}>
-            {isSeller ? 'Esnaf Satıcı' : 'Tüketici'}
+          <span className={`text-[9px] font-extrabold uppercase tracking-wider block ${config.tagColor}`}>
+            {config.label}
           </span>
         </div>
         <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
@@ -81,75 +108,53 @@ export default function GlobalUserNav() {
       {dropdownOpen && (
         <div className="absolute right-0 mt-2 w-64 bg-white border border-slate-200 rounded-2xl shadow-xl py-2 z-50 animate-fade-in divide-y divide-slate-100 text-xs">
           
-          {/* Kullanıcı Bilgisi */}
+          {/* User Info Header */}
           <div className="px-4 py-3">
             <span className="font-bold text-slate-900 block truncate">{user.name}</span>
             <span className="text-[11px] text-slate-400 block truncate">{user.email}</span>
             <div className="mt-2 flex items-center justify-between">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
-                isSeller ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800'
-              }`}>
-                {isSeller ? `🏪 ${user.storeName || 'Mağaza Sahibi'}` : '👤 Tüketici'}
+              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md border ${config.badgeColor}`}>
+                {user.storeName || config.label}
               </span>
-              <button
-                onClick={() => {
-                  switchRole(isSeller ? 'buyer' : 'seller');
-                  setDropdownOpen(false);
-                }}
-                className="text-[10px] text-indigo-700 hover:underline font-bold"
-              >
-                {isSeller ? 'Müşteriye Geç' : 'Esnafa Geç'}
-              </button>
+              <span className="text-[10px] font-mono text-emerald-600 font-bold">Oturum Aktif</span>
             </div>
           </div>
 
-          {/* Menü Linkleri */}
+          {/* Role Specific Dropdown Links */}
           <div className="py-1">
-            {isSeller ? (
+            {/* A) MERCHANT / ESNAF */}
+            {currentRole === 'merchant' && (
               <>
                 <Link
-                  to="/yonetim"
+                  to={`/dukkan/${user.storeId || 'atolye-zanaat'}`}
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-bold"
                 >
-                  <Store className="w-4 h-4 text-indigo-600" />
-                  <span>SaaS Esnaf Yönetim Paneli</span>
+                  <Store className="w-4 h-4 text-amber-600" />
+                  <span>Mağazamı Gör</span>
                 </Link>
                 <Link
                   to="/yonetim"
                   onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-semibold"
+                  className="flex items-center gap-2.5 px-4 py-2 text-slate-900 bg-amber-50 hover:bg-amber-100 font-black"
                 >
-                  <Sparkles className="w-4 h-4 text-amber-500" />
-                  <span>TamTeklif (İş Fırsatları)</span>
+                  <ShieldCheck className="w-4 h-4 text-[#0F4C3A]" />
+                  <span>Yönetim Paneli</span>
                 </Link>
                 <Link
-                  to="/saas-konsol/byopos"
+                  to="/saticipaneli"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
                 >
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Sanal POS (BYO) Ayarları</span>
-                </Link>
-                <Link
-                  to="/saas-konsol/accounting"
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
-                >
-                  <Calculator className="w-4 h-4 text-amber-600" />
-                  <span>GİB e-Fatura & Muhasebe</span>
+                  <Calculator className="w-4 h-4 text-indigo-600" />
+                  <span>Abonelik Durumu (%0 Komisyon)</span>
                 </Link>
               </>
-            ) : (
+            )}
+
+            {/* B) CUSTOMER / MÜŞTERİ */}
+            {currentRole === 'customer' && (
               <>
-                <Link
-                  to="/hesabim/taleplerim"
-                  onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-slate-900 bg-amber-50/60 hover:bg-amber-100/60 font-black"
-                >
-                  <Sparkles className="w-4 h-4 text-amber-600" />
-                  <span>Fiyat Taleplerim & Teklifler</span>
-                </Link>
                 <Link
                   to="/hesabim"
                   onClick={() => setDropdownOpen(false)}
@@ -159,26 +164,101 @@ export default function GlobalUserNav() {
                   <span>Siparişlerim & Faturalarım</span>
                 </Link>
                 <Link
-                  to="/hesabim"
+                  to="/hesabim/sadakat"
                   onClick={() => setDropdownOpen(false)}
-                  className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
+                  className="flex items-center gap-2.5 px-4 py-2 text-slate-900 bg-amber-50 hover:bg-amber-100 font-black"
                 >
-                  <MapPin className="w-4 h-4 text-emerald-600" />
-                  <span>Randevularım & Usta Çağrılarım</span>
+                  <Sparkles className="w-4 h-4 text-amber-600" />
+                  <span>Mahalle Sadakat Kartım</span>
                 </Link>
                 <Link
                   to="/hesabim"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-medium"
                 >
-                  <Heart className="w-4 h-4 text-rose-500" />
-                  <span>Favorilerim</span>
+                  <User className="w-4 h-4 text-slate-600" />
+                  <span>Hesap Ayarları & Adresler</span>
+                </Link>
+              </>
+            )}
+
+            {/* C) COURIER / KURYE */}
+            {currentRole === 'courier' && (
+              <>
+                <Link
+                  to="/kurye/panel"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-[#0B132B] bg-emerald-50 hover:bg-emerald-100 font-black"
+                >
+                  <Bike className="w-4 h-4 text-[#10B981]" />
+                  <span>Aktif Görevler & Radar</span>
+                </Link>
+                <Link
+                  to="/kurye/panel"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <span>Kazançlarım & Günlük Hasılat</span>
+                </Link>
+              </>
+            )}
+
+            {/* D) ADMIN / SÜPER ADMİN */}
+            {currentRole === 'admin' && (
+              <>
+                <Link
+                  to="/sistem-admin"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-amber-900 bg-amber-100 hover:bg-amber-200 font-black"
+                >
+                  <Lock className="w-4 h-4 text-slate-950" />
+                  <span>Süper Konsol Yönetimi</span>
+                </Link>
+                <Link
+                  to="/sistem-admin"
+                  onClick={() => setDropdownOpen(false)}
+                  className="flex items-center gap-2.5 px-4 py-2 text-slate-700 hover:bg-slate-50 font-semibold"
+                >
+                  <BarChart3 className="w-4 h-4 text-indigo-600" />
+                  <span>Platform Raporları & PayTR</span>
                 </Link>
               </>
             )}
           </div>
 
-          {/* Çıkış Yap */}
+          {/* Quick Role Switcher for Demo Testing */}
+          <div className="p-2 bg-slate-50 border-t border-slate-100 space-y-1 text-[10px]">
+            <span className="text-slate-400 font-mono uppercase block font-bold px-2">Hızlı Rol Değiştir (Demo)</span>
+            <div className="grid grid-cols-2 gap-1">
+              <button 
+                onClick={() => { switchRole('customer'); setDropdownOpen(false); navigate('/hesabim'); }}
+                className="px-2 py-1 rounded bg-white hover:bg-indigo-50 border border-slate-200 font-semibold text-slate-700 text-left"
+              >
+                👤 Müşteri
+              </button>
+              <button 
+                onClick={() => { switchRole('merchant'); setDropdownOpen(false); navigate('/yonetim'); }}
+                className="px-2 py-1 rounded bg-white hover:bg-amber-50 border border-slate-200 font-semibold text-slate-700 text-left"
+              >
+                🏪 Esnaf
+              </button>
+              <button 
+                onClick={() => { switchRole('courier'); setDropdownOpen(false); navigate('/kurye/panel'); }}
+                className="px-2 py-1 rounded bg-white hover:bg-emerald-50 border border-slate-200 font-semibold text-slate-700 text-left"
+              >
+                🛵 Kurye
+              </button>
+              <button 
+                onClick={() => { switchRole('admin'); setDropdownOpen(false); navigate('/sistem-admin'); }}
+                className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 font-bold text-amber-400 text-left"
+              >
+                🛡️ Admin
+              </button>
+            </div>
+          </div>
+
+          {/* Logout */}
           <div className="py-1">
             <button
               onClick={() => {

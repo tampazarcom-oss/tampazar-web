@@ -31,6 +31,14 @@ const BlogSitemap = lazy(() => import('./pages/BlogSitemap'));
 const PazaryeriDiscoveryPage = lazy(() => import('./components/PazaryeriDiscoveryPage'));
 const SellerPortalPage = lazy(() => import('./components/SellerPortalPage'));
 
+// Role & Auth & Admin Panel Pages
+const ProtectedRoute = lazy(() => import('./components/auth/ProtectedRoute'));
+const CustomerAuthPage = lazy(() => import('./pages/CustomerAuthPage'));
+const CourierAuthPage = lazy(() => import('./pages/CourierAuthPage'));
+const CourierDashboardPage = lazy(() => import('./pages/CourierDashboardPage'));
+const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
+const AdminDashboardPage = lazy(() => import('./pages/AdminDashboardPage'));
+
 const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
 const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
 const LogisticsIntegration = lazy(() => import('./components/LogisticsIntegration'));
@@ -424,97 +432,80 @@ function MainLayout() {
               path="/sitemap.xml" 
               element={<BlogSitemap />} 
             />
+            {/* Müşteri Giriş / Kayıt */}
+            <Route path="/giris" element={<CustomerAuthPage />} />
+            <Route path="/kayit" element={<CustomerAuthPage />} />
+
+            {/* Müşteri Hesabı (Protected) */}
             <Route 
               path="/hesabim" 
-              element={<CustomerAccountPage />} 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+                  <CustomerAccountPage />
+                </ProtectedRoute>
+              } 
             />
             <Route 
-              path="/hesabim/taleplerim" 
-              element={<CustomerAccountPage />} 
+              path="/hesabim/*" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+                  <CustomerAccountPage />
+                </ProtectedRoute>
+              } 
             />
+
+            {/* TamKurye Giriş, Başvuru ve Sürücü Paneli */}
+            <Route path="/kurye/giris" element={<CourierAuthPage />} />
+            <Route path="/kurye/basvuru" element={<CourierAuthPage />} />
             <Route 
-              path="/hesabim/taleplerim/:id" 
-              element={<CustomerAccountPage />} 
+              path="/kurye/panel" 
+              element={
+                <ProtectedRoute allowedRoles={['courier']}>
+                  <CourierDashboardPage />
+                </ProtectedRoute>
+              } 
             />
+
+            {/* Süper Admin Giriş ve Paneli (Izole) */}
+            <Route path="/sistem-admin/login" element={<AdminLoginPage />} />
             <Route 
-              path="/hesabim/dijital-arsivim" 
-              element={<CustomerAccountPage />} 
+              path="/sistem-admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              } 
             />
-            <Route 
-              path="/hesabim/randevularim" 
-              element={<CustomerAccountPage />} 
-            />
-            <Route 
-              path="/hesabim/sadakat" 
-              element={<CustomerAccountPage />} 
-            />
-            <Route 
-              path="/hesabim/ikramlar" 
-              element={<CustomerAccountPage />} 
-            />
+
+            {/* Esnaf Yönetim Paneli (Protected) */}
             <Route 
               path="/yonetim" 
               element={
-                <TampazarSellerDashboard 
-                  onNavigate={(tab) => {
-                    if (tab === 'home') navigate('/');
-                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
-                    else navigate(`/saas-konsol/${tab}`);
-                  }} 
-                  activeStoreName={activeTenant.name} 
-                />
+                <ProtectedRoute allowedRoles={['merchant', 'seller']}>
+                  <TampazarSellerDashboard 
+                    onNavigate={(tab) => {
+                      if (tab === 'home') navigate('/');
+                      else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                      else navigate(`/saas-konsol/${tab}`);
+                    }} 
+                    activeStoreName={activeTenant.name} 
+                  />
+                </ProtectedRoute>
               } 
             />
             <Route 
-              path="/yonetim/afis" 
+              path="/yonetim/*" 
               element={
-                <TampazarSellerDashboard 
-                  onNavigate={(tab) => {
-                    if (tab === 'home') navigate('/');
-                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
-                    else navigate(`/saas-konsol/${tab}`);
-                  }} 
-                  activeStoreName={activeTenant.name} 
-                />
-              } 
-            />
-            <Route 
-              path="/yonetim/sadakat" 
-              element={
-                <TampazarSellerDashboard 
-                  onNavigate={(tab) => {
-                    if (tab === 'home') navigate('/');
-                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
-                    else navigate(`/saas-konsol/${tab}`);
-                  }} 
-                  activeStoreName={activeTenant.name} 
-                />
-              } 
-            />
-            <Route 
-              path="/yonetim/:subTab" 
-              element={
-                <TampazarSellerDashboard 
-                  onNavigate={(tab) => {
-                    if (tab === 'home') navigate('/');
-                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
-                    else navigate(`/saas-konsol/${tab}`);
-                  }} 
-                  activeStoreName={activeTenant.name} 
-                />
-              } 
-            />
-            <Route 
-              path="/yonetim/ayarlar/:subTab" 
-              element={
-                <TampazarSellerDashboard 
-                  onNavigate={(tab) => {
-                    if (tab === 'home') navigate('/');
-                    else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
-                    else navigate(`/saas-konsol/${tab}`);
-                  }} 
-                  activeStoreName={activeTenant.name} 
-                />
+                <ProtectedRoute allowedRoles={['merchant', 'seller']}>
+                  <TampazarSellerDashboard 
+                    onNavigate={(tab) => {
+                      if (tab === 'home') navigate('/');
+                      else if (tab === 'store-profile') navigate(`/dukkan/${activeTenant.slug}`);
+                      else navigate(`/saas-konsol/${tab}`);
+                    }} 
+                    activeStoreName={activeTenant.name} 
+                  />
+                </ProtectedRoute>
               } 
             />
             <Route 
