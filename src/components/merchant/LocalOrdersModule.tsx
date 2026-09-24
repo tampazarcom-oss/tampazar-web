@@ -19,6 +19,7 @@ import {
   SuspendedItemRecord 
 } from '../../data/hybridCommerceData';
 import OrderCustomizationDisplay from './OrderCustomizationDisplay';
+import CourierDispatchModal from '../courier/CourierDispatchModal';
 
 interface LocalOrdersModuleProps {
   orders: HybridOrder[];
@@ -30,6 +31,7 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
   const [testSoundPlayed, setTestSoundPlayed] = useState(false);
   const [suspendedItems, setSuspendedItems] = useState<SuspendedItemRecord[]>([]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [selectedOrderForCourier, setSelectedOrderForCourier] = useState<HybridOrder | null>(null);
 
   const loadSuspended = () => {
     setSuspendedItems(getStoredSuspendedItems());
@@ -329,13 +331,23 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
                   )}
 
                   {isPreparing && (
-                    <button
-                      onClick={() => handleDispatchCourier(order.id)}
-                      className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-black text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
-                    >
-                      <Bike className="w-4 h-4" />
-                      Kuryeye Teslim Et & Yola Çıkar
-                    </button>
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setSelectedOrderForCourier(order)}
+                        className="w-full py-3 bg-[#F59E0B] hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-md transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Bike className="w-4 h-4 text-slate-950" />
+                        🛵 Yakındaki Kuryeyi Çağır (Radarı Aç)
+                      </button>
+
+                      <button
+                        onClick={() => handleDispatchCourier(order.id)}
+                        className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5"
+                      >
+                        <Bike className="w-3.5 h-3.5" />
+                        Kendi Kuryeme Ver & Yola Çıkar
+                      </button>
+                    </div>
                   )}
 
                   {isCourierOnWay && (
@@ -371,6 +383,26 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
           })
         )}
       </div>
+
+      {/* TamKurye Radarı ve Çağrı Modalı */}
+      {selectedOrderForCourier && (
+        <CourierDispatchModal
+          order={{
+            id: selectedOrderForCourier.id,
+            orderNumber: selectedOrderForCourier.orderNumber,
+            customerName: selectedOrderForCourier.customerName,
+            customerPhone: selectedOrderForCourier.customerPhone,
+            customerAddress: selectedOrderForCourier.customerAddress,
+            storeName: 'TamPazar Esnafı',
+            totalAmount: selectedOrderForCourier.totalAmount
+          }}
+          onClose={() => setSelectedOrderForCourier(null)}
+          onCourierAssigned={(courierName, courierPhone) => {
+            onUpdateOrderStatus(selectedOrderForCourier.id, 'COURIER_ON_WAY');
+            showToast(`🛵 Kurye ${courierName} (${courierPhone}) göreve atandı ve sipariş yola çıkarıldı.`);
+          }}
+        />
+      )}
     </div>
   );
 }

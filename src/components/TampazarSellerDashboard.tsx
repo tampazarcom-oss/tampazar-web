@@ -8,7 +8,7 @@ import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShoppingCart, ArrowDownLeft, FileText, Truck,
   Users, Building2, Package, Wallet, BarChart3, Calculator,
-  Store, Settings, Search, Calendar, Bot, Bell,
+  Store, Settings, Search, Calendar, Bot, Bell, Bike,
   TrendingUp, TrendingDown, ArrowUpRight, DollarSign, Euro,
   ChevronDown, PlusCircle, CheckCircle2, ShieldCheck, Download,
   Layers, ArrowLeft, ExternalLink, Sparkles, MessageCircle,
@@ -26,6 +26,7 @@ import {
 } from '../data/hybridCommerceData';
 import CargoOrdersModule from './merchant/CargoOrdersModule';
 import LocalOrdersModule from './merchant/LocalOrdersModule';
+import CourierOrdersManagementModule from './merchant/CourierOrdersManagementModule';
 import ServiceOrdersModule from './merchant/ServiceOrdersModule';
 import CashflowModule from './merchant/CashflowModule';
 import SubscriptionTierModal from './merchant/SubscriptionTierModal';
@@ -56,6 +57,7 @@ export type DashboardTab =
   | 'stok' 
   | 'orders_cargo' 
   | 'orders_local' 
+  | 'orders_courier'
   | 'orders_service' 
   | 'tamdijital'
   | 'tamseans'
@@ -90,6 +92,7 @@ export default function TampazarSellerDashboard({
     if (p.includes('kasa') || p.includes('nakit') || p.includes('wallet')) return 'kasa';
     if (p.includes('stok') || p.includes('urun') || p.includes('stock')) return 'stok';
     if (p.includes('kargo') || p.includes('orders_cargo')) return 'orders_cargo';
+    if (p.includes('kurye') || p.includes('courier')) return 'orders_courier';
     if (p.includes('hizli') || p.includes('orders_local')) return 'orders_local';
     if (p.includes('servis') || p.includes('orders_service')) return 'orders_service';
     if (p.includes('dijital') || p.includes('tamdijital')) return 'tamdijital';
@@ -656,6 +659,24 @@ export default function TampazarSellerDashboard({
             </div>
             <span className="text-[10px] bg-rose-500 text-white font-bold px-1.5 py-0.5 rounded">
               {hybridOrders.filter(o => o.deliveryType === 'LOCAL_EXPRESS').length}
+            </span>
+          </button>
+
+          {/* TamKurye Açık Kurye Çağrı & Radarı */}
+          <button
+            onClick={() => setActiveTab('orders_courier')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'orders_courier' 
+                ? 'bg-[#0F4C3A] text-white font-black shadow-sm' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Bike className="w-4 h-4 text-emerald-400" />
+              <span>TamKurye (Kurye Çağır & Havuz)</span>
+            </div>
+            <span className="text-[10px] bg-emerald-950/80 text-emerald-300 font-bold px-1.5 py-0.5 rounded">
+              %0 Komisyon
             </span>
           </button>
 
@@ -1635,6 +1656,13 @@ export default function TampazarSellerDashboard({
                 orders={hybridOrders}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
               />
+            </div>
+          )}
+
+          {/* TAB: TAMKURYE (AÇIK KURYE RADARI & ÇAĞRI MODÜLÜ) */}
+          {activeTab === 'orders_courier' && (
+            <div className="animate-fade-in">
+              <CourierOrdersManagementModule />
             </div>
           )}
 

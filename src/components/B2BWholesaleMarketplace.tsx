@@ -22,6 +22,7 @@ import {
   getStoredDropshippedProducts, saveStoredDropshippedProducts
 } from '../data/b2bDropshipData';
 import { applyPageSEO } from '../utils/seo';
+import { getProductSocialProof } from '../utils/socialProof';
 
 // B2B Zengin Teknik ve Lojistik Özellik Veri Arayüzü
 export interface B2BSpecs {
@@ -615,6 +616,7 @@ export default function B2BWholesaleMarketplace() {
               const suggestedRetail = product.suggestedRetailPrice || Math.round(wholesalePrice * 1.5);
               const estProfit = suggestedRetail - wholesalePrice;
               const profitPercent = Math.round((estProfit / wholesalePrice) * 100);
+              const b2bProof = getProductSocialProof(product.id || product.slug, product.salesCount, { isB2B: true });
 
               return (
                 <div
@@ -659,9 +661,11 @@ export default function B2BWholesaleMarketplace() {
                   {/* Card Content */}
                   <div className="p-5 space-y-4 flex-1 flex flex-col justify-between">
                     <div className="space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs text-[#0F4C3A] font-bold">
-                        <Building2 className="w-3.5 h-3.5" />
-                        <span className="truncate">{product.storeName}</span>
+                      <div className="flex items-center justify-between gap-1.5 text-xs">
+                        <div className="flex items-center gap-1.5 text-[#0F4C3A] font-bold truncate">
+                          <Building2 className="w-3.5 h-3.5 shrink-0" />
+                          <span className="truncate">{product.storeName}</span>
+                        </div>
                       </div>
 
                       {/* Başlık (Clickable) */}
@@ -671,6 +675,13 @@ export default function B2BWholesaleMarketplace() {
                       >
                         {product.title}
                       </h3>
+
+                      {/* Toptan Sevk Hacmi Rozeti */}
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-black text-amber-950 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-md shadow-2xs">
+                          {b2bProof.wholesaleBadgeText}
+                        </span>
+                      </div>
 
                       {/* Açıklama Metni - Kesilme Düzeltilmiş ve Tıklanabilir Detay Linki */}
                       <div className="space-y-1">
@@ -939,6 +950,13 @@ export default function B2BWholesaleMarketplace() {
                       <div className="flex items-center gap-2 text-xs text-slate-600">
                         <MapPin className="w-3.5 h-3.5 text-rose-500" />
                         <span className="font-bold text-slate-800">{specs.origin}</span>
+                      </div>
+
+                      {/* B2B Toptan Hacim & Sevk Rozeti */}
+                      <div className="pt-1">
+                        <span className="inline-flex items-center gap-1.5 text-xs font-black text-amber-950 bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-xl shadow-2xs">
+                          {getProductSocialProof(selectedDetailProduct.id || selectedDetailProduct.slug, selectedDetailProduct.salesCount, { isB2B: true }).wholesaleBadgeText}
+                        </span>
                       </div>
                     </div>
 

@@ -22,6 +22,8 @@ const LegalPages = lazy(() => import('./components/LegalPages'));
 const TampazarSellerDashboard = lazy(() => import('./components/TampazarSellerDashboard'));
 const CustomerAccountPage = lazy(() => import('./components/CustomerAccountPage'));
 const B2BWholesaleMarketplace = lazy(() => import('./components/B2BWholesaleMarketplace'));
+const CourierDirectoryPage = lazy(() => import('./components/courier/CourierDirectoryPage'));
+const CourierOnboardingAndDashboard = lazy(() => import('./components/courier/CourierOnboardingAndDashboard'));
 const BlogPage = lazy(() => import('./pages/Blog'));
 const BlogSitemap = lazy(() => import('./pages/BlogSitemap'));
 
@@ -204,6 +206,16 @@ function MainLayout() {
             🏢 B2B Toptan & Esnaf Ağı
           </Link>
           <Link
+            to="/kuryeler"
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
+              location.pathname.startsWith('/kurye') 
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
+                : 'text-amber-200 hover:text-white'
+            }`}
+          >
+            🛵 TamKurye
+          </Link>
+          <Link
             to="/blog"
             className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
               location.pathname.startsWith('/blog')
@@ -348,6 +360,18 @@ function MainLayout() {
             <Route 
               path="/toptan/:id" 
               element={<B2BWholesaleMarketplace />} 
+            />
+            <Route 
+              path="/kuryeler" 
+              element={<CourierDirectoryPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
+              path="/kurye-ol" 
+              element={<CourierOnboardingAndDashboard onBackToMarketplace={() => navigate('/kuryeler')} />} 
+            />
+            <Route 
+              path="/yonetim/kurye" 
+              element={<CourierOnboardingAndDashboard onBackToMarketplace={() => navigate('/yonetim')} />} 
             />
             <Route 
               path="/blog" 

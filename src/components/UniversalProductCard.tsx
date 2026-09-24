@@ -7,8 +7,9 @@ import React, { useState } from 'react';
 import { 
   ShoppingBag, Calendar, Phone, MessageCircle, 
   MapPin, Clock, ShieldCheck, Layers, AlertCircle, 
-  Check, Star, ArrowUpRight, Zap, Download, Video
+  Check, Star, ArrowUpRight, Zap, Download, Video, Sparkles
 } from 'lucide-react';
+import { getProductSocialProof, getStoreSocialProof } from '../utils/socialProof';
 
 export type SectorType = 'RETAIL' | 'WHOLESALE' | 'SERVICE' | 'FOOD' | 'EMERGENCY' | 'DIGITAL' | 'CONSULTATION';
 
@@ -27,6 +28,7 @@ export interface UniversalCardData {
   price: number;
   vatRate: number; // KDV %
   currency?: string;
+  salesCount?: number;
   deliveryType?: 'national_cargo' | 'instant_courier' | 'service_call' | 'digital_download' | 'online_session';
   digitalFormats?: string[];
   sessionDurationMin?: number;
@@ -43,6 +45,7 @@ export interface UniversalCardData {
     reviewCount: number;
     paymentProvider: string; // "Doğrudan PayTR", "Kendi iyzico POS'u"
     isPhysicalVerified: boolean;
+    totalOrders?: number;
   };
 
   // Sektöre Özel Opsiyonel Alanlar
@@ -70,6 +73,20 @@ export default function UniversalProductCard({
 }) {
   const [selectedQty, setSelectedQty] = useState(data.minOrderQty || 1);
   const [addedAnimation, setAddedAnimation] = useState(false);
+
+  // Akıllı Sosyal Kanıt ve Eşik Kontrolleri
+  const productSocialProof = getProductSocialProof(
+    data.id || data.slug,
+    data.salesCount,
+    { isB2B: data.sector === 'WHOLESALE', isService: data.sector === 'SERVICE' }
+  );
+
+  const storeSocialProof = getStoreSocialProof(
+    data.store.slug || data.store.name,
+    data.store.rating,
+    data.store.reviewCount,
+    data.store.totalOrders
+  );
 
   // Dinamik Toptan Fiyat Hesaplayıcı
   const getActivePrice = () => {
@@ -199,6 +216,23 @@ export default function UniversalProductCard({
             <h3 className="font-extrabold text-slate-900 text-sm leading-snug line-clamp-2 min-h-[40px]">
               {data.title}
             </h3>
+          </div>
+
+          {/* Akıllı Sosyal Kanıt ve Eşik Kontrollü Satış / Mahalle Rozeti */}
+          <div className="pt-0.5">
+            {data.sector === 'WHOLESALE' ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-900 bg-amber-50 border border-amber-200/80 px-2 py-0.5 rounded-md shadow-2xs">
+                {productSocialProof.wholesaleBadgeText}
+              </span>
+            ) : productSocialProof.hasHighSales ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200/80 px-2 py-0.5 rounded-md shadow-2xs">
+                {productSocialProof.badgeText}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-700 bg-slate-100/90 border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">
+                {productSocialProof.badgeText}
+              </span>
+            )}
           </div>
 
           {/* Sektörel Detay Bloğu */}

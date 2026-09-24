@@ -13,6 +13,7 @@ import { Tenant, Product, initialProducts, initialTenants } from '../data/mockDa
 import QuickAddProductForm from './QuickAddProductForm';
 import BookingAndStoreEngine, { DEFAULT_SERVICES, ServiceItem } from './BookingAndStoreEngine';
 import { applyPageSEO } from '../utils/seo';
+import { getStoreSocialProof } from '../utils/socialProof';
 
 export interface ProductItem {
   id: string;
@@ -351,6 +352,8 @@ export default function StoreProfilePage({
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const storeSocialProof = getStoreSocialProof(store.slug || store.id);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
 
@@ -423,6 +426,24 @@ export default function StoreProfilePage({
                   <span className="flex items-center gap-1 text-[11px] font-bold bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full border border-emerald-200">
                     <CheckCircle2 className="w-3.5 h-3.5" /> Doğrulanmış Esnaf
                   </span>
+
+                  {/* 5 Üzerinden Puan Rozeti */}
+                  <span className="flex items-center gap-1 text-[11px] font-extrabold bg-amber-50 text-amber-900 px-2.5 py-0.5 rounded-full border border-amber-200 shadow-2xs">
+                    <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span>{storeSocialProof.ratingScore} / 5.0</span>
+                    <span className="text-amber-700 font-normal">({storeSocialProof.reviewCount} Değerlendirme)</span>
+                  </span>
+
+                  {/* Eşik Kontrollü Sipariş Hacmi / Tecrübe Rozeti */}
+                  {storeSocialProof.hasHighVolume ? (
+                    <span className="flex items-center gap-1 text-[11px] font-black bg-[#0B132B] text-emerald-400 px-2.5 py-0.5 rounded-full border border-emerald-500/30 shadow-2xs">
+                      {storeSocialProof.volumeBadge}
+                    </span>
+                  ) : (
+                    <span className="flex items-center gap-1 text-[11px] font-bold bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded-full border border-slate-300 shadow-2xs">
+                      {storeSocialProof.experienceBadge}
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm font-medium text-slate-600 mt-1">{store.slogan}</p>
                 

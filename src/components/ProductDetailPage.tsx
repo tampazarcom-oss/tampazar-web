@@ -24,6 +24,7 @@ import {
 } from '../data/digitalAndSessionData';
 import { HybridOrder, initialHybridOrders } from '../data/hybridCommerceData';
 import { applyPageSEO } from '../utils/seo';
+import { getProductSocialProof, getStoreSocialProof } from '../utils/socialProof';
 
 export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?: string; onBackToMarketplace?: () => void }) {
   const navigate = useNavigate();
@@ -608,6 +609,33 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
     }
   };
 
+  // Akıllı Sosyal Kanıt ve Eşik Kontrolleri (CRO Motoru)
+  const productSocialProof = getProductSocialProof(
+    foundProduct?.id || foundProduct?.slug || product.id || product.slug || 'sample-product',
+    foundProduct?.salesCount,
+    { isB2B: foundProduct?.type === 'wholesale', isService: isSession || foundProduct?.type === 'service' }
+  );
+
+  const storeSocialProof = getStoreSocialProof(
+    product.store.slug || product.store.name,
+    product.store.rating,
+    product.reviewCount
+  );
+
+  const [activeViewers, setActiveViewers] = useState(productSocialProof.activeViewers);
+
+  // Canlı izleyici organik dalgalanması (3-18 arası)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveViewers(prev => {
+        const delta = Math.random() > 0.5 ? 1 : -1;
+        const next = prev + delta;
+        return Math.max(3, Math.min(18, next));
+      });
+    }, 7000);
+    return () => clearInterval(interval);
+  }, []);
+
   const hasMissingRequiredForm = Boolean(
     customFormConfig?.enabled && customFormConfig.fields.some(
       fld => fld.required && (!customFormValues[fld.id] || customFormValues[fld.id].trim() === '')
@@ -769,9 +797,9 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
           <div className="lg:col-span-7 space-y-6 flex flex-col justify-between">
             <div className="space-y-4">
               
-              {/* Kategori ve Değerlendirme & Özel Rozet */}
+              {/* Kategori, Sosyal Kanıt Rozeti ve Değerlendirme */}
               <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <span className="bg-indigo-50 text-indigo-900 px-3 py-1 rounded-full font-bold border border-indigo-100">
                     {foundProduct!.category}
                   </span>
@@ -783,6 +811,17 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   {isSession && (
                     <span className="bg-cyan-600 text-white px-3 py-1 rounded-full font-black flex items-center gap-1 shadow-xs">
                       <Video className="w-3 h-3" /> Uzaktan Canlı Seans
+                    </span>
+                  )}
+
+                  {/* Eşik Kontrollü Satış / Mahalle Rozeti */}
+                  {productSocialProof.hasHighSales ? (
+                    <span className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full font-black text-[11px] flex items-center gap-1 shadow-2xs">
+                      {productSocialProof.badgeText}
+                    </span>
+                  ) : (
+                    <span className="bg-amber-50 text-amber-900 border border-amber-200 px-2.5 py-1 rounded-full font-black text-[11px] flex items-center gap-1 shadow-2xs">
+                      {productSocialProof.badgeText}
                     </span>
                   )}
                 </div>
@@ -798,6 +837,21 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
               <h1 className="text-2xl md:text-3xl font-black text-slate-900 tracking-tight leading-snug">
                 {product.title}
               </h1>
+
+              {/* CANLI İLGİ VE GÖRÜNTÜLENME SAYACI (CRO MOTORU) */}
+              <div className="flex flex-wrap items-center gap-2 text-xs bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 rounded-2xl text-slate-700 shadow-2xs">
+                <span className="relative flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span className="font-medium text-slate-700">
+                  👀 Şu an <strong className="font-black text-slate-950">{activeViewers} kişi</strong> bu ürünü inceliyor
+                </span>
+                <span className="text-slate-300 hidden sm:inline">•</span>
+                <span className="text-slate-600 text-[11px]">
+                  Bugün mahallenizde <strong className="font-bold text-slate-800">{productSocialProof.todayViews} kez</strong> incelendi
+                </span>
+              </div>
 
               {/* Fiyat ve KDV Bandı */}
               <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl flex items-center justify-between">
@@ -830,9 +884,10 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                         <span className="font-extrabold text-sm md:text-base text-slate-900 truncate">
                           {product.store.name}
                         </span>
-                        {/* Puan Rozeti: Yeşil zeminli mağaza puanı */}
-                        <span className="bg-emerald-600 text-white font-black text-xs px-2 py-0.5 rounded-md flex items-center gap-0.5 shadow-2xs shrink-0">
-                          {product.store.rating >= 4.5 ? '9.6' : '9.3'} <Star className="w-3 h-3 fill-white" />
+                        {/* 5 Üzerinden Mağaza Puan Rozeti */}
+                        <span className="bg-emerald-600 text-white font-black text-xs px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs shrink-0">
+                          <Star className="w-3 h-3 fill-white" />
+                          <span>{storeSocialProof.ratingScore} / 5.0</span>
                         </span>
                       </div>
                       <span className="text-[11px] text-slate-500 truncate block mt-0.5">
@@ -855,11 +910,19 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   </button>
                 </div>
 
-                {/* Rozetler */}
+                {/* Eşik Kontrollü Sipariş Hacmi & Güven Rozetleri */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 text-[10px] font-bold">
-                  <span className="bg-amber-50 text-amber-900 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-200 shadow-2xs">
-                    <Zap className="w-3 h-3 text-amber-600 fill-amber-500" /> Hızlı Satıcı
-                  </span>
+                  {/* Sipariş Eşiği Kontrolü */}
+                  {storeSocialProof.hasHighVolume ? (
+                    <span className="bg-[#0B132B] text-emerald-400 px-2.5 py-0.5 rounded-md flex items-center gap-1 border border-emerald-500/30 shadow-2xs font-black">
+                      {storeSocialProof.volumeBadge}
+                    </span>
+                  ) : (
+                    <span className="bg-amber-50 text-amber-900 px-2.5 py-0.5 rounded-md flex items-center gap-1 border border-amber-200 shadow-2xs font-bold">
+                      {storeSocialProof.experienceBadge}
+                    </span>
+                  )}
+                  
                   <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-200 shadow-2xs">
                     <Check className="w-3 h-3 text-emerald-600" /> Doğrulanmış Esnaf
                   </span>
