@@ -15,6 +15,7 @@ import QuickAddProductForm from './QuickAddProductForm';
 import BookingAndStoreEngine, { DEFAULT_SERVICES, ServiceItem } from './BookingAndStoreEngine';
 import { applyPageSEO } from '../utils/seo';
 import { getStoreSocialProof } from '../utils/socialProof';
+import LLMSummaryBox from './seo/LLMSummaryBox';
 
 export interface ProductItem {
   id: string;
@@ -283,6 +284,34 @@ export default function StoreProfilePage({
   };
 
   const store = findStoreData(activeStoreId);
+
+  useEffect(() => {
+    if (store) {
+      applyPageSEO({
+        pathname: `/dukkan/${store.slug}`,
+        store: {
+          name: store.name,
+          slug: store.slug,
+          legalTitle: store.legalTitle,
+          slogan: store.slogan,
+          about: store.about,
+          avatarUrl: store.avatarUrl,
+          bannerUrl: store.bannerUrl,
+          phone: store.phone,
+          whatsapp: store.whatsapp,
+          websiteUrl: store.websiteUrl,
+          city: store.city,
+          district: store.district,
+          fullAddress: store.fullAddress,
+          googleMapsUrl: store.googleMapsUrl,
+          workingHours: store.workingHours,
+          taxOffice: store.taxOffice,
+          taxNumber: store.taxNumber,
+          paymentProvider: store.paymentGatewayNotice
+        }
+      });
+    }
+  }, [store]);
 
   if (!store) {
     return (
@@ -608,6 +637,16 @@ export default function StoreProfilePage({
           </div>
 
         </div>
+
+        {/* AI & GEO LLM Semantik Esnaf Özeti */}
+        <LLMSummaryBox
+          storeName={store.name}
+          city={store.city}
+          district={store.district}
+          merchantNote={store.about}
+          paymentMethod={store.paymentGatewayNotice}
+          deliveryType="GİB e-Fatura & Aynı Gün Teslimat / Kargo"
+        />
 
         {/* 3. MAĞAZA İÇİ SEKMELER VE ARAMA BAR (Requirement 2) */}
         <div className="space-y-6">

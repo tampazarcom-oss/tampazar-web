@@ -1,84 +1,46 @@
-# TamPazar Robots.txt - Arama Motorları & Yapay Zekâ Tarayıcıları (GEO)
-# https://tampazar.com
+# TamPazar Robots.txt Configuration
+# Full Indexing Permission for Web Crawlers & AI Search Engines (GEO - Generative Engine Optimization)
 
-# 1. Genel Kurallar (Tüm Arama Motorları İçin)
 User-agent: *
 Allow: /
-Allow: /sehir-avm
-Allow: /dukkan/
-Allow: /urun/
-Allow: /mesafeli-satis
-Allow: /gizlilik
-Allow: /kvkk
-Allow: /cerez-politikasi
-Allow: /iade-ve-degisim
-Allow: /llms.txt
-Allow: /llms-full.txt
-Allow: /sitemap.xml
 Disallow: /yonetim/
+Disallow: /sistem-admin/
+Disallow: /kurye/panel
 Disallow: /saas-konsol/
-Disallow: /hesabim/
-Disallow: /api/
 
-# 2. Googlebot & Bingbot
-User-agent: Googlebot
-Allow: /
-Disallow: /yonetim/
-Disallow: /saas-konsol/
-Disallow: /hesabim/
-
-User-agent: Bingbot
-Allow: /
-Disallow: /yonetim/
-Disallow: /saas-konsol/
-Disallow: /hesabim/
-
-# 3. Yapay Zekâ ve Üretken Arama Motorları (GEO)
-# OpenAI / ChatGPT
+# Explicit Permissions for AI Search Engines & LLM Bots
 User-agent: GPTBot
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /yonetim/
-Disallow: /saas-konsol/
-Disallow: /hesabim/
 
 User-agent: ChatGPT-User
 Allow: /
-Disallow: /yonetim/
-Disallow: /saas-konsol/
 
-# Google Gemini & Google-Extended
-User-agent: Google-Extended
+User-agent: ClaudeBot
 Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /yonetim/
-Disallow: /saas-konsol/
 
-# Perplexity AI
 User-agent: PerplexityBot
 Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: YandexBot
+Allow: /
+
+# LLM Manifests
 Allow: /llms.txt
 Allow: /llms-full.txt
-Disallow: /yonetim/
-Disallow: /saas-konsol/
 
-# Anthropic Claude
-User-agent: ClaudeBot
-User-agent: anthropic-ai
-Allow: /
-Allow: /llms.txt
-Allow: /llms-full.txt
-Disallow: /yonetim/
-Disallow: /saas-konsol/
-
-# Apple & Siri AI
-User-agent: Applebot
-User-agent: Applebot-Extended
-Allow: /
-Disallow: /yonetim/
-Disallow: /saas-konsol/
-
-# Sitemap Konumu
+# Dynamic Multi-Sitemap Index
 Sitemap: https://tampazar.com/sitemap.xml
+Sitemap: https://tampazar.com/sitemap-products.xml
+Sitemap: https://tampazar.com/sitemap-stores.xml
+Sitemap: https://tampazar.com/sitemap-categories.xml
+Sitemap: https://tampazar.com/sitemap-blog.xml
+Sitemap: https://tampazar.com/sitemap-locations.xml

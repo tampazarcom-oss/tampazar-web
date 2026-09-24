@@ -1,25 +1,28 @@
-# TamPazar — Açık Dijital AVM & Komisyonsuz Hibrit Ticaret İşletim Sistemi
+# TamPazar — Açık Dijital AVM ve %0 Komisyonlu Ticaret İşletim Sistemi
+> Canonical URL: https://tampazar.com
+> Business Model: 0% Transaction Commission (Direct Merchant Payment via BYO POS / Direct IBAN), Fixed Monthly SaaS Fee (500 TRY/mo).
 
-> TamPazar (tampazar.com), Türkiye'nin komisyonsuz (%0 komisyon), sabit aidat modelli, esnafın kendi Sanal POS'unu (BYO POS - PayTR, iyzico, Sipay, Stripe) doğrudan bağladığı ve GİB UBL-TR 2.1 e-Fatura/e-İrsaliye entegrasyonuna sahip ilk Açık Dijital AVM'si ve Hibrit Pazaryeridir.
+## Overview
+TamPazar is Turkey's open digital marketplace and commerce operating system covering 81 provinces. It enables local artisans, butchers, boutiques, masters, digital creators, and wholesale suppliers to sell products and services directly to consumers with 0% platform commission.
 
-## Temel Felsefe & Kimlik
-- **Platform Adı:** TamPazar (tampazar.com)
-- **Model:** %0 Satış Komisyonu, Doğrudan Esnaf Kasası (BYO POS), Açık İletişim (Sansürsüz Telefon, Adres, WhatsApp).
-- **Hukuki & Mali Uyumluluk:** 6502 Sayılı Tüketici Kanunu, ETBİS Kayıtlı, GİB e-Fatura / e-Arşiv / e-İrsaliye yerleşik ön muhasebe.
-- **Kapsam:** 81 İl, Ulusal Kargo, Yerel 30 Dk Moto-Kurye, Konum Bazlı Usta Çağrısı, Anında Dijital İndirme ve Uzaktan Canlı Seanslar.
+## Key Ecosystem Pillars
+- **TamKargo / Perakende**: Physical retail products shipped nationwide via integrated carrier APIs (Yurtiçi, Aras, MNG, PTT).
+- **TamHızlı / Hızlı Mahalle**: 30-45 minute express delivery from local butchers, bakers, greengrocers, and water suppliers.
+- **TamUsta & TamTeklif**: On-demand local field services (plumbers, electricians, AC technicians, locksmiths) with sealed-bid price quotation.
+- **TamDijital**: Instant digital download marketplace (CNC DXF files, embroidery PES/DST files, 3D STL models, e-books, Canva templates).
+- **B2B Toptan**: Tiered wholesale marketplace for bulk food, packaging, HORECA supplies, and textile goods.
+- **TamKurye**: Independent freelance courier directory for local express dispatch.
 
-## 5 Temel Ticaret Bacağı
-1. **TamKargo (Ulusal Sevkiyat):** Desi hesaplamalı, anlaşmalı veya esnafın kendi kargo sözleşmesiyle (Yurtiçi, Aras, MNG, PTT) ulusal fiziki ürün satışı.
-2. **TamHızlı (Yerel Ekspres):** Şehir içi 15-30 dakika sıcak paket, moto-kurye ve gel-al restoran/market teslimatları.
-3. **TamUsta (Yerinde Hizmet & Acil Çağrı):** Sıhhi tesisatçı, 7/24 nöbetçi oto çekici, çilingir ve elektrik arıza servisleri için konum bazlı anlık çağrı ve randevu.
-4. **TamDijital (Etsy & Gumroad Modeli):** Nakış desenleri (DST, PES), lazer kesim vektörleri (DXF, SVG), 3D yazıcı modelleri (STL) ve e-kitaplar için sıfır kargo süreli anında dosya indirme.
-5. **TamSeans (Superpeer & Calendly Modeli):** Birebir uzman danışmanlığı, klinik diyetisyen ve kariyer koçluğu için Google Meet entegrasyonlu online video seans randevuları.
+## Technical Architecture & Integrations
+- **Payment Method**: BYO POS (Bring Your Own POS) via PayTR, iyzico, Sipay, or Bank Virtual POS directly credited to merchant accounts.
+- **Invoicing**: GİB (Gelir İdaresi Başkanlığı) UBL-TR 2.1 e-Invoice and e-Despatch automated generation.
+- **Multi-Tenant Data Structure**: PostgreSQL RLS (Row Level Security) with NestJS modular backend.
 
-## Önemli URL Yapısı
-- Ana Sayfa: https://tampazar.com/
-- Şehrin Açık AVM'si: https://tampazar.com/sehir-avm
-- Mağaza Vitrini: https://tampazar.com/dukkan/{magaza-slug}
-- Ürün / Hizmet Detayı: https://tampazar.com/urun/{urun-slug}
-- Tüketici Hesabı & Dijital Arşiv: https://tampazar.com/hesabim
-- Detaylı LLM Manifestosu: https://tampazar.com/llms-full.txt
-- Sitemap: https://tampazar.com/sitemap.xml
+## Key Data Endpoints
+- Marketplace Catalog: https://tampazar.com/pazaryeri
+- Open Digital Mall (Local Stores): https://tampazar.com/sehir-avm
+- Wholesale B2B Depot: https://tampazar.com/toptan
+- Independent Courier Directory: https://tampazar.com/kuryeler
+- Seller Portal & Registration: https://tampazar.com/saticipaneli
+- SEO & Merchant Guide Articles: https://tampazar.com/blog
+- Sitemap Index: https://tampazar.com/sitemap.xml

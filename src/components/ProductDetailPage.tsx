@@ -25,6 +25,7 @@ import {
 import { HybridOrder, initialHybridOrders } from '../data/hybridCommerceData';
 import { applyPageSEO } from '../utils/seo';
 import { getProductSocialProof, getStoreSocialProof } from '../utils/socialProof';
+import LLMSummaryBox from './seo/LLMSummaryBox';
 
 export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?: string; onBackToMarketplace?: () => void }) {
   const navigate = useNavigate();
@@ -952,6 +953,18 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   </button>
                 </div>
               </div>
+
+              {/* LLM & GEO AI Semantik İçerik Beyan Kutusu */}
+              <LLMSummaryBox
+                productTitle={product.title}
+                category={foundProduct?.category || product.tag}
+                price={product.price}
+                storeName={product.store.name}
+                city="Ordu"
+                district="Altınordu"
+                merchantNote={foundProduct?.description}
+                deliveryType={isDigital ? 'Saniyesinde Anında İndirme (0 Kargo)' : 'GİB e-Fatura & Doğrudan Esnaftan Hızlı Kargo'}
+              />
 
               {/* 1. DİJİTAL ÜRÜN ÖZELLİKLERİ (TAMDİJİTAL) */}
               {isDigital && (
