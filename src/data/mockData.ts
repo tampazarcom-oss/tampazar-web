@@ -102,6 +102,23 @@ export interface Product {
     pricePerUnit: number;
   }[];
 
+  // B2B & Toptan Satış & Dropshipping (Faire & Spocket Modeli)
+  isB2BOnly?: boolean;
+  b2bMinQty?: number;
+  b2bUnitType?: 'adet' | 'seri' | 'koli' | 'cuval' | 'paket';
+  b2bWholesalePrice?: number;
+  b2bTieredPricing?: {
+    minQty: number;
+    maxQty?: number | null;
+    price: number;
+  }[];
+  allowDropshipping?: boolean;
+  suggestedRetailPrice?: number;
+  dropshipOriginalStoreId?: string;
+  dropshipOriginalStoreName?: string;
+  dropshipOriginalProductId?: string;
+  isDropshippedCopy?: boolean;
+
   // Service specific
   durationMin?: number;
   bookingSlots?: string[];
@@ -118,6 +135,85 @@ export interface Product {
     meetingLink?: string;
     [key: string]: any;
   };
+
+  // Dinamik Ölçü Birimi, Özelleştirme & Müşteri Formu Motoru
+  customizationOptions?: ProductCustomizationOptions;
+}
+
+// 1. Ölçü Birimi Konfigürasyonu
+export interface MeasurementConfig {
+  unit: 'adet' | 'kg' | 'gram' | 'litre' | 'metre' | 'm2' | 'porsiyon' | 'paket';
+  minQuantity?: number; // Örn: 0.5 kg
+  stepQuantity?: number; // Örn: 0.5 kg veya 250 g
+  unitLabel?: string; // Örn: 'Kg', 'Porsiyon', 'Metre'
+  pricePerUnitMultiplier?: number;
+}
+
+// 2. Yemek & Restoran Malzeme Seçici (Yemeksepeti / Döner Modeli)
+export interface FoodRemovableIngredient {
+  id: string;
+  name: string;
+  defaultIncluded: boolean;
+}
+
+export interface FoodExtraIngredient {
+  id: string;
+  name: string;
+  price: number;
+}
+
+export interface FoodMandatoryGroup {
+  id: string;
+  title: string;
+  required: boolean;
+  options: {
+    id: string;
+    name: string;
+    priceDiff?: number;
+  }[];
+}
+
+export interface FoodCustomizationConfig {
+  enabled: boolean;
+  removableIngredients?: FoodRemovableIngredient[];
+  extraIngredients?: FoodExtraIngredient[];
+  mandatoryGroups?: FoodMandatoryGroup[];
+}
+
+// 3. Fotoğraf Baskı & Dijital Dosya Yükleme Alanı
+export interface FileUploadConfig {
+  enabled: boolean;
+  title?: string;
+  description?: string;
+  allowedFormats: string[]; // e.g. ['JPG', 'PNG', 'PDF', 'TIFF', 'RAW', 'ZIP']
+  minFiles?: number;
+  maxFiles?: number;
+  maxSizeMB?: number;
+  required?: boolean;
+}
+
+// 4. Matbaa, Davetiye, Lazer & Kişiye Özel Form Alanları
+export interface CustomFieldConfig {
+  id: string;
+  label: string;
+  type: 'text' | 'textarea' | 'date' | 'select' | 'number';
+  placeholder?: string;
+  required: boolean;
+  options?: string[]; // select için
+}
+
+export interface CustomFormConfig {
+  enabled: boolean;
+  title?: string;
+  description?: string;
+  fields: CustomFieldConfig[];
+}
+
+export interface ProductCustomizationOptions {
+  measurement?: MeasurementConfig;
+  foodCustomization?: FoodCustomizationConfig;
+  fileUpload?: FileUploadConfig;
+  customForm?: CustomFormConfig;
 }
 
 export interface PosConfig {
@@ -313,6 +409,245 @@ export const initialPosConfigs: PosConfig[] = [
 ];
 
 export const initialProducts: Product[] = [
+  // 1. YEMEK & RESTORAN (Yemeksepeti / Döner Modeli - Malzeme Çıkarma & Ekstra Ekleme)
+  {
+    id: 'p-doner-hatay',
+    tenantId: 's3',
+    storeName: 'Tarihi Taşfırın & Döner Ustası',
+    type: 'retail',
+    title: 'Hatay Usulü Soslu Tavuk Döner Dürüm',
+    slug: 'hatay-usulu-soslu-tavuk-doner-durum',
+    category: 'Yemek & Döner',
+    categorySlug: 'yemek-doner',
+    description: 'Özel marineli çıtır tavuk eti, taşfırın tırnak lavaşı, el yapımı Hatay salçalı tereyağlı sos, kornişon turşu ve fırın patates ile sıcak servis.',
+    price: 185,
+    sku: 'DNR-HATAY-01',
+    vatRate: 10,
+    rating: 4.95,
+    salesCount: 1420,
+    badge: 'Usta İşi / Sıcak Kurye',
+    image: 'https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'local_express',
+      localDeliveryTime: '25-35 Dk',
+      minBasketAmount: 120,
+      isTakeawayAllowed: true
+    },
+    fulfillment: {
+      pillar: 'tamhizli'
+    },
+    customizationOptions: {
+      measurement: {
+        unit: 'porsiyon',
+        minQuantity: 1,
+        stepQuantity: 1,
+        unitLabel: 'Porsiyon / Dürüm'
+      },
+      foodCustomization: {
+        enabled: true,
+        removableIngredients: [
+          { id: 'rem-sogan', name: 'Soğan', defaultIncluded: true },
+          { id: 'rem-tursu', name: 'Kornişon Turşu', defaultIncluded: true },
+          { id: 'rem-mayonez', name: 'Sarımsaklı Mayonez', defaultIncluded: true },
+          { id: 'rem-patates', name: 'Kızarmış Patates', defaultIncluded: true }
+        ],
+        extraIngredients: [
+          { id: 'ext-kasar', name: 'Ekstra Kaşar Peyniri', price: 30 },
+          { id: 'ext-lavas', name: 'Çift Lavaş', price: 15 },
+          { id: 'ext-truf', name: 'Trüf Aromalı Mayonez', price: 20 },
+          { id: 'ext-sos', name: 'Duble Hatay Özel Sos', price: 15 }
+        ],
+        mandatoryGroups: [
+          {
+            id: 'grp-aci',
+            title: 'Acı Tercihi',
+            required: true,
+            options: [
+              { id: 'opt-acisiz', name: 'Acısız' },
+              { id: 'opt-az', name: 'Az Acılı' },
+              { id: 'opt-orta', name: 'Orta Acılı (Klasik)' },
+              { id: 'opt-cok', name: 'Çok Acılı (Hatay Biberi)' }
+            ]
+          },
+          {
+            id: 'grp-icecek',
+            title: 'İçecek Seçimi (İsteğe Bağlı)',
+            required: false,
+            options: [
+              { id: 'opt-none', name: 'İçecek İstemiyorum' },
+              { id: 'opt-ayran', name: 'Köy Yayık Ayranı (330ml)', priceDiff: 28 },
+              { id: 'opt-kola', name: 'Kutu Kola (330ml)', priceDiff: 40 },
+              { id: 'opt-salgam', name: 'Özel Adana Şalgamı', priceDiff: 30 }
+            ]
+          }
+        ]
+      }
+    }
+  },
+
+  // 2. MANAV / ŞARKÜTERİ (Kilogram / Gram / Tartılı Ürün Modeli)
+  {
+    id: 'p-manav-elma',
+    tenantId: 's3',
+    storeName: 'Manav & Şarküteri Pazarı',
+    type: 'retail',
+    title: 'Bahçe Taze Amasya Elması',
+    slug: 'bahce-taze-amasya-elmasi',
+    category: 'Manav & Meyve',
+    categorySlug: 'manav-meyve',
+    description: 'Doğal sulak vadilerden günlük toplanan sulu, sert ve aromatik tescilli Amasya elması. 0.5 kg artış adımlarıyla tam istediğiniz miktarda tartılarak özenle paketlenir.',
+    price: 45, // 1 kg fiyatı
+    sku: 'MNV-ELM-01',
+    vatRate: 1,
+    rating: 4.88,
+    salesCount: 890,
+    badge: 'Günlük Taze Tartı',
+    image: 'https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'local_express',
+      localDeliveryTime: '30 Dk',
+      minBasketAmount: 80,
+      isTakeawayAllowed: true
+    },
+    fulfillment: {
+      pillar: 'tamhizli'
+    },
+    customizationOptions: {
+      measurement: {
+        unit: 'kg',
+        minQuantity: 0.5,
+        stepQuantity: 0.5,
+        unitLabel: 'Kg',
+        pricePerUnitMultiplier: 1
+      }
+    }
+  },
+
+  // 3. FOTOĞRAF BASKI & DOSYA YÜKLEME (Fotoğraf Stüdyosu Modeli)
+  {
+    id: 'p-foto-baski-100',
+    tenantId: 's3',
+    storeName: 'FotoSentez Stüdyo',
+    type: 'retail',
+    title: '10x15 Parlak Fotoğraf Baskı (100 Adet)',
+    slug: '10x15-parlak-fotograf-baski-100-adet',
+    category: 'Fotoğraf Baskı',
+    categorySlug: 'fotograf-baski',
+    description: 'Fujifilm Crystal Archive gümüş halojenür fotoğraf kağıdına solmaz garantili gerçek fotoğraf baskısı. Cep telefonunuzdan veya bilgisayarınızdan doğrudan yükleyin, stüdyomuzda basıp ücretsiz kargolayalım.',
+    price: 340,
+    sku: 'FTS-BSK-100',
+    vatRate: 20,
+    rating: 4.96,
+    salesCount: 650,
+    badge: 'Fujifilm Orijinal Kağıt',
+    image: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'Yurtiçi Kargo',
+      desi: 1,
+      isFreeShipping: true
+    },
+    fulfillment: {
+      pillar: 'tamkargo'
+    },
+    customizationOptions: {
+      measurement: {
+        unit: 'paket',
+        minQuantity: 1,
+        stepQuantity: 1,
+        unitLabel: 'Paket (100 Fotoğraf)'
+      },
+      fileUpload: {
+        enabled: true,
+        title: 'Baskı Fotoğraflarınızı Yükleyin',
+        description: 'Lütfen basılmasını istediğiniz fotoğrafları JPG, PNG, TIFF veya ZIP formatında yükleyin. Yüklenen fotoğraflar stüdyo renk kalibrasyonundan geçirilerek basılır.',
+        allowedFormats: ['JPG', 'JPEG', 'PNG', 'TIFF', 'RAW', 'ZIP'],
+        minFiles: 1,
+        maxFiles: 100,
+        maxSizeMB: 150,
+        required: true
+      }
+    }
+  },
+
+  // 4. MATBAA, DAVETİYE & KİŞİYE ÖZEL FORM SİHİRBAZI
+  {
+    id: 'p-davetiye-geometrik',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat & Matbaa',
+    type: 'retail',
+    title: 'Özel Tasarım Geometrik Düğün Davetiyesi (100 Adet)',
+    slug: 'ozel-tasarim-geometrik-dugun-davetiyesi-100-adet',
+    category: 'Matbaa & Davetiye',
+    categorySlug: 'matbaa-davetiye',
+    description: '350 gr özel dokulu Japon pamuk kağıt, altın yaldız geometrik gofre baskı ve el yapımı mühürlü zarf seçeneği. Bilgilerinizi aşağıdaki formdan girin, grafikerimiz WhatsApp ile prova göndersin.',
+    price: 1850,
+    sku: 'DVT-GEO-100',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 310,
+    badge: 'Altın Varak & Özel Kağıt',
+    image: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=80&w=800',
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'Aras Kargo',
+      desi: 2,
+      isFreeShipping: true
+    },
+    fulfillment: {
+      pillar: 'tamkargo'
+    },
+    customizationOptions: {
+      measurement: {
+        unit: 'paket',
+        minQuantity: 1,
+        stepQuantity: 1,
+        unitLabel: 'Kutu (100 Davetiye)'
+      },
+      customForm: {
+        enabled: true,
+        title: 'Düğün Davetiyesi Baskı Bilgi Formu',
+        description: 'Lütfen davetiye üzerine basılacak metinleri dikkatle doldurunuz. Baskı öncesi WhatsApp üzerinden grafik prova onayı alınacaktır.',
+        fields: [
+          {
+            id: 'fld-gelin-damat',
+            label: 'Gelin & Damat Adı',
+            type: 'text',
+            placeholder: 'Örn: Zeynep Kaya & Ali Can Demir',
+            required: true
+          },
+          {
+            id: 'fld-tarih-saat',
+            label: 'Düğün / Nikah Tarihi & Saati',
+            type: 'text',
+            placeholder: 'Örn: 18 Temmuz 2027 Cumartesi, Saat: 19:30',
+            required: true
+          },
+          {
+            id: 'fld-salon-adres',
+            label: 'Düğün Salonu Adı ve Açık Adres',
+            type: 'textarea',
+            placeholder: 'Örn: Boğaziçi Sahil Davet Salonu, Sahil Cad. No: 48 Sarıyer / İstanbul',
+            required: true
+          },
+          {
+            id: 'fld-davetiye-sozu',
+            label: 'Davetiye Sözü / Özel Mesaj',
+            type: 'textarea',
+            placeholder: 'Örn: Bu en mutlu günümüzde siz değerli dostlarımızı aramızda görmekten onur duyarız.',
+            required: false
+          },
+          {
+            id: 'fld-whatsapp-onay',
+            label: 'Tasarım Prova Onayı İçin WhatsApp Numarası',
+            type: 'text',
+            placeholder: '0532 123 45 67',
+            required: true
+          }
+        ]
+      }
+    }
+  },
   // Atölye Zanaat (s1) - Retail (Perakende / Zanaatkâr)
   {
     id: 'p1',
@@ -1124,6 +1459,118 @@ export const initialProducts: Product[] = [
       fixedServiceFee: 1200,
       serviceRadiusKm: 30,
       isOnSiteService: true
+    }
+  },
+  // B2B & TOPTAN TİCARET & DROPSHIPPING (FAIRE & SPOCKET MODELİ)
+  {
+    id: 'prod-b2b-01',
+    tenantId: 's2',
+    storeName: 'Merter Toptan Tekstil & Konfeksiyon San.',
+    type: 'wholesale',
+    title: 'Toptan 1 Seri (6 Adet) Oversize 3 İplik Şardonlu Sweatshirt Paketi (S-M-L-XL Asorti)',
+    slug: 'toptan-seri-oversize-sardonlu-sweatshirt-paketi',
+    category: 'Toptan Tekstil & Giyim',
+    categorySlug: 'toptan-tekstil',
+    description: 'İstanbul Merter/Güngören üretim merkezinden birinci sınıf %100 pamuklu 3 iplik şardonlu kışlık oversize sweatshirt serisi. 1 pakette 6 adet (1S, 2M, 2L, 1XL) asorti yer alır. İçi polar tüylü, çekmezlik garantili.',
+    price: 1680, // Seri fiyatı (280 TL x 6 adet)
+    sku: 'MRT-SWT-SR6',
+    vatRate: 10,
+    rating: 4.9,
+    salesCount: 1420,
+    badge: 'Toptan Seri (6 Adet Paket)',
+    image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?auto=format&fit=crop&q=80&w=800',
+    stockCount: 850,
+    brand: 'Merter Fabrika',
+    isB2BOnly: true,
+    b2bMinQty: 5,
+    b2bUnitType: 'seri',
+    b2bWholesalePrice: 1680,
+    b2bTieredPricing: [
+      { minQty: 5, maxQty: 19, price: 1680 },
+      { minQty: 20, maxQty: 49, price: 1500 },
+      { minQty: 50, maxQty: null, price: 1320 }
+    ],
+    allowDropshipping: true,
+    suggestedRetailPrice: 650, // Adet başına önerilen perakende satış fiyatı
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'Yurtiçi Kargo Palet & Koli',
+      isFreeShipping: true,
+      desi: 6
+    }
+  },
+  {
+    id: 'prod-b2b-02',
+    tenantId: 's1',
+    storeName: 'Gedikpaşa Zanaat Ayakkabı Toptan İmalat',
+    type: 'wholesale',
+    title: 'Toptan 1 Koli (8 Çift) Hakiki Dana Derisi El İşçiliği Oxford Erkek Ayakkabı (40-44 Asorti)',
+    slug: 'toptan-koli-hakiki-deri-oxford-ayakkabi-serisi',
+    category: 'Toptan Ayakkabı & Kundura',
+    categorySlug: 'toptan-ayakkabi',
+    description: 'İstanbul Gedikpaşa ve İzmir Işıkkent usta atölyelerinde kösele taban ve hakiki vidala dana derisinden üretilmiş kurumsal toptan seri. 1 kolide 8 çift (1x40, 2x41, 3x42, 1x43, 1x44) asorti kutulu ayakkabı bulunmaktadır.',
+    price: 6000, // Koli fiyatı (750 TL x 8 çift)
+    sku: 'GDK-KOL-8CK',
+    vatRate: 10,
+    rating: 5.0,
+    salesCount: 890,
+    badge: 'Toptan Koli (8 Çift Asorti)',
+    image: 'https://images.unsplash.com/photo-1533867617858-e7b97e060509?auto=format&fit=crop&q=80&w=800',
+    stockCount: 340,
+    brand: 'Gedikpaşa Zanaat',
+    isB2BOnly: true,
+    b2bMinQty: 2,
+    b2bUnitType: 'koli',
+    b2bWholesalePrice: 6000,
+    b2bTieredPricing: [
+      { minQty: 2, maxQty: 9, price: 6000 },
+      { minQty: 10, maxQty: 24, price: 5440 },
+      { minQty: 25, maxQty: null, price: 4960 }
+    ],
+    allowDropshipping: true,
+    suggestedRetailPrice: 1650, // Çift başına önerilen perakende satış fiyatı
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'Aras Kargo Koli Sevk',
+      isFreeShipping: true,
+      desi: 14
+    }
+  },
+  {
+    id: 'prod-b2b-03',
+    tenantId: 's3',
+    storeName: 'Ordu/Giresun Fındık Çiftliği Kooperatifi',
+    type: 'wholesale',
+    title: 'Toptan 1 Çuval (50 KG) Vakumlu Çifte Kavrulmuş Giresun Kalite Fındık İçi',
+    slug: 'toptan-cuval-50kg-vakumlu-cifte-kavrulmus-findik',
+    category: 'Toptan Yöresel Gıda & Tarım',
+    categorySlug: 'toptan-gida',
+    description: 'Doğu Karadeniz çiftçilerimizden toplanan, taş kırma yöntemiyle ayıklanıp odun fırınında çifte kavrulan 1. kalite yağlı fındık içi. 50 KG jüt çuval içerisinde 5\'er kiloluk 10 adet koruyucu vakumlu pakette sevk edilir.',
+    price: 16000, // Çuval fiyatı (320 TL/KG x 50 KG)
+    sku: 'FND-CVL-50KG',
+    vatRate: 1,
+    rating: 4.9,
+    salesCount: 620,
+    badge: 'Toptan 50 KG Çuval',
+    image: 'https://images.unsplash.com/photo-1541832676-9b763b0239ab?auto=format&fit=crop&q=80&w=800',
+    stockCount: 180,
+    brand: 'Giresun Çiftçi Kooperatifi',
+    isB2BOnly: true,
+    b2bMinQty: 1,
+    b2bUnitType: 'cuval',
+    b2bWholesalePrice: 16000,
+    b2bTieredPricing: [
+      { minQty: 1, maxQty: 4, price: 16000 },
+      { minQty: 5, maxQty: 19, price: 14500 },
+      { minQty: 20, maxQty: null, price: 13000 }
+    ],
+    allowDropshipping: true,
+    suggestedRetailPrice: 480, // KG başına önerilen perakende satış fiyatı
+    deliveryOptions: {
+      type: 'physical_cargo',
+      carrierCompany: 'MNG Kargo Ambar Sevk',
+      isFreeShipping: true,
+      desi: 50
     }
   }
 ];

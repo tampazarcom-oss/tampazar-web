@@ -9,6 +9,7 @@ import {
   Clock, ExternalLink, MessageCircle, AlertCircle, X, Check, Eye
 } from 'lucide-react';
 import { HybridOrder } from '../../data/hybridCommerceData';
+import OrderCustomizationDisplay from './OrderCustomizationDisplay';
 
 interface CargoOrdersModuleProps {
   orders: HybridOrder[];
@@ -163,11 +164,24 @@ export default function CargoOrdersModule({ orders, onUpdateOrderStatus }: Cargo
                       </td>
 
                       <td className="p-4">
-                        <div className="space-y-0.5">
+                        <div className="space-y-1.5 max-w-xs sm:max-w-sm">
                           {order.items.map((item, i) => (
-                            <div key={i} className="text-slate-800">
-                              <span className="font-bold">{item.qty}x</span> {item.title}
+                            <div key={i} className="text-slate-800 border-b border-slate-100 last:border-0 pb-1.5 last:pb-0">
+                              <div>
+                                <span className="font-bold">{item.qty}x</span> {item.title}
+                                {item.customization?.unitLabel && item.customization.unitLabel.toLowerCase() !== 'adet' && (
+                                  <span className="ml-1 text-[10px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded">
+                                    {item.qty} {item.customization.unitLabel}
+                                  </span>
+                                )}
+                              </div>
                               {item.variant && <span className="text-slate-400 block text-[10px]">{item.variant}</span>}
+                              
+                              {/* Dinamik Özelleştirmeler, Form Metinleri & Dosya İndirme */}
+                              <OrderCustomizationDisplay 
+                                customization={item.customization} 
+                                itemTitle={item.title} 
+                              />
                             </div>
                           ))}
                           <strong className="text-slate-900 block pt-1 text-sm font-black">

@@ -34,6 +34,7 @@ import StoreSettingsModule from './merchant/StoreSettingsModule';
 import TamTeklifOpportunitiesModule from './merchant/TamTeklifOpportunitiesModule';
 import TamDigitalModule from './merchant/TamDigitalModule';
 import TamSessionModule from './merchant/TamSessionModule';
+import B2BDropshippingModule from './merchant/B2BDropshippingModule';
 import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface TampazarSellerDashboardProps {
@@ -53,6 +54,7 @@ export type DashboardTab =
   | 'tamdijital'
   | 'tamseans'
   | 'tamteklif'
+  | 'b2b_dropshipping'
   | 'pos' 
   | 'subscription'
   | 'settings';
@@ -664,6 +666,24 @@ export default function TampazarSellerDashboard({
             </div>
             <span className="text-[10px] bg-emerald-500 text-white font-bold px-1.5 py-0.5 rounded-full">
               {quotationRequestsCount} Fırsat
+            </span>
+          </button>
+
+          {/* 6. B2B TOPTAN & DROPSHIPPING (Faire & Spocket Modeli) */}
+          <button
+            onClick={() => setActiveTab('b2b_dropshipping')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'b2b_dropshipping' 
+                ? 'bg-amber-400 text-slate-950 font-black shadow-md' 
+                : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Layers className="w-4 h-4 text-amber-400" />
+              <span>B2B & Dropshipping</span>
+            </div>
+            <span className="text-[10px] bg-amber-500/20 text-amber-300 font-bold px-1.5 py-0.5 rounded-full border border-amber-500/30">
+              Toptan
             </span>
           </button>
 
@@ -1507,6 +1527,17 @@ export default function TampazarSellerDashboard({
               <TamTeklifOpportunitiesModule
                 currentMerchantId={user?.id || 'store-kuzey-teknik'}
                 currentStoreName={activeStoreName || user?.storeName || 'Kuzey Teknik Tesisat & Mühendislik'}
+              />
+            </div>
+          )}
+
+          {/* TAB: B2B TOPTAN TİCARET & DROPSHIPPING (FAIRE & SPOCKET MODELİ) */}
+          {activeTab === 'b2b_dropshipping' && (
+            <div className="animate-fade-in">
+              <B2BDropshippingModule
+                currentStoreName={currentStore}
+                storeId={user?.storeId || 's3'}
+                onOpenNewProductModal={() => setShowAddProductModal(true)}
               />
             </div>
           )}

@@ -20,6 +20,7 @@ const ProductDetailPage = lazy(() => import('./components/ProductDetailPage'));
 const LegalPages = lazy(() => import('./components/LegalPages'));
 const TampazarSellerDashboard = lazy(() => import('./components/TampazarSellerDashboard'));
 const CustomerAccountPage = lazy(() => import('./components/CustomerAccountPage'));
+const B2BWholesaleMarketplace = lazy(() => import('./components/B2BWholesaleMarketplace'));
 
 const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
 const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
@@ -189,6 +190,16 @@ function MainLayout() {
             👤 Tüketici Hesabım
           </Link>
           <Link
+            to="/toptan"
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
+              location.pathname === '/toptan' 
+                ? 'bg-amber-400 text-slate-950 font-bold shadow-xs' 
+                : 'text-amber-300 hover:text-white'
+            }`}
+          >
+            🏢 B2B Toptan & Esnaf Ağı
+          </Link>
+          <Link
             to="/yonetim"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/yonetim' 
@@ -311,6 +322,14 @@ function MainLayout() {
             <Route 
               path="/urun/:slug" 
               element={<ProductDetailRouteWrapper />} 
+            />
+            <Route 
+              path="/hizmet/:slug" 
+              element={<ProductDetailRouteWrapper />} 
+            />
+            <Route 
+              path="/toptan" 
+              element={<B2BWholesaleMarketplace />} 
             />
             <Route 
               path="/hesabim" 

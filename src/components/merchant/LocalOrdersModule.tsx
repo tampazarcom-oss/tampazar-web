@@ -9,6 +9,7 @@ import {
   MapPin, Phone, Printer, AlertCircle, Sparkles, Check, ArrowRight 
 } from 'lucide-react';
 import { HybridOrder, playOrderAlertChime } from '../../data/hybridCommerceData';
+import OrderCustomizationDisplay from './OrderCustomizationDisplay';
 
 interface LocalOrdersModuleProps {
   orders: HybridOrder[];
@@ -150,13 +151,26 @@ export default function LocalOrdersModule({ orders, onUpdateOrderStatus }: Local
                 </div>
 
                 {/* Ürün Listesi */}
-                <div className="py-3 space-y-1.5 flex-1">
+                <div className="py-3 space-y-2.5 flex-1">
                   {order.items.map((item, i) => (
-                    <div key={i} className="flex items-center justify-between text-xs">
-                      <span className="text-slate-800">
-                        <strong className="text-indigo-900 font-black">{item.qty}x</strong> {item.title}
-                      </span>
-                      <span className="font-bold text-slate-900">₺{(item.price * item.qty).toLocaleString('tr-TR')}</span>
+                    <div key={i} className="border-b border-slate-100 last:border-0 pb-2 last:pb-0">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-slate-800">
+                          <strong className="text-indigo-900 font-black">{item.qty}x</strong> {item.title}
+                          {item.customization?.unitLabel && item.customization.unitLabel.toLowerCase() !== 'adet' && (
+                            <span className="ml-1 text-[11px] font-bold text-amber-800 bg-amber-100 px-1.5 py-0.2 rounded">
+                              {item.qty} {item.customization.unitLabel}
+                            </span>
+                          )}
+                        </span>
+                        <span className="font-bold text-slate-900">₺{(item.price * item.qty).toLocaleString('tr-TR')}</span>
+                      </div>
+
+                      {/* Dinamik Müşteri Seçenekleri & Mutfak Fişi */}
+                      <OrderCustomizationDisplay 
+                        customization={item.customization} 
+                        itemTitle={item.title} 
+                      />
                     </div>
                   ))}
                 </div>

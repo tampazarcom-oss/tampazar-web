@@ -4,6 +4,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   Search, ShoppingBag, ShieldCheck, Zap, 
   Store, Briefcase, ChevronRight, Star, SlidersHorizontal, 
@@ -26,6 +27,7 @@ interface MarketplaceHomeProps {
 }
 
 export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboard, onNavigateToSuperMall, onNavigateToProduct }: MarketplaceHomeProps) {
+  const navigate = useNavigate();
   const [tenants] = useState<Tenant[]>(() => {
     const saved = localStorage.getItem('tampazar_tenants');
     return saved ? JSON.parse(saved) : initialTenants;
@@ -592,6 +594,15 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
 
           {/* Sağ Eylemler */}
           <div className="flex items-center gap-3">
+            <Link 
+              to="/toptan"
+              className="hidden lg:flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-amber-400 px-3.5 py-2.5 rounded-xl font-black text-xs transition-all cursor-pointer shadow-xs border border-slate-700"
+            >
+              <Layers className="w-3.5 h-3.5 text-amber-400" />
+              <span>B2B Toptan & Dropship</span>
+              <span className="bg-amber-400 text-slate-950 text-[9px] font-black px-1 rounded uppercase">Faire</span>
+            </Link>
+
             <button 
               onClick={() => {
                 setTamTeklifCategory(undefined);
@@ -631,6 +642,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
             { id: 'yemek-lezzetler', label: 'Yemek & Yerel Lezzetler', icon: Zap, color: 'bg-amber-50 text-amber-800 border-amber-200' },
             { id: 'esnaf-butik', label: 'Esnaf Sanat & Butik', icon: Store, color: 'bg-emerald-50 text-emerald-800 border-emerald-200' },
             { id: 'kargo-bedava', label: 'Kargo Bedava', icon: ShieldCheck, color: 'bg-sky-50 text-sky-800 border-sky-200' },
+            { id: 'b2b-toptan', label: 'B2B Toptan & Tedarik', icon: Layers, color: 'bg-amber-100 text-amber-900 border-amber-300', isLink: true, url: '/toptan' },
             { id: 'kuponlar', label: 'İndirim Kuponları', icon: Tag, color: 'bg-purple-50 text-purple-800 border-purple-200' },
           ].map(story => {
             const Icon = story.icon;
@@ -639,7 +651,9 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
               <button
                 key={story.id || 'all'}
                 onClick={() => {
-                  if (story.id === 'kuponlar') {
+                  if ((story as any).isLink) {
+                    navigate((story as any).url);
+                  } else if (story.id === 'kuponlar') {
                     alert('TamPazar 250 TL Esnaf İndirim Kuponu Hesabınıza Tanımlandı: TAMPZ250');
                   } else {
                     setActiveStoryFilter(story.id);

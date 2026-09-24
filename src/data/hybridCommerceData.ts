@@ -248,6 +248,16 @@ export type HybridDeliveryType =
   | 'DIGITAL_DOWNLOAD'  // 4. TamDijital (Etsy & Gumroad Modeli Anında Dosya İndirme)
   | 'ONLINE_SESSION';   // 5. TamSeans (Superpeer & Calendly Modeli Canlı Randevu)
 
+export interface OrderItemCustomization {
+  selectedWeightOrQty?: number;
+  unitLabel?: string;
+  removedIngredients?: string[];
+  addedIngredients?: { name: string; price: number }[];
+  selectedMandatoryOptions?: { groupTitle: string; optionName: string; priceDiff?: number }[];
+  uploadedFiles?: { name: string; size: string; previewUrl?: string }[];
+  customFormValues?: { fieldLabel: string; value: string }[];
+}
+
 export interface HybridOrder {
   id: string;
   orderNumber: string;
@@ -271,6 +281,7 @@ export interface HybridOrder {
     qty: number;
     sku?: string;
     variant?: string;
+    customization?: OrderItemCustomization;
   }[];
   totalAmount: number;
   paymentMethod: 'PAYTR_POS' | 'IYZICO_POS' | 'CASH_ON_DELIVERY' | 'PAY_AT_DOOR';
@@ -345,6 +356,189 @@ export interface HybridOrder {
 }
 
 export const initialHybridOrders: HybridOrder[] = [
+  // 1. ÖZELLEŞTİRİLMİŞ YEMEK SİPARİŞİ (Yemeksepeti / Döner Modeli: Malzeme Çıkarma & Ekstra)
+  {
+    id: 'ord-food-custom-1',
+    orderNumber: 'TPZ-YEMEK-2026-0711',
+    deliveryType: 'LOCAL_EXPRESS',
+    tenantId: 's3',
+    storeName: 'Tarihi Taşfırın & Döner Ustası',
+    customerName: 'Burak Serengil',
+    customerPhone: '+90 534 888 77 66',
+    customerAddress: 'Bahçelievler Mah. 100. Yıl Bulvarı No: 15 D: 4, Altınordu',
+    city: 'Ordu',
+    district: 'Altınordu',
+    coordinates: {
+      lat: 40.9810,
+      lng: 37.8830
+    },
+    items: [
+      {
+        productId: 'p-doner-hatay',
+        title: 'Hatay Usulü Soslu Tavuk Döner Dürüm',
+        price: 230, // 185 base + 30 kasar + 15 lavas
+        qty: 2,
+        sku: 'DNR-HATAY-01',
+        customization: {
+          removedIngredients: ['Soğan', 'Kornişon Turşu'],
+          addedIngredients: [
+            { name: 'Ekstra Kaşar Peyniri', price: 30 },
+            { name: 'Çift Lavaş', price: 15 }
+          ],
+          selectedMandatoryOptions: [
+            { groupTitle: 'Acı Tercihi', optionName: 'Orta Acılı (Klasik)' },
+            { groupTitle: 'İçecek', optionName: 'Köy Yayık Ayranı (330ml)', priceDiff: 28 }
+          ]
+        }
+      }
+    ],
+    totalAmount: 516, // (230 + 28) * 2 = 516
+    paymentMethod: 'PAYTR_POS',
+    paymentStatus: 'PAID',
+    status: 'KITCHEN_PREPARING',
+    localDeliveryDetails: {
+      courierName: 'Kurye Serdar (Motosiklet)',
+      courierPhone: '+90 541 333 44 55',
+      etaMinutes: 22,
+      deliverySubtype: 'COURIER_30MIN',
+      preparationStartedAt: '2026-09-24 10:45'
+    },
+    invoiceNumber: 'GIB2026000000945',
+    createdAt: '2026-09-24 10:42'
+  },
+
+  // 2. MANAV TARTILI SİPARİŞ (Kilogram / Gram Hassas Tartı)
+  {
+    id: 'ord-manav-weight-1',
+    orderNumber: 'TPZ-MANAV-2026-0312',
+    deliveryType: 'LOCAL_EXPRESS',
+    tenantId: 's3',
+    storeName: 'Manav & Şarküteri Pazarı',
+    customerName: 'Fatma Gültekin',
+    customerPhone: '+90 533 222 99 11',
+    customerAddress: 'Akyazı Mah. Sahil Cad. Mavi Blok No: 8 D: 12, Altınordu',
+    city: 'Ordu',
+    district: 'Altınordu',
+    coordinates: {
+      lat: 40.9780,
+      lng: 37.8920
+    },
+    items: [
+      {
+        productId: 'p-manav-elma',
+        title: 'Bahçe Taze Amasya Elması',
+        price: 45,
+        qty: 2.5,
+        sku: 'MNV-ELM-01',
+        customization: {
+          selectedWeightOrQty: 2.5,
+          unitLabel: 'Kg'
+        }
+      }
+    ],
+    totalAmount: 112.5,
+    paymentMethod: 'PAY_AT_DOOR',
+    paymentStatus: 'PENDING',
+    status: 'RINGING',
+    localDeliveryDetails: {
+      courierName: 'Hızlı Manav Çırağı (Elektrikli Bisiklet)',
+      courierPhone: '+90 533 111 44 55',
+      etaMinutes: 18,
+      deliverySubtype: 'COURIER_30MIN',
+      preparationStartedAt: '2026-09-24 10:50'
+    },
+    invoiceNumber: 'GIB2026000000946',
+    createdAt: '2026-09-24 10:51'
+  },
+
+  // 3. FOTOĞRAF BASKI SİPARİŞİ (Müşteri Dosya / Fotoğraf Yüklemeli - ZIP İndirme)
+  {
+    id: 'ord-foto-upload-1',
+    orderNumber: 'TPZ-FTS-2026-1189',
+    deliveryType: 'CARGO',
+    tenantId: 's3',
+    storeName: 'FotoSentez Stüdyo',
+    customerName: 'Mert Aksoy',
+    customerPhone: '+90 544 777 33 22',
+    customerEmail: 'mert.aksoy@gmail.com',
+    customerAddress: 'Moda Cad. Ferah Çıkmazı No: 12 D: 6, Kadıköy',
+    city: 'İstanbul',
+    district: 'Kadıköy',
+    items: [
+      {
+        productId: 'p-foto-baski-100',
+        title: '10x15 Parlak Fotoğraf Baskı (100 Adet)',
+        price: 340,
+        qty: 1,
+        sku: 'FTS-BSK-100',
+        customization: {
+          uploadedFiles: [
+            { name: 'aile_tatil_fotograflari_01.jpg', size: '4.8 MB', previewUrl: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=300' },
+            { name: 'mezuniyet_toreni_portre.png', size: '6.2 MB', previewUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=300' },
+            { name: 'bebek_ilk_yas_albumu.zip', size: '48.5 MB' }
+          ]
+        }
+      }
+    ],
+    totalAmount: 340,
+    paymentMethod: 'PAYTR_POS',
+    paymentStatus: 'PAID',
+    status: 'PREPARING',
+    cargoDetails: {
+      carrier: 'Yurtiçi Kargo',
+      trackingNumber: 'YK-89102839101',
+      barcode: '9810283910129',
+      despatchNumber: 'IRS2026000000450'
+    },
+    invoiceNumber: 'GIB2026000000947',
+    createdAt: '2026-09-24 09:15'
+  },
+
+  // 4. DAVETİYE & KİŞİYE ÖZEL BASKI FORMU (Metin Kopyalama & Tablo Görünümü)
+  {
+    id: 'ord-davetiye-form-1',
+    orderNumber: 'TPZ-MAT-2026-0490',
+    deliveryType: 'CARGO',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat & Matbaa',
+    customerName: 'Zeynep Kaya',
+    customerPhone: '+90 532 999 44 22',
+    customerEmail: 'zeynep.kaya@gmail.com',
+    customerAddress: 'Levent Mah. Menekşe Sok. No: 9 D: 2, Beşiktaş',
+    city: 'İstanbul',
+    district: 'Beşiktaş',
+    items: [
+      {
+        productId: 'p-davetiye-geometrik',
+        title: 'Özel Tasarım Geometrik Düğün Davetiyesi (100 Adet)',
+        price: 1850,
+        qty: 1,
+        sku: 'DVT-GEO-100',
+        customization: {
+          customFormValues: [
+            { fieldLabel: 'Gelin & Damat Adı', value: 'Zeynep Kaya & Ali Can Demir' },
+            { fieldLabel: 'Düğün / Nikah Tarihi & Saati', value: '18 Temmuz 2027 Cumartesi, Saat: 19:30' },
+            { fieldLabel: 'Düğün Salonu & Açık Adres', value: 'Boğaziçi Sahil Davet Salonu, Sahil Cad. No: 48 Sarıyer / İstanbul' },
+            { fieldLabel: 'Davetiye Sözü / Özel Mesaj', value: 'Birlikte çıkacağımız bu sonsuz yolculuğun ilk gününde sizleri de aramızda görmekten mutluluk duyarız.' },
+            { fieldLabel: 'Tasarım Prova Onayı İçin WhatsApp', value: '0532 999 44 22' }
+          ]
+        }
+      }
+    ],
+    totalAmount: 1850,
+    paymentMethod: 'PAYTR_POS',
+    paymentStatus: 'PAID',
+    status: 'PREPARING',
+    cargoDetails: {
+      carrier: 'Aras Kargo',
+      trackingNumber: 'ARAS-5519201948',
+      barcode: '8819201948112',
+      despatchNumber: 'IRS2026000000451'
+    },
+    invoiceNumber: 'GIB2026000000948',
+    createdAt: '2026-09-24 08:30'
+  },
+
   // 1. ULUSAL KARGO SİPARİŞİ (TamKargo)
   {
     id: 'ord-cargo-101',

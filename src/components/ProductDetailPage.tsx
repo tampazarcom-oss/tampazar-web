@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Heart, Share2, Star, ShieldCheck, Truck, RotateCcw, 
-  Store, MessageCircle, Phone, MapPin, Check, Plus, 
+  Store, MessageCircle, Phone, MapPin, Check, Plus, Minus,
   ThumbsUp, UserCheck, ChevronRight, AlertCircle, ShoppingBag, Clock, Navigation, Zap,
-  Download, Video, Calendar, FileCode, CheckCircle2, Copy, ExternalLink, X, Sparkles, CreditCard, Lock
+  Download, Video, Calendar, FileCode, CheckCircle2, Copy, ExternalLink, X, Sparkles, CreditCard, Lock,
+  Upload, Trash2, Scale, FileText, Utensils, Image as ImageIcon
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -20,11 +21,24 @@ import {
   saveOnlineAppointmentRecord,
   OnlineAppointmentRecord 
 } from '../data/digitalAndSessionData';
+import { HybridOrder, initialHybridOrders } from '../data/hybridCommerceData';
 import { applyPageSEO } from '../utils/seo';
 
 export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?: string; onBackToMarketplace?: () => void }) {
-  // 1. Search in initialProducts
-  const foundProduct = initialProducts.find(p => p.slug === slug || p.id === slug);
+  // 1. Search in localStorage or fallback to initialProducts
+  const [allProducts] = useState<Product[]>(() => {
+    try {
+      const saved = localStorage.getItem('tampazar_products');
+      if (saved) {
+        const parsed: Product[] = JSON.parse(saved);
+        const missing = initialProducts.filter(ip => !parsed.some(p => p.id === ip.id || p.slug === ip.slug));
+        return [...parsed, ...missing];
+      }
+    } catch {}
+    return initialProducts;
+  });
+
+  const foundProduct = allProducts.find(p => p.slug === slug || p.id === slug) || initialProducts.find(p => p.slug === slug || p.id === slug);
   
   // 2. If not found, search in SAMPLE_PRODUCTS (services, emergency, wholesale, food)
   const foundSampleService = !foundProduct ? SAMPLE_PRODUCTS.find(s => s.slug === slug || s.id === slug) : null;
@@ -320,6 +334,86 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
   const [followerCount, setFollowerCount] = useState(product.store.followerCount);
   const [addedToCart, setAddedToCart] = useState(false);
 
+  // --- DİNAMİK ÖLÇÜ BİRİMİ & ÖZELLEŞTİRME MOTORU STATE'LERİ ---
+  const customization = foundProduct?.customizationOptions;
+  const measurement = customization?.measurement;
+  const foodConfig = customization?.foodCustomization;
+  const fileUploadConfig = customization?.fileUpload;
+  const customFormConfig = customization?.customForm;
+
+  // 1. Ölçü Birimi / Gramaj / Adet State
+  const [selectedWeightOrQty, setSelectedWeightOrQty] = useState<number>(() => {
+    return measurement?.minQuantity || 1;
+  });
+
+  // 2. Yemek Malzeme Seçimi State
+  const [removedIngredients, setRemovedIngredients] = useState<string[]>([]);
+  const [extraIngredients, setExtraIngredients] = useState<string[]>([]);
+  const [selectedMandatoryOptions, setSelectedMandatoryOptions] = useState<{ [groupId: string]: string }>(() => {
+    const defaults: { [groupId: string]: string } = {};
+    foodConfig?.mandatoryGroups?.forEach(grp => {
+      if (grp.options.length > 0) {
+        defaults[grp.id] = grp.options[0].id;
+      }
+    });
+    return defaults;
+  });
+
+  // 3. Fotoğraf / Dosya Yükleme State
+  const [uploadedFiles, setUploadedFiles] = useState<{ name: string; size: string; previewUrl?: string }[]>([]);
+  const [fileUploadError, setFileUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // 4. Dinamik Form Alanları State
+  const [customFormValues, setCustomFormValues] = useState<{ [fieldId: string]: string }>({});
+  const [showFormErrors, setShowFormErrors] = useState(false);
+  const [orderSuccessDetails, setOrderSuccessDetails] = useState<string | null>(null);
+
+  // File Upload Handlers
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    setFileUploadError(null);
+
+    const maxCount = fileUploadConfig?.maxFiles || 100;
+    if (uploadedFiles.length + files.length > maxCount) {
+      setFileUploadError(`En fazla ${maxCount} adet dosya yükleyebilirsiniz.`);
+      return;
+    }
+
+    const newUploaded = files.map(file => {
+      const isImg = file.type.startsWith('image/');
+      return {
+        name: file.name,
+        size: `${(file.size / (1024 * 1024)).toFixed(1)} MB`,
+        previewUrl: isImg ? URL.createObjectURL(file) : undefined
+      };
+    });
+
+    setUploadedFiles(prev => [...prev, ...newUploaded]);
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Dinamik Fiyat Hesaplaması
+  const extraIngredientsCost = (foodConfig?.extraIngredients || [])
+    .filter(ext => extraIngredients.includes(ext.id))
+    .reduce((sum, ext) => sum + ext.price, 0);
+
+  const mandatoryOptionsCost = (foodConfig?.mandatoryGroups || []).reduce((sum, grp) => {
+    const selectedOptId = selectedMandatoryOptions[grp.id];
+    const opt = grp.options.find(o => o.id === selectedOptId);
+    return sum + (opt?.priceDiff || 0);
+  }, 0);
+
+  const baseCalculatedUnitPrice = (foundProduct?.price || product.price) + extraIngredientsCost + mandatoryOptionsCost;
+
+  const dynamicTotalPrice = measurement?.unit === 'kg' || measurement?.unit === 'gram'
+    ? Math.round(baseCalculatedUnitPrice * selectedWeightOrQty * 100) / 100
+    : Math.round(baseCalculatedUnitPrice * selectedWeightOrQty);
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -418,9 +512,98 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
     }
   };
 
+  const hasMissingRequiredForm = Boolean(
+    customFormConfig?.enabled && customFormConfig.fields.some(
+      fld => fld.required && (!customFormValues[fld.id] || customFormValues[fld.id].trim() === '')
+    )
+  );
+
+  const hasMissingFiles = Boolean(
+    fileUploadConfig?.enabled && fileUploadConfig.required && uploadedFiles.length < (fileUploadConfig.minFiles || 1)
+  );
+
   const handleAddToCart = () => {
+    if (hasMissingRequiredForm) {
+      setShowFormErrors(true);
+      return;
+    }
+    if (hasMissingFiles) {
+      setFileUploadError(`Lütfen sipariş için en az ${fileUploadConfig?.minFiles || 1} adet dosya veya fotoğraf yükleyin.`);
+      return;
+    }
+
+    try {
+      const existingRaw = localStorage.getItem('tampazar_hybrid_orders');
+      const ordersList: HybridOrder[] = existingRaw ? JSON.parse(existingRaw) : initialHybridOrders;
+
+      const orderSummaryText = [
+        measurement?.unit === 'kg' ? `${selectedWeightOrQty} Kg` : `${selectedWeightOrQty} Adet`,
+        removedIngredients.length > 0 ? `(${removedIngredients.length} Malzeme Çıkarıldı)` : '',
+        extraIngredients.length > 0 ? `(+${extraIngredients.length} Ekstra Eklendi)` : '',
+        uploadedFiles.length > 0 ? `(${uploadedFiles.length} Fotoğraf Yüklendi)` : '',
+        customFormConfig?.enabled ? `(Kişisel Form Dolduruldu)` : ''
+      ].filter(Boolean).join(' ');
+
+      const newOrder: HybridOrder = {
+        id: `ord-user-${Date.now()}`,
+        orderNumber: `TPZ-${Date.now().toString().slice(-6)}`,
+        deliveryType: foundProduct?.deliveryOptions?.type === 'local_express' ? 'LOCAL_EXPRESS' : 'CARGO',
+        tenantId: foundProduct?.tenantId || tenant.id,
+        storeName: foundProduct?.storeName || product.store.name,
+        customerName: user?.name || 'Cemre Demir',
+        customerPhone: user?.phone || '+90 532 444 55 66',
+        customerEmail: user?.email || 'cemre.demir@example.com',
+        customerAddress: 'Bahçelievler Mah. Atatürk Bulvarı No: 28 D: 5',
+        city: 'Ordu',
+        district: 'Altınordu',
+        items: [
+          {
+            productId: foundProduct?.id || product.id,
+            title: foundProduct?.title || product.title,
+            price: baseCalculatedUnitPrice,
+            qty: selectedWeightOrQty,
+            sku: foundProduct?.sku,
+            variant: selectedSize ? `${selectedSize} / ${selectedColor}` : undefined,
+            customization: {
+              selectedWeightOrQty,
+              unitLabel: measurement?.unitLabel || (measurement?.unit === 'kg' ? 'Kg' : 'Adet'),
+              removedIngredients: (foodConfig?.removableIngredients || [])
+                .filter(rem => removedIngredients.includes(rem.id))
+                .map(rem => rem.name),
+              addedIngredients: (foodConfig?.extraIngredients || [])
+                .filter(ext => extraIngredients.includes(ext.id))
+                .map(ext => ({ name: ext.name, price: ext.price })),
+              selectedMandatoryOptions: (foodConfig?.mandatoryGroups || []).map(grp => {
+                const opt = grp.options.find(o => o.id === selectedMandatoryOptions[grp.id]);
+                return {
+                  groupTitle: grp.title,
+                  optionName: opt?.name || '',
+                  priceDiff: opt?.priceDiff
+                };
+              }),
+              uploadedFiles: uploadedFiles.map(f => ({ name: f.name, size: f.size, previewUrl: f.previewUrl })),
+              customFormValues: (customFormConfig?.fields || []).map(fld => ({
+                fieldLabel: fld.label,
+                value: customFormValues[fld.id] || ''
+              }))
+            }
+          }
+        ],
+        totalAmount: dynamicTotalPrice,
+        paymentMethod: 'PAYTR_POS',
+        paymentStatus: 'PAID',
+        status: foundProduct?.deliveryOptions?.type === 'local_express' ? 'RINGING' : 'PREPARING',
+        createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
+      };
+
+      localStorage.setItem('tampazar_hybrid_orders', JSON.stringify([newOrder, ...ordersList]));
+      setOrderSuccessDetails(orderSummaryText);
+    } catch (e) {
+      console.error(e);
+    }
+
     setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+    setTimeout(() => setAddedToCart(false), 3500);
   };
 
   return (
@@ -647,8 +830,358 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                 </div>
               )}
 
+              {/* 3. DİNAMİK ÖLÇÜ BİRİMİ, YEMEK MALZEMELERİ, DOSYA YÜKLEME VE KİŞİYE ÖZEL FORM MOTORU */}
+              {customization && (
+                <div className="space-y-4 pt-2 border-t border-slate-200">
+                  
+                  {/* A) ÖLÇÜ BİRİMİ / TARTILI ÜRÜN STEPPER */}
+                  {measurement && (
+                    <div className="bg-amber-50/70 border border-amber-200 p-3.5 rounded-2xl space-y-2.5">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-amber-950 text-xs">
+                          <Scale className="w-4 h-4 text-amber-600" />
+                          <span>Miktar & Tartı Seçimi:</span>
+                          <span className="text-[10px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-black">
+                            Birim: {measurement.unitLabel || measurement.unit.toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="text-xs font-black text-amber-900">
+                          ₺{(foundProduct?.price || product.price)} / {measurement.unitLabel || measurement.unit}
+                        </div>
+                      </div>
+
+                      {/* Tartılı Stepper (+/-) */}
+                      <div className="flex items-center justify-between gap-3 bg-white p-2 rounded-xl border border-amber-200">
+                        <span className="text-xs text-slate-600 font-semibold pl-1">Seçilen Ağırlık / Adet:</span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const step = measurement.stepQuantity || (measurement.unit === 'kg' ? 0.5 : 1);
+                              const min = measurement.minQuantity || step;
+                              setSelectedWeightOrQty(prev => Math.max(min, Math.round((prev - step) * 100) / 100));
+                            }}
+                            className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-black flex items-center justify-center transition cursor-pointer"
+                            title="Azalt"
+                          >
+                            <Minus className="w-3.5 h-3.5" />
+                          </button>
+                          <span className="text-sm font-black text-slate-900 min-w-16 text-center">
+                            {selectedWeightOrQty} {measurement.unitLabel || measurement.unit}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const step = measurement.stepQuantity || (measurement.unit === 'kg' ? 0.5 : 1);
+                              setSelectedWeightOrQty(prev => Math.round((prev + step) * 100) / 100);
+                            }}
+                            className="w-8 h-8 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black flex items-center justify-center transition cursor-pointer"
+                            title="Artır"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Hızlı Tartı Önayarları */}
+                      {measurement.unit === 'kg' && (
+                        <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                          <span className="text-[10px] text-amber-800 font-bold">Hızlı Seçim:</span>
+                          {[0.5, 1, 1.5, 2, 3, 5].map((w) => (
+                            <button
+                              key={w}
+                              type="button"
+                              onClick={() => setSelectedWeightOrQty(w)}
+                              className={`px-2 py-0.5 rounded-lg text-[10px] font-bold border transition cursor-pointer ${
+                                selectedWeightOrQty === w 
+                                  ? 'bg-amber-800 text-white border-amber-800 shadow-2xs' 
+                                  : 'bg-white text-slate-700 border-amber-200 hover:bg-amber-100'
+                              }`}
+                            >
+                              {w} Kg
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* B) YEMEK & RESTORAN MALZEME SEÇİCİ (YEMEKSEPETİ / DÖNER MODELİ) */}
+                  {foodConfig?.enabled && (
+                    <div className="bg-white border border-slate-200 p-4 rounded-2xl space-y-4 shadow-2xs">
+                      <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs border-b border-slate-100 pb-2">
+                        <Utensils className="w-4 h-4 text-rose-600" />
+                        <span>Döner / Restoran Malzeme Tercihleri</span>
+                      </div>
+
+                      {/* 1. İstemediğiniz Malzemeler (Çıkarma) */}
+                      {foodConfig.removableIngredients && foodConfig.removableIngredients.length > 0 && (
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 block">
+                            İstemediğiniz Malzemeleri Çıkarın (Ücretsiz):
+                          </label>
+                          <div className="flex flex-wrap gap-2">
+                            {foodConfig.removableIngredients.map((ing) => {
+                              const isRemoved = removedIngredients.includes(ing.id);
+                              return (
+                                <button
+                                  key={ing.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setRemovedIngredients(prev => 
+                                      isRemoved ? prev.filter(id => id !== ing.id) : [...prev, ing.id]
+                                    );
+                                  }}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer border ${
+                                    isRemoved
+                                      ? 'bg-rose-50 text-rose-700 border-rose-300 line-through'
+                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                  }`}
+                                >
+                                  {isRemoved ? '🚫' : '✓'} {isRemoved ? `${ing.name}suz` : ing.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 2. Ekstra Malzemeler & Soslar (+Ücretli) */}
+                      {foodConfig.extraIngredients && foodConfig.extraIngredients.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                          <label className="text-xs font-bold text-slate-700 block">
+                            Ekstra Lezzetler & Soslar:
+                          </label>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {foodConfig.extraIngredients.map((ext) => {
+                              const isSelected = extraIngredients.includes(ext.id);
+                              return (
+                                <button
+                                  key={ext.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setExtraIngredients(prev =>
+                                      isSelected ? prev.filter(id => id !== ext.id) : [...prev, ext.id]
+                                    );
+                                  }}
+                                  className={`p-2.5 rounded-xl text-xs font-bold text-left transition flex items-center justify-between border cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-emerald-50 text-emerald-900 border-emerald-500 shadow-2xs'
+                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <span className={`w-4 h-4 rounded flex items-center justify-center text-[10px] ${isSelected ? 'bg-emerald-600 text-white' : 'border border-slate-300'}`}>
+                                      {isSelected ? '✓' : '+'}
+                                    </span>
+                                    <span>{ext.name}</span>
+                                  </div>
+                                  <span className="text-emerald-700 font-black">+{ext.price} ₺</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* 3. Zorunlu Seçim Grupları (Acı, İçecek vb.) */}
+                      {foodConfig.mandatoryGroups && foodConfig.mandatoryGroups.map((grp) => (
+                        <div key={grp.id} className="space-y-1.5 pt-1 border-t border-slate-100">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold text-slate-700">
+                              {grp.title} {grp.required && <span className="text-rose-500">*</span>}
+                            </label>
+                            {grp.required && (
+                              <span className="text-[10px] bg-rose-50 text-rose-700 px-1.5 py-0.2 rounded font-semibold">Zorunlu</span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {grp.options.map((opt) => {
+                              const isSelected = selectedMandatoryOptions[grp.id] === opt.id;
+                              return (
+                                <button
+                                  key={opt.id}
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedMandatoryOptions(prev => ({ ...prev, [grp.id]: opt.id }));
+                                  }}
+                                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition border cursor-pointer ${
+                                    isSelected
+                                      ? 'bg-indigo-900 text-white border-indigo-900 shadow-2xs'
+                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-slate-300'
+                                  }`}
+                                >
+                                  {opt.name} {opt.priceDiff ? `(+${opt.priceDiff} ₺)` : ''}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* C) FOTOĞRAF BASKI & DOSYA YÜKLEME ALANI */}
+                  {fileUploadConfig?.enabled && (
+                    <div className="bg-indigo-50/70 border border-indigo-200 p-4 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-indigo-950 text-xs">
+                          <ImageIcon className="w-4 h-4 text-indigo-600" />
+                          <span>{fileUploadConfig.title || 'Baskı Fotoğraflarınızı Yükleyin'}</span>
+                        </div>
+                        {fileUploadConfig.required && (
+                          <span className="text-[10px] bg-indigo-200 text-indigo-900 px-2 py-0.5 rounded font-bold">
+                            Zorunlu (Min. {fileUploadConfig.minFiles || 1} Dosya)
+                          </span>
+                        )}
+                      </div>
+
+                      {fileUploadConfig.description && (
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          {fileUploadConfig.description}
+                        </p>
+                      )}
+
+                      {/* Gizli File Input & Sürükle-Bırak Tetikleyici */}
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileUpload} 
+                        multiple 
+                        accept={fileUploadConfig.allowedFormats.map(f => `.${f.toLowerCase()}`).join(',')}
+                        className="hidden" 
+                      />
+
+                      <div 
+                        onClick={() => fileInputRef.current?.click()}
+                        className="border-2 border-dashed border-indigo-300 hover:border-indigo-500 rounded-xl p-4 bg-white text-center cursor-pointer transition group"
+                      >
+                        <Upload className="w-6 h-6 text-indigo-500 mx-auto mb-1 group-hover:scale-110 transition" />
+                        <span className="text-xs font-bold text-indigo-900 block">
+                          Fotoğraf / Dosyaları Seçin veya Sürükleyin
+                        </span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">
+                          Formatlar: {fileUploadConfig.allowedFormats.join(', ')} · Maks: {fileUploadConfig.maxSizeMB || 100} MB
+                        </span>
+                      </div>
+
+                      {fileUploadError && (
+                        <div className="text-[11px] text-rose-600 font-semibold bg-rose-50 p-2 rounded-lg border border-rose-200 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          {fileUploadError}
+                        </div>
+                      )}
+
+                      {/* Yüklenen Dosyalar Önizleme Listesi */}
+                      {uploadedFiles.length > 0 && (
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-[11px] font-bold text-indigo-900 block">
+                            Yüklenen Fotoğraflar ({uploadedFiles.length} Adet):
+                          </span>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                            {uploadedFiles.map((file, idx) => (
+                              <div key={idx} className="bg-white p-2 rounded-xl border border-indigo-100 flex items-center justify-between shadow-2xs gap-2">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                  {file.previewUrl ? (
+                                    <img src={file.previewUrl} alt={file.name} className="w-8 h-8 rounded object-cover shrink-0" />
+                                  ) : (
+                                    <div className="w-8 h-8 rounded bg-indigo-100 text-indigo-700 flex items-center justify-center text-[10px] font-bold shrink-0">
+                                      ZIP
+                                    </div>
+                                  )}
+                                  <div className="truncate text-left">
+                                    <p className="text-[10px] font-bold text-slate-800 truncate" title={file.name}>{file.name}</p>
+                                    <p className="text-[9px] text-slate-400">{file.size}</p>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleRemoveFile(idx);
+                                  }}
+                                  className="text-slate-400 hover:text-rose-600 p-1 cursor-pointer"
+                                  title="Kaldır"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* D) MATBAA, DAVETİYE, LAZER & KİŞİYE ÖZEL FORM SİHİRBAZI */}
+                  {customFormConfig?.enabled && (
+                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                          <FileText className="w-4 h-4 text-amber-600" />
+                          <span>{customFormConfig.title || 'Kişiye Özel Baskı / Davetiye Formu'}</span>
+                        </div>
+                        <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-bold">
+                          Ön Prova Onaylı
+                        </span>
+                      </div>
+
+                      {customFormConfig.description && (
+                        <p className="text-[11px] text-slate-600 leading-relaxed">
+                          {customFormConfig.description}
+                        </p>
+                      )}
+
+                      {/* Dinamik Form Alanları */}
+                      <div className="space-y-2.5 pt-1">
+                        {customFormConfig.fields.map((fld) => {
+                          const val = customFormValues[fld.id] || '';
+                          const isInvalid = showFormErrors && fld.required && !val.trim();
+
+                          return (
+                            <div key={fld.id} className="space-y-1">
+                              <label className="text-[11px] font-bold text-slate-700 flex items-center justify-between">
+                                <span>{fld.label} {fld.required && <span className="text-rose-500">*</span>}</span>
+                                {fld.required && <span className="text-[9px] text-slate-400">Zorunlu</span>}
+                              </label>
+
+                              {fld.type === 'textarea' ? (
+                                <textarea
+                                  rows={2}
+                                  value={val}
+                                  onChange={(e) => setCustomFormValues(prev => ({ ...prev, [fld.id]: e.target.value }))}
+                                  placeholder={fld.placeholder || ''}
+                                  className={`w-full text-xs p-2 rounded-xl border bg-white outline-none transition ${
+                                    isInvalid ? 'border-rose-500 focus:ring-1 focus:ring-rose-500' : 'border-slate-200 focus:border-indigo-600'
+                                  }`}
+                                />
+                              ) : (
+                                <input
+                                  type={fld.type === 'number' ? 'number' : fld.type === 'date' ? 'date' : 'text'}
+                                  value={val}
+                                  onChange={(e) => setCustomFormValues(prev => ({ ...prev, [fld.id]: e.target.value }))}
+                                  placeholder={fld.placeholder || ''}
+                                  className={`w-full text-xs p-2 rounded-xl border bg-white outline-none transition ${
+                                    isInvalid ? 'border-rose-500 focus:ring-1 focus:ring-rose-500' : 'border-slate-200 focus:border-indigo-600'
+                                  }`}
+                                />
+                              )}
+
+                              {isInvalid && (
+                                <p className="text-[10px] text-rose-600 font-semibold">Lütfen bu alanı doldurunuz.</p>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
               {/* 3. STANDART PERAKENDE / TOPTAN VARYANTLARI */}
-              {!isDigital && !isSession && (
+              {!isDigital && !isSession && !customization?.measurement && !customization?.foodCustomization && (
                 <div className="space-y-4 pt-2">
                   {/* Ölçü / Beden */}
                   <div className="space-y-2">
@@ -722,7 +1255,19 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                     className="flex-1 py-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm rounded-2xl transition flex items-center justify-center gap-2 shadow-lg cursor-pointer"
                   >
                     <ShoppingBag className="w-5 h-5" />
-                    {addedToCart ? 'Sepete Eklendi ✓' : 'Hemen Sepete Ekle & Al'}
+                    {addedToCart ? (
+                      <span>Sepete Eklendi & Esnafa İletildi ✓</span>
+                    ) : (
+                      <span>
+                        {customization?.foodCustomization?.enabled 
+                          ? `Siparişi Ver & Sepete Ekle (₺${dynamicTotalPrice.toLocaleString('tr-TR')})`
+                          : customization?.measurement?.unit === 'kg'
+                          ? `Sepete Ekle (${selectedWeightOrQty} Kg - ₺${dynamicTotalPrice.toLocaleString('tr-TR')})`
+                          : customization?.customForm?.enabled || customization?.fileUpload?.enabled
+                          ? `Kişiselleştirmeyi Tamamla & Al (₺${dynamicTotalPrice.toLocaleString('tr-TR')})`
+                          : `Hemen Sepete Ekle (₺${dynamicTotalPrice.toLocaleString('tr-TR')})`}
+                      </span>
+                    )}
                   </button>
                 )}
 
@@ -735,9 +1280,25 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
               </div>
 
               {addedToCart && (
-                <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl text-xs font-semibold animate-fade-in flex items-center justify-between">
-                  <span>Ürün sepetinize başarıyla eklendi! Doğrudan esnaf kasasından faturalandırılacaktır.</span>
-                  <span className="font-bold underline cursor-pointer" onClick={onBackToMarketplace}>Sepete Git →</span>
+                <div className="bg-emerald-50 border border-emerald-300 text-emerald-950 p-4 rounded-2xl text-xs space-y-1.5 shadow-sm animate-fade-in">
+                  <div className="flex items-center gap-2 font-black text-emerald-900 text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                    <span>Sipariş Başarıyla Alındı & Esnaf Paneline Aktarıldı!</span>
+                  </div>
+                  {orderSuccessDetails && (
+                    <p className="text-emerald-800 font-semibold pl-7">
+                      Seçimleriniz: <span className="font-bold underline">{orderSuccessDetails}</span> · Tutar: ₺{dynamicTotalPrice.toLocaleString('tr-TR')}
+                    </p>
+                  )}
+                  <div className="pl-7 pt-1 flex items-center gap-3 text-[11px]">
+                    <button
+                      onClick={() => navigate('/yonetim')}
+                      className="font-bold text-emerald-900 underline hover:text-emerald-950 cursor-pointer flex items-center gap-1"
+                    >
+                      <span>Esnaf Yönetim Panelinde Canlı Gör (/yonetim)</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </button>
+                  </div>
                 </div>
               )}
 

@@ -3,7 +3,8 @@ import {
   X, Check, AlertCircle, Sparkles, Plus, Trash2, 
   Upload, Image as ImageIcon, DollarSign, Package, 
   Truck, ShieldCheck, Tag, Info, Layers, RefreshCw, Star,
-  Download, Video, FileCode, Clock, Globe, Calendar as CalendarIcon, CheckCircle2
+  Download, Video, FileCode, Clock, Globe, Calendar as CalendarIcon, CheckCircle2,
+  Scale, Utensils, Sliders, FileText
 } from 'lucide-react';
 import { Product } from '../../data/mockData';
 
@@ -15,7 +16,7 @@ interface AdvancedProductModalProps {
   storeName?: string;
 }
 
-type TabKey = 'basic' | 'pricing' | 'variants' | 'logistics';
+type TabKey = 'basic' | 'pricing' | 'variants' | 'logistics' | 'b2b' | 'customization';
 
 interface VariantRow {
   id: string;
@@ -106,6 +107,82 @@ export default function AdvancedProductModal({
   const [sessionChannel, setSessionChannel] = useState<'google_meet' | 'zoom' | 'whatsapp_phone'>('google_meet');
   const [meetingLink, setMeetingLink] = useState('https://meet.google.com/tpz-danisman-oda');
   const [expertTitle, setExpertTitle] = useState('Kıdemli Uzman Danışman');
+
+  // Tab 5: B2B & Toptan Satış & Dropshipping
+  const [isB2BAvailable, setIsB2BAvailable] = useState<boolean>(false);
+  const [isB2BOnly, setIsB2BOnly] = useState<boolean>(false);
+  const [b2bMinQty, setB2bMinQty] = useState<number>(10);
+  const [b2bUnitType, setB2bUnitType] = useState<'adet' | 'seri' | 'koli' | 'cuval' | 'paket'>('adet');
+  const [b2bWholesalePrice, setB2bWholesalePrice] = useState<number>(350);
+  const [b2bTieredPricing, setB2bTieredPricing] = useState<{ minQty: number; maxQty?: number | null; price: number }[]>([
+    { minQty: 10, maxQty: 49, price: 350 },
+    { minQty: 50, maxQty: null, price: 300 }
+  ]);
+  const [allowDropshipping, setAllowDropshipping] = useState<boolean>(true);
+  const [suggestedRetailPrice, setSuggestedRetailPrice] = useState<number>(590);
+
+  // Tab 6: Ölçü Birimi & Dinamik Müşteri Sipariş Seçenekleri
+  const [measurementUnit, setMeasurementUnit] = useState<'adet' | 'kg' | 'gram' | 'litre' | 'metre' | 'm2' | 'porsiyon' | 'paket'>('adet');
+  const [measurementMin, setMeasurementMin] = useState<number>(1);
+  const [measurementStep, setMeasurementStep] = useState<number>(1);
+  const [measurementUnitLabel, setMeasurementUnitLabel] = useState<string>('Adet');
+  const [priceMultiplier, setPriceMultiplier] = useState<number>(1);
+
+  // Yemek & Restoran Malzeme Seçici
+  const [foodCustomizationEnabled, setFoodCustomizationEnabled] = useState<boolean>(false);
+  const [removableIngredients, setRemovableIngredients] = useState<{ id: string; name: string; defaultIncluded: boolean }[]>([
+    { id: 'rem-1', name: 'Soğan', defaultIncluded: true },
+    { id: 'rem-2', name: 'Kornişon Turşu', defaultIncluded: true },
+    { id: 'rem-3', name: 'Sarımsaklı Mayonez', defaultIncluded: true }
+  ]);
+  const [newRemovableName, setNewRemovableName] = useState<string>('');
+
+  const [extraIngredients, setExtraIngredients] = useState<{ id: string; name: string; price: number }[]>([
+    { id: 'ext-1', name: 'Ekstra Kaşar Peyniri', price: 30 },
+    { id: 'ext-2', name: 'Çift Lavaş', price: 15 },
+    { id: 'ext-3', name: 'Trüf Aromalı Mayonez', price: 20 }
+  ]);
+  const [newExtraName, setNewExtraName] = useState<string>('');
+  const [newExtraPrice, setNewExtraPrice] = useState<number>(20);
+
+  const [mandatoryGroups, setMandatoryGroups] = useState<{ id: string; title: string; required: boolean; options: { id: string; name: string; priceDiff?: number }[] }[]>([
+    {
+      id: 'grp-1',
+      title: 'Acı Durumu',
+      required: true,
+      options: [
+        { id: 'opt-1', name: 'Acısız' },
+        { id: 'opt-2', name: 'Az Acılı' },
+        { id: 'opt-3', name: 'Orta Acılı' },
+        { id: 'opt-4', name: 'Çok Acılı' }
+      ]
+    }
+  ]);
+  const [newGroupTitle, setNewGroupTitle] = useState<string>('');
+
+  // Fotoğraf Baskı & Dosya Yükleme
+  const [fileUploadEnabled, setFileUploadEnabled] = useState<boolean>(false);
+  const [fileUploadTitle, setFileUploadTitle] = useState<string>('Baskı Fotoğraflarınızı Yükleyin');
+  const [fileUploadDesc, setFileUploadDesc] = useState<string>('Lütfen basılmasını istediğiniz fotoğrafları JPG, PNG veya ZIP formatında yükleyin.');
+  const [fileUploadFormats, setFileUploadFormats] = useState<string[]>(['JPG', 'PNG', 'PDF', 'TIFF', 'RAW', 'ZIP']);
+  const [fileUploadMin, setFileUploadMin] = useState<number>(1);
+  const [fileUploadMax, setFileUploadMax] = useState<number>(100);
+  const [fileUploadMaxSize, setFileUploadMaxSize] = useState<number>(100);
+  const [fileUploadRequired, setFileUploadRequired] = useState<boolean>(true);
+
+  // Dinamik Kişiye Özel Form Sihirbazı (Matbaa / Davetiye / Lazer)
+  const [customFormEnabled, setCustomFormEnabled] = useState<boolean>(false);
+  const [customFormTitle, setCustomFormTitle] = useState<string>('Kişiye Özel Baskı / Davetiye Bilgi Formu');
+  const [customFormDesc, setCustomFormDesc] = useState<string>('Davetiyenizin üzerine basılacak bilgileri eksiksiz doldurunuz.');
+  const [customFormFields, setCustomFormFields] = useState<{ id: string; label: string; type: 'text' | 'textarea' | 'date' | 'select' | 'number'; placeholder?: string; required: boolean }[]>([
+    { id: 'fld-1', label: 'Gelin & Damat Adı', type: 'text', placeholder: 'Örn: Leyla & Mecnun', required: true },
+    { id: 'fld-2', label: 'Düğün / Kına Tarihi ve Saati', type: 'text', placeholder: 'Örn: 24 Ağustos 2026 - 19:30', required: true },
+    { id: 'fld-3', label: 'Düğün Salonu Adı ve Açık Adres', type: 'textarea', placeholder: 'Örn: Grand Bosphorus Balo Salonu, Beşiktaş / İstanbul', required: true },
+    { id: 'fld-4', label: 'Varsa Özel Davetiye Sözü / Notu', type: 'textarea', placeholder: 'Örn: Bir ömür boyu sürecek mutluluğumuza tanık olmanız dileğiyle...', required: false }
+  ]);
+  const [newFieldLabel, setNewFieldLabel] = useState<string>('');
+  const [newFieldType, setNewFieldType] = useState<'text' | 'textarea' | 'date' | 'number'>('text');
+  const [newFieldRequired, setNewFieldRequired] = useState<boolean>(true);
 
   if (!isOpen) return null;
 
@@ -284,7 +361,52 @@ export default function AdvancedProductModal({
         sessionChannel: productType === 'online_session' ? sessionChannel : undefined,
         meetingLink: productType === 'online_session' ? meetingLink : undefined,
         expertTitle: productType === 'online_session' ? expertTitle : undefined
-      }
+      },
+      // B2B & Dropshipping
+      isB2BOnly: isB2BAvailable ? isB2BOnly : false,
+      b2bMinQty: isB2BAvailable ? Number(b2bMinQty) : undefined,
+      b2bUnitType: isB2BAvailable ? b2bUnitType : undefined,
+      b2bWholesalePrice: isB2BAvailable ? Number(b2bWholesalePrice) : undefined,
+      b2bTieredPricing: isB2BAvailable ? b2bTieredPricing : undefined,
+      allowDropshipping: isB2BAvailable ? allowDropshipping : undefined,
+      suggestedRetailPrice: isB2BAvailable && allowDropshipping ? Number(suggestedRetailPrice) : undefined,
+      // Dinamik Ölçü Birimi & Özelleştirme Seçenekleri
+      customizationOptions: (
+        measurementUnit !== 'adet' || 
+        foodCustomizationEnabled || 
+        fileUploadEnabled || 
+        customFormEnabled
+      ) ? {
+        measurement: {
+          unit: measurementUnit,
+          minQuantity: measurementMin,
+          stepQuantity: measurementStep,
+          unitLabel: measurementUnitLabel || (measurementUnit === 'kg' ? 'Kg' : measurementUnit),
+          pricePerUnitMultiplier: priceMultiplier
+        },
+        foodCustomization: foodCustomizationEnabled ? {
+          enabled: true,
+          removableIngredients,
+          extraIngredients,
+          mandatoryGroups
+        } : undefined,
+        fileUpload: fileUploadEnabled ? {
+          enabled: true,
+          title: fileUploadTitle,
+          description: fileUploadDesc,
+          allowedFormats: fileUploadFormats,
+          minFiles: fileUploadMin,
+          maxFiles: fileUploadMax,
+          maxSizeMB: fileUploadMaxSize,
+          required: fileUploadRequired
+        } : undefined,
+        customForm: customFormEnabled ? {
+          enabled: true,
+          title: customFormTitle,
+          description: customFormDesc,
+          fields: customFormFields
+        } : undefined
+      } : undefined
     };
 
     onSaveProduct(newProduct);
@@ -370,6 +492,36 @@ export default function AdvancedProductModal({
           >
             <span className="w-5 h-5 rounded-full text-[11px] flex items-center justify-center bg-slate-100 text-slate-700 font-mono">4</span>
             Teslimat & Lojistik Modeli
+          </button>
+
+          <button
+            onClick={() => setActiveTab('b2b')}
+            className={`py-3 px-4 text-xs font-black border-b-2 transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'b2b' 
+                ? 'border-indigo-600 text-indigo-600' 
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full text-[11px] flex items-center justify-center bg-amber-100 text-amber-900 font-mono">5</span>
+            <span className="flex items-center gap-1.5">
+              <Layers className="w-3.5 h-3.5 text-amber-500" />
+              B2B & Dropshipping
+            </span>
+          </button>
+
+          <button
+            onClick={() => setActiveTab('customization')}
+            className={`py-3 px-4 text-xs font-black border-b-2 transition flex items-center gap-2 whitespace-nowrap cursor-pointer ${
+              activeTab === 'customization' 
+                ? 'border-indigo-600 text-indigo-600' 
+                : 'border-transparent text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            <span className="w-5 h-5 rounded-full text-[11px] flex items-center justify-center bg-indigo-100 text-indigo-900 font-mono">6</span>
+            <span className="flex items-center gap-1.5">
+              <Scale className="w-3.5 h-3.5 text-indigo-600" />
+              Ölçü Birimi & Müşteri Seçenekleri
+            </span>
           </button>
         </div>
 
@@ -1525,6 +1677,771 @@ export default function AdvancedProductModal({
             </div>
           )}
 
+          {/* TAB 5: B2B TOPTAN SATIŞ & DROPSHIPPING (FAIRE & SPOCKET MODELİ) */}
+          {activeTab === 'b2b' && (
+            <div className="space-y-6 animate-fade-in">
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center shrink-0 shadow-sm">
+                  <Layers className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    B2B Toptan Ticaret & Esnaftan Esnafa Dropshipping Ağı
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    Ürününüzü toptan paket, koli veya seri olarak diğer perakendeci esnafa satın; dilerseniz diğer mağazaların bu ürünü kendi vitrinlerinde satmalarına (Dropshipping) izin vererek satış ağınızı katlayın.
+                  </p>
+                </div>
+              </div>
+
+              {/* 1. Toptan Satışa Aç Toggle */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <Package className="w-4 h-4 text-indigo-600" />
+                      Toptan Satışa Aç (B2B Modülü)
+                    </label>
+                    <p className="text-xs text-slate-500">
+                      Bu ürün toptan seri, koli veya minimum adet bazında satışa sunulsun.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={isB2BAvailable}
+                      onChange={(e) => setIsB2BAvailable(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+
+                {isB2BAvailable && (
+                  <div className="pt-4 border-t border-slate-100 space-y-4 animate-fade-in">
+                    {/* Yalnızca Mağazalar Görsün (Kapalı Devre) Checkbox */}
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <span className="text-xs font-bold text-slate-900 block">
+                          🔒 Yalnızca Onaylı Mağazalar Görsün (Kapalı Devre Toptan)
+                        </span>
+                        <p className="text-[11px] text-slate-500">
+                          Halk perakende fiyatını ve ürünü görmez; yalnızca 'seller' rolündeki doğrulanmış esnaf toptan fiyatıyla satın alabilir.
+                        </p>
+                      </div>
+                      <input
+                        type="checkbox"
+                        checked={isB2BOnly}
+                        onChange={(e) => setIsB2BOnly(e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 rounded cursor-pointer"
+                      />
+                    </div>
+
+                    {/* Minimum Toptan Alım Adedi & Birim Tipi */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                          Minimum Toptan Alım Miktarı:
+                        </label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={b2bMinQty}
+                          onChange={(e) => setB2bMinQty(Math.max(1, Number(e.target.value)))}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
+                          placeholder="Örn: 10"
+                        />
+                        <span className="text-[10px] text-slate-500 mt-1 block">
+                          Alıcı tek seferde en az bu miktarı sepete ekleyebilir.
+                        </span>
+                      </div>
+
+                      <div>
+                        <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                          Toptan Paketleme / Birim Tipi:
+                        </label>
+                        <select
+                          value={b2bUnitType}
+                          onChange={(e) => setB2bUnitType(e.target.value as any)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
+                        >
+                          <option value="adet">Adet (Birim Başına)</option>
+                          <option value="seri">Seri (Örn: 6'lı Asorti Paket)</option>
+                          <option value="koli">Koli (Örn: 8-12 Çift Kutu)</option>
+                          <option value="cuval">Çuval (Örn: 50 KG Torba)</option>
+                          <option value="paket">Paket (Özel Ambalaj)</option>
+                        </select>
+                        <span className="text-[10px] text-slate-500 mt-1 block">
+                          Sipariş faturası ve sevk irsaliyesine bu birim basılır.
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Toptan Birim Fiyatı */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                        Toptan Taban Birim Fiyatı (TL):
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₺</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={b2bWholesalePrice}
+                          onChange={(e) => setB2bWholesalePrice(Math.max(1, Number(e.target.value)))}
+                          className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Kademeli Fiyat Matrisi */}
+                    <div className="space-y-2 pt-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-slate-800">
+                          Kademeli Toptan Fiyat Matrisi (Toplu Alım İndirimi):
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const lastTier = b2bTieredPricing[b2bTieredPricing.length - 1];
+                            const nextMin = lastTier ? (lastTier.maxQty ? lastTier.maxQty + 1 : lastTier.minQty + 50) : 50;
+                            setB2bTieredPricing([
+                              ...b2bTieredPricing,
+                              { minQty: nextMin, maxQty: null, price: Math.max(1, b2bWholesalePrice - 50) }
+                            ]);
+                          }}
+                          className="text-[11px] font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> Kademe Ekle
+                        </button>
+                      </div>
+
+                      <div className="border border-slate-200 rounded-xl overflow-hidden divide-y divide-slate-100">
+                        {b2bTieredPricing.map((tier, idx) => (
+                          <div key={idx} className="p-2.5 bg-slate-50 flex items-center gap-3 text-xs">
+                            <span className="font-mono text-slate-500 text-[11px] w-6">#{idx + 1}</span>
+                            <div className="flex items-center gap-2 flex-1">
+                              <input
+                                type="number"
+                                min={1}
+                                value={tier.minQty}
+                                onChange={(e) => {
+                                  const updated = [...b2bTieredPricing];
+                                  updated[idx].minQty = Number(e.target.value);
+                                  setB2bTieredPricing(updated);
+                                }}
+                                className="w-16 px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold"
+                              />
+                              <span className="text-slate-400">-</span>
+                              <input
+                                type="number"
+                                placeholder="Sınırsız"
+                                value={tier.maxQty || ''}
+                                onChange={(e) => {
+                                  const updated = [...b2bTieredPricing];
+                                  updated[idx].maxQty = e.target.value ? Number(e.target.value) : null;
+                                  setB2bTieredPricing(updated);
+                                }}
+                                className="w-20 px-2 py-1 bg-white border border-slate-200 rounded text-center font-bold"
+                              />
+                              <span className="text-slate-500 font-semibold">{b2bUnitType} arası</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-400">Birim:</span>
+                              <input
+                                type="number"
+                                value={tier.price}
+                                onChange={(e) => {
+                                  const updated = [...b2bTieredPricing];
+                                  updated[idx].price = Number(e.target.value);
+                                  setB2bTieredPricing(updated);
+                                }}
+                                className="w-24 px-2 py-1 bg-white border border-slate-200 rounded font-bold text-emerald-600 text-right"
+                              />
+                              <span className="font-bold text-slate-600">₺</span>
+                            </div>
+                            {b2bTieredPricing.length > 1 && (
+                              <button
+                                type="button"
+                                onClick={() => setB2bTieredPricing(b2bTieredPricing.filter((_, i) => i !== idx))}
+                                className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Dropshipping'e İzin Ver Toggle (Faire & Spocket Modeli) */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <label className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-emerald-600" />
+                      Esnaftan Esnafa Dropshipping'e İzin Ver
+                    </label>
+                    <p className="text-xs text-slate-500">
+                      Diğer TamPazar mağazaları bu ürünü tek tıkla kendi vitrinlerine ekleyip kâr koyarak satabilsin.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={allowDropshipping}
+                      onChange={(e) => setAllowDropshipping(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                </div>
+
+                {allowDropshipping && (
+                  <div className="pt-4 border-t border-slate-100 space-y-4 animate-fade-in">
+                    <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl space-y-1 text-xs text-emerald-900">
+                      <span className="font-black flex items-center gap-1.5 text-emerald-800">
+                        <Check className="w-4 h-4 text-emerald-600" />
+                        Beyaz Etiket (White-Label Blind Shipping) Güvencesi
+                      </span>
+                      <p className="text-[11px] text-emerald-700 leading-relaxed">
+                        Sipariş geldiğinde paketleme ve sevk sizin tarafınızdan yapılır; ancak kargo etiketine ve kutu üzerine satışı yapan perakendeci esnafın logosu ve dükkan adı basılır. Toptancı kimliği gizli kalır.
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                        Önerilen Perakende Satış Fiyatı (TL):
+                      </label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-2.5 text-xs font-bold text-slate-400">₺</span>
+                        <input
+                          type="number"
+                          min={1}
+                          value={suggestedRetailPrice}
+                          onChange={(e) => setSuggestedRetailPrice(Math.max(1, Number(e.target.value)))}
+                          className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <span className="text-[10px] text-slate-500 mt-1 block">
+                        Perakendeci mağaza ürünü vitrinine çekerken bu fiyatı varsayılan olarak görür ve dilediği kâr marjını uygulayabilir.
+                      </span>
+                    </div>
+
+                    {/* Kâr Marjı Hesaplayıcı */}
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                      <div>
+                        <span className="text-slate-500 block text-[11px]">Toptan Fiyatınız:</span>
+                        <span className="font-bold text-slate-800">₺{b2bWholesalePrice.toLocaleString('tr-TR')}</span>
+                      </div>
+                      <div className="text-slate-300">→</div>
+                      <div>
+                        <span className="text-slate-500 block text-[11px]">Önerilen Perakende:</span>
+                        <span className="font-bold text-slate-800">₺{suggestedRetailPrice.toLocaleString('tr-TR')}</span>
+                      </div>
+                      <div className="text-slate-300">=</div>
+                      <div className="text-right">
+                        <span className="text-slate-500 block text-[11px]">Perakendecinin Kârı:</span>
+                        <span className="font-black text-emerald-600">
+                          ₺{(suggestedRetailPrice - b2bWholesalePrice).toLocaleString('tr-TR')} (%{Math.round(((suggestedRetailPrice - b2bWholesalePrice) / b2bWholesalePrice) * 100)})
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ================= TAB 6: ÖLÇÜ BİRİMİ & DİNAMİK ÖZELLEŞTİRME ================= */}
+          {activeTab === 'customization' && (
+            <div className="space-y-6 animate-fade-in">
+              
+              {/* Bilgilendirme Kutusu */}
+              <div className="bg-indigo-50/70 border border-indigo-200 p-4 rounded-2xl flex items-start gap-3">
+                <Scale className="w-5 h-5 text-indigo-600 shrink-0 mt-0.5" />
+                <div className="space-y-1">
+                  <h3 className="font-black text-indigo-950 text-xs">
+                    Sektörel Dinamik Sipariş Seçenekleri & Ölçü Motoru
+                  </h3>
+                  <p className="text-[11px] text-indigo-900 leading-relaxed">
+                    Manavdan restoran siparişine, fotoğraf baskısından davetiye matbaasına kadar her esnafın ürününü müşteriye göre tam uyumlu hale getirmesini sağlar.
+                  </p>
+                </div>
+              </div>
+
+              {/* 1. ÖLÇÜ BİRİMİ TANIMLAMA */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center gap-2 border-b border-slate-100 pb-2">
+                  <Scale className="w-4 h-4 text-amber-600" />
+                  <h4 className="text-sm font-black text-slate-900">a) Ölçü Birimi Tanımlama</h4>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-slate-700 block">Temel Satış Ölçü Birimi:</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                    {[
+                      { id: 'adet', label: 'Adet', desc: 'Standart perakende' },
+                      { id: 'kg', label: 'Kilogram / Gram', desc: 'Manav, şarküteri, kuruyemiş' },
+                      { id: 'litre', label: 'Litre', desc: 'Süt, zeytinyağı, içecek' },
+                      { id: 'metre', label: 'Metre / m²', desc: 'Kumaş, halı, zemin' },
+                      { id: 'porsiyon', label: 'Porsiyon / Paket', desc: 'Restoran & kafe menüsü' }
+                    ].map((unit) => (
+                      <button
+                        key={unit.id}
+                        type="button"
+                        onClick={() => {
+                          setMeasurementUnit(unit.id as any);
+                          if (unit.id === 'kg') {
+                            setMeasurementMin(0.5);
+                            setMeasurementStep(0.5);
+                            setMeasurementUnitLabel('Kg');
+                          } else if (unit.id === 'adet') {
+                            setMeasurementMin(1);
+                            setMeasurementStep(1);
+                            setMeasurementUnitLabel('Adet');
+                          } else if (unit.id === 'porsiyon') {
+                            setMeasurementMin(1);
+                            setMeasurementStep(1);
+                            setMeasurementUnitLabel('Porsiyon');
+                          }
+                        }}
+                        className={`p-3 rounded-xl border text-left transition cursor-pointer ${
+                          measurementUnit === unit.id 
+                            ? 'bg-amber-50 border-amber-500 text-amber-950 shadow-2xs' 
+                            : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        <span className="font-bold text-xs block">{unit.label}</span>
+                        <span className="text-[10px] text-slate-400 block mt-0.5">{unit.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Tartılı / Kademeli Parametreler */}
+                {measurementUnit !== 'adet' && (
+                  <div className="p-3.5 bg-amber-50/60 rounded-xl border border-amber-200 grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in">
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Minimum Miktar:</label>
+                      <input
+                        type="number"
+                        step={0.1}
+                        min={0.1}
+                        value={measurementMin}
+                        onChange={(e) => setMeasurementMin(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-xs font-bold text-slate-800"
+                        placeholder="Örn: 0.5"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">Örn: 0.5 kg veya 1 porsiyon</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Artış Adımı (+/-):</label>
+                      <input
+                        type="number"
+                        step={0.1}
+                        min={0.1}
+                        value={measurementStep}
+                        onChange={(e) => setMeasurementStep(Number(e.target.value))}
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-xs font-bold text-slate-800"
+                        placeholder="Örn: 0.5"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">Müşteri butonla bu adımda artırır</span>
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-slate-700 block mb-1">Görünecek Etiket:</label>
+                      <input
+                        type="text"
+                        value={measurementUnitLabel}
+                        onChange={(e) => setMeasurementUnitLabel(e.target.value)}
+                        className="w-full p-2 bg-white border border-amber-200 rounded-lg text-xs font-bold text-slate-800"
+                        placeholder="Örn: Kg, Paket, Porsiyon"
+                      />
+                      <span className="text-[10px] text-slate-400 mt-0.5 block">Sepette ve fişte basılır</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. YEMEK & RESTORAN İÇİN MALZEME SEÇİCİ */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <Utensils className="w-4 h-4 text-rose-600" />
+                      b) Yemek & Restoran İçin Malzeme Seçici (Yemeksepeti / Döner Modeli)
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Müşterinin "Soğansız", "Turşusuz" seçimi yapmasını ve "+Ekstra Kaşar", "+Çift Lavaş" eklemesini sağlar.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={foodCustomizationEnabled}
+                      onChange={(e) => setFoodCustomizationEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-rose-600"></div>
+                  </label>
+                </div>
+
+                {foodCustomizationEnabled && (
+                  <div className="pt-4 border-t border-slate-100 space-y-5 animate-fade-in">
+                    
+                    {/* Çıkarılacak Malzemeler */}
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-slate-800 block">
+                        İstemediğiniz Malzemeler Grubu (Çıkarılabilir / Ücretsiz):
+                      </label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {removableIngredients.map((item) => (
+                          <div key={item.id} className="bg-rose-50 border border-rose-200 text-rose-800 px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1.5">
+                            <span>🚫 {item.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setRemovableIngredients(removableIngredients.filter(i => i.id !== item.id))}
+                              className="text-rose-400 hover:text-rose-700 cursor-pointer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newRemovableName}
+                          onChange={(e) => setNewRemovableName(e.target.value)}
+                          placeholder="Yeni çıkarılabilir malzeme (Örn: Mayonez, Domates)..."
+                          className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newRemovableName.trim()) {
+                              setRemovableIngredients([...removableIngredients, { id: `rem-${Date.now()}`, name: newRemovableName.trim(), defaultIncluded: true }]);
+                              setNewRemovableName('');
+                            }
+                          }}
+                          className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-xl text-xs cursor-pointer"
+                        >
+                          Ekle
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Ekstra Malzemeler & Soslar (+Ücret) */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <label className="text-xs font-bold text-slate-800 block">
+                        Ekstra Malzemeler & Soslar (Fiyata Dinamik Eklenir):
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-2">
+                        {extraIngredients.map((extra) => (
+                          <div key={extra.id} className="bg-emerald-50 border border-emerald-200 p-2 rounded-xl flex items-center justify-between text-xs font-bold">
+                            <span className="text-emerald-900">+ {extra.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-emerald-700 font-black">+{extra.price} ₺</span>
+                              <button
+                                type="button"
+                                onClick={() => setExtraIngredients(extraIngredients.filter(e => e.id !== extra.id))}
+                                className="text-emerald-400 hover:text-emerald-700 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newExtraName}
+                          onChange={(e) => setNewExtraName(e.target.value)}
+                          placeholder="Ekstra malzeme adı (Örn: Ekstra Kaşar)..."
+                          className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                        />
+                        <div className="relative w-28">
+                          <span className="absolute left-2.5 top-2 text-xs font-bold text-slate-400">+₺</span>
+                          <input
+                            type="number"
+                            min={1}
+                            value={newExtraPrice}
+                            onChange={(e) => setNewExtraPrice(Number(e.target.value))}
+                            className="w-full pl-8 pr-2 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (newExtraName.trim()) {
+                              setExtraIngredients([...extraIngredients, { id: `ext-${Date.now()}`, name: newExtraName.trim(), price: newExtraPrice }]);
+                              setNewExtraName('');
+                            }
+                          }}
+                          className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs cursor-pointer"
+                        >
+                          Ekstra Ekle
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Zorunlu Tercih Grupları */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
+                      <label className="text-xs font-bold text-slate-800 block">
+                        Zorunlu Seçim Grupları (Acı Tercihi, İçecek vb.):
+                      </label>
+                      <div className="space-y-2">
+                        {mandatoryGroups.map((grp) => (
+                          <div key={grp.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between">
+                            <div>
+                              <span className="font-bold text-slate-800 text-xs">{grp.title}</span>
+                              <span className="text-[10px] text-slate-500 block">
+                                Seçenekler: {grp.options.map(o => o.name).join(', ')}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setMandatoryGroups(mandatoryGroups.filter(g => g.id !== grp.id))}
+                              className="text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 3. FOTOĞRAF BASKI & DOSYA YÜKLEME */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <Upload className="w-4 h-4 text-indigo-600" />
+                      c) Fotoğraf Baskı & Dijital İşler İçin Dosya/Fotoğraf Yükleme Alanı
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Müşterilerin sipariş vermeden önce baskı fotoğraflarını tarayıcıdan sürükleyip yüklemesini sağlar.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={fileUploadEnabled}
+                      onChange={(e) => setFileUploadEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
+                </div>
+
+                {fileUploadEnabled && (
+                  <div className="pt-4 border-t border-slate-100 space-y-4 animate-fade-in">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Müşteriye Gösterilecek Başlık:</label>
+                        <input
+                          type="text"
+                          value={fileUploadTitle}
+                          onChange={(e) => setFileUploadTitle(e.target.value)}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">İzin Verilen Formatlar:</label>
+                        <div className="flex flex-wrap gap-1.5 pt-1">
+                          {['JPG', 'PNG', 'PDF', 'TIFF', 'RAW', 'ZIP'].map((fmt) => (
+                            <span key={fmt} className="px-2 py-0.5 rounded bg-indigo-50 border border-indigo-200 text-indigo-800 text-[10px] font-bold">
+                              .{fmt}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Min. Dosya Sayısı:</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={fileUploadMin}
+                          onChange={(e) => setFileUploadMin(Number(e.target.value))}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Maks. Dosya Sayısı:</label>
+                        <input
+                          type="number"
+                          min={1}
+                          value={fileUploadMax}
+                          onChange={(e) => setFileUploadMax(Number(e.target.value))}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1">Maks. Boyut (MB):</label>
+                        <input
+                          type="number"
+                          min={10}
+                          value={fileUploadMaxSize}
+                          onChange={(e) => setFileUploadMaxSize(Number(e.target.value))}
+                          className="w-full p-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 4. MATBAA, DAVETİYE, LAZER DİNAMİK FORM SİHİRBAZI */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-200 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="text-sm font-black text-slate-900 flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-amber-600" />
+                      d) Matbaa, Davetiye, Lazer & Kişiye Özel Ürün Form Sihirbazı
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Gelin-Damat isimleri, düğün tarihi, ahşap yazı metni gibi müşteri bilgilerini toplar.
+                    </p>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={customFormEnabled}
+                      onChange={(e) => setCustomFormEnabled(e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-hidden rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+                  </label>
+                </div>
+
+                {customFormEnabled && (
+                  <div className="pt-4 border-t border-slate-100 space-y-4 animate-fade-in">
+                    
+                    {/* Hızlı Şablon Butonları */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-bold text-slate-600">Hazır Şablon Yükle:</span>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomFormTitle('Düğün & Nişan Davetiyesi Bilgi Formu');
+                          setCustomFormFields([
+                            { id: 'fld-1', label: 'Gelin & Damat Adı', type: 'text', placeholder: 'Örn: Selin & Ahmet', required: true },
+                            { id: 'fld-2', label: 'Düğün / Kına Tarihi & Saati', type: 'text', placeholder: 'Örn: 15 Ekim 2026 - 19:30', required: true },
+                            { id: 'fld-3', label: 'Düğün Salonu Adı ve Açık Adres', type: 'textarea', placeholder: 'Örn: Beylerbeyi Sarayı Yanı, Üsküdar', required: true },
+                            { id: 'fld-4', label: 'Varsa Özel Davetiye Sözü / Şiir', type: 'textarea', placeholder: 'Örn: Mutluluğumuzu paylaşmaya davetlisiniz...', required: false }
+                          ]);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-bold cursor-pointer"
+                      >
+                        💍 Düğün Davetiyesi Şablonu
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setCustomFormTitle('Ahşap / Lazer Plaka Kazıma Formu');
+                          setCustomFormFields([
+                            { id: 'fld-l1', label: 'Üzerine Yazılacak İsim / Plaka No', type: 'text', placeholder: 'Örn: Mehmet Yılmaz - 34 TPZ 1923', required: true },
+                            { id: 'fld-l2', label: 'Yazı Fontu veya Özel Talimat', type: 'text', placeholder: 'Örn: El yazısı / Kaligrafik', required: false }
+                          ]);
+                        }}
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-[10px] font-bold cursor-pointer"
+                      >
+                        🪵 Ahşap / Lazer Plaka Şablonu
+                      </button>
+                    </div>
+
+                    {/* Alan Listesi */}
+                    <div className="space-y-2">
+                      {customFormFields.map((fld) => (
+                        <div key={fld.id} className="p-3 bg-slate-50 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800">{fld.label}</span>
+                            <span className="text-[10px] bg-white border border-slate-200 px-1.5 py-0.5 rounded text-slate-500 font-mono uppercase">
+                              {fld.type}
+                            </span>
+                            {fld.required && (
+                              <span className="text-[9px] bg-rose-50 text-rose-700 px-1 py-0.2 rounded font-bold">Zorunlu</span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCustomFormFields(customFormFields.filter(f => f.id !== fld.id))}
+                            className="text-rose-400 hover:text-rose-700 cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Yeni Alan Ekleme Satırı */}
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 grid grid-cols-1 sm:grid-cols-4 gap-2 items-center">
+                      <input
+                        type="text"
+                        value={newFieldLabel}
+                        onChange={(e) => setNewFieldLabel(e.target.value)}
+                        placeholder="Alan Başlığı (Örn: Şirket Ünvanı)..."
+                        className="p-2 bg-white border border-slate-200 rounded-lg text-xs"
+                      />
+                      <select
+                        value={newFieldType}
+                        onChange={(e) => setNewFieldType(e.target.value as any)}
+                        className="p-2 bg-white border border-slate-200 rounded-lg text-xs"
+                      >
+                        <option value="text">Kısa Metin</option>
+                        <option value="textarea">Uzun Açıklama (Adres)</option>
+                        <option value="date">Tarih Seçici</option>
+                        <option value="number">Sayısal Veri</option>
+                      </select>
+                      <label className="flex items-center gap-1.5 text-xs text-slate-700 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={newFieldRequired}
+                          onChange={(e) => setNewFieldRequired(e.target.checked)}
+                          className="rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                        />
+                        <span>Zorunlu Alan</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newFieldLabel.trim()) {
+                            setCustomFormFields([
+                              ...customFormFields,
+                              {
+                                id: `fld-${Date.now()}`,
+                                label: newFieldLabel.trim(),
+                                type: newFieldType,
+                                required: newFieldRequired
+                              }
+                            ]);
+                            setNewFieldLabel('');
+                          }
+                        }}
+                        className="py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs cursor-pointer text-center"
+                      >
+                        Alanı Ekle
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          )}
+
         </div>
 
         {/* MODAL FOOTER */}
@@ -1545,6 +2462,8 @@ export default function AdvancedProductModal({
                   if (activeTab === 'pricing') setActiveTab('basic');
                   if (activeTab === 'variants') setActiveTab('pricing');
                   if (activeTab === 'logistics') setActiveTab('variants');
+                  if (activeTab === 'b2b') setActiveTab('logistics');
+                  if (activeTab === 'customization') setActiveTab('b2b');
                 }}
                 className="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 font-bold rounded-xl border border-slate-200 transition cursor-pointer text-xs"
               >
@@ -1552,7 +2471,7 @@ export default function AdvancedProductModal({
               </button>
             )}
 
-            {activeTab !== 'logistics' ? (
+            {activeTab !== 'customization' ? (
               <button
                 type="button"
                 onClick={() => {
@@ -1572,6 +2491,10 @@ export default function AdvancedProductModal({
                     setActiveTab('variants');
                   } else if (activeTab === 'variants') {
                     setActiveTab('logistics');
+                  } else if (activeTab === 'logistics') {
+                    setActiveTab('b2b');
+                  } else if (activeTab === 'b2b') {
+                    setActiveTab('customization');
                   }
                 }}
                 className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-black rounded-xl shadow-xs transition cursor-pointer text-xs flex items-center gap-1.5"
