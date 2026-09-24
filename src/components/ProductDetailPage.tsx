@@ -49,6 +49,9 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
 
   // Dinamik Kurumsal SEO, GEO & Schema.org Enjeksiyonu
   useEffect(() => {
+    // Sayfa açılışında en tepeye kaydır (Scroll to Top)
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+
     if (foundSampleService) {
       applyPageSEO({
         pathname: `/urun/${foundSampleService.slug}`,
@@ -234,6 +237,72 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                   <p className="text-xs text-slate-600 pt-1 leading-relaxed">
                     Bu hizmet doğrudan esnafın kendi kasasına aktarılır. Komisyon kesintisi yoktur. Yerinde keşif ve acil çağrı için hemen iletişime geçebilirsiniz.
                   </p>
+                </div>
+
+                {/* TRENDYOL STİLİ KOMPAKT ESNAF / SATICI KARTI */}
+                <div className="bg-gradient-to-br from-slate-50 via-white to-amber-50/20 border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-11 h-11 rounded-xl bg-[#0F4C3A] text-[#F59E0B] font-black text-lg flex items-center justify-center shadow-xs shrink-0 border border-[#0B3A2C]">
+                        {foundSampleService.store.name.charAt(0)}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-extrabold text-sm md:text-base text-slate-900 truncate">
+                            {foundSampleService.store.name}
+                          </span>
+                          <span className="bg-emerald-600 text-white font-black text-xs px-2 py-0.5 rounded-md flex items-center gap-0.5 shadow-2xs shrink-0">
+                            {foundSampleService.store.rating >= 4.5 ? '9.6' : '9.3'} <Star className="w-3 h-3 fill-white" />
+                          </span>
+                        </div>
+                        <span className="text-[11px] text-slate-500 truncate block mt-0.5">
+                          {foundSampleService.store.district} / {foundSampleService.store.city} · Doğrulanmış Yerel İşletme
+                        </span>
+                      </div>
+                    </div>
+
+                    <a
+                      href={`tel:${foundSampleService.store.phone}`}
+                      className="px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 border bg-white text-slate-700 border-slate-300 hover:border-[#0F4C3A] hover:text-[#0F4C3A]"
+                    >
+                      + İletişim
+                    </a>
+                  </div>
+
+                  {/* Rozetler */}
+                  <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 text-[10px] font-bold">
+                    <span className="bg-amber-50 text-amber-900 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-200 shadow-2xs">
+                      <Zap className="w-3 h-3 text-amber-600 fill-amber-500" /> Hızlı Satıcı / Usta
+                    </span>
+                    <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-200 shadow-2xs">
+                      <Check className="w-3 h-3 text-emerald-600" /> Doğrulanmış Esnaf
+                    </span>
+                    <span className="bg-indigo-50 text-indigo-900 px-2 py-0.5 rounded-md flex items-center gap-1 border border-indigo-200 shadow-2xs">
+                      <Award className="w-3 h-3 text-indigo-600" /> Yerel Zanaatkar
+                    </span>
+                  </div>
+
+                  {/* İletişim & Aksiyon Butonları */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <a
+                      href={`https://wa.me/${foundSampleService.store.whatsapp}?text=Merhaba%2C+${encodeURIComponent(foundSampleService.title)}+hakkında+bilgi+almak+istiyorum.`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 hover:border-[#0F4C3A] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <MessageSquare className="w-3.5 h-3.5 text-[#0F4C3A]" />
+                      <span>Satıcıya Soru Sor</span>
+                    </a>
+
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/dukkan/${foundSampleService.store.slug}`)}
+                      className="py-2.5 px-3 bg-[#0F4C3A] hover:bg-[#0B3A2C] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                    >
+                      <Store className="w-3.5 h-3.5 text-[#F59E0B]" />
+                      <span>MAĞAZAYA GİT →</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -746,6 +815,78 @@ export default function ProductDetailPage({ slug, onBackToMarketplace }: { slug?
                     %0 Komisyonlu Fiyat
                   </span>
                   <span className="text-[10px] text-slate-500 block mt-1">KDV (%{product.vatRate}) Dahil</span>
+                </div>
+              </div>
+
+              {/* TRENDYOL STİLİ KOMPAKT ESNAF / SATICI KARTI */}
+              <div className="bg-gradient-to-br from-slate-50 via-white to-amber-50/20 border border-slate-200 rounded-2xl p-4 shadow-2xs space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-11 h-11 rounded-xl bg-[#0F4C3A] text-[#F59E0B] font-black text-lg flex items-center justify-center shadow-xs shrink-0 border border-[#0B3A2C]">
+                      {product.store.name.charAt(0)}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-extrabold text-sm md:text-base text-slate-900 truncate">
+                          {product.store.name}
+                        </span>
+                        {/* Puan Rozeti: Yeşil zeminli mağaza puanı */}
+                        <span className="bg-emerald-600 text-white font-black text-xs px-2 py-0.5 rounded-md flex items-center gap-0.5 shadow-2xs shrink-0">
+                          {product.store.rating >= 4.5 ? '9.6' : '9.3'} <Star className="w-3 h-3 fill-white" />
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-500 truncate block mt-0.5">
+                        {followerCount.toLocaleString('tr-TR')} Takipçi · {product.store.address.split('(')[0].trim()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Takip Et Butonu */}
+                  <button
+                    type="button"
+                    onClick={toggleFollowStore}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 border ${
+                      isFollowingStore
+                        ? 'bg-[#0F4C3A] text-white border-[#0F4C3A] shadow-xs'
+                        : 'bg-white text-slate-700 border-slate-300 hover:border-[#0F4C3A] hover:text-[#0F4C3A] hover:bg-slate-50'
+                    }`}
+                  >
+                    {isFollowingStore ? 'Takip Ediliyor ✓' : '+ Takip Et'}
+                  </button>
+                </div>
+
+                {/* Rozetler */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-100 text-[10px] font-bold">
+                  <span className="bg-amber-50 text-amber-900 px-2 py-0.5 rounded-md flex items-center gap-1 border border-amber-200 shadow-2xs">
+                    <Zap className="w-3 h-3 text-amber-600 fill-amber-500" /> Hızlı Satıcı
+                  </span>
+                  <span className="bg-emerald-50 text-emerald-800 px-2 py-0.5 rounded-md flex items-center gap-1 border border-emerald-200 shadow-2xs">
+                    <Check className="w-3 h-3 text-emerald-600" /> Doğrulanmış Esnaf
+                  </span>
+                  <span className="bg-indigo-50 text-indigo-900 px-2 py-0.5 rounded-md flex items-center gap-1 border border-indigo-200 shadow-2xs">
+                    <Award className="w-3 h-3 text-indigo-600" /> Yerel Zanaatkar
+                  </span>
+                </div>
+
+                {/* İletişim & Aksiyon Butonları */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => setShowArtisanQuestionModal(true)}
+                    className="py-2.5 px-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 hover:border-[#0F4C3A] rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs"
+                  >
+                    <MessageSquare className="w-3.5 h-3.5 text-[#0F4C3A]" />
+                    <span>Satıcıya Soru Sor</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => navigate(`/dukkan/${product.store.slug}`)}
+                    className="py-2.5 px-3 bg-[#0F4C3A] hover:bg-[#0B3A2C] text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
+                  >
+                    <Store className="w-3.5 h-3.5 text-[#F59E0B]" />
+                    <span>MAĞAZAYA GİT →</span>
+                  </button>
                 </div>
               </div>
 
