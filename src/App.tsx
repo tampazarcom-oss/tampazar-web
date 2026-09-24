@@ -7,8 +7,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { initialTenants, Tenant } from './data/mockData';
 import BrandLogo from './components/BrandLogo';
-import { updatePageSEO } from './utils/seo';
-import { injectJsonLd } from './utils/jsonLd';
+import { applyPageSEO } from './utils/seo';
 import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard, User } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import AuthModal from './components/AuthModal';
@@ -108,46 +107,9 @@ function MainLayout() {
 
   // Dynamic SEO & Schema.org JSON-LD injection on location change
   useEffect(() => {
-    updatePageSEO(location.pathname);
-
-    // Inject appropriate JSON-LD structured data
-    if (location.pathname === '/') {
-      injectJsonLd({
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        "name": "TamPazar",
-        "url": "https://tampazar.com/",
-        "potentialAction": {
-          "@type": "SearchAction",
-          "target": "https://tampazar.com/?q={search_term_string}",
-          "query-input": "required name=search_term_string"
-        }
-      });
-    } else if (location.pathname === '/sehir-avm') {
-      injectJsonLd({
-        "@context": "https://schema.org",
-        "@type": "ShoppingCenter",
-        "name": "Şehrin Açık Dijital AVM'si - TamPazar",
-        "url": "https://tampazar.com/sehir-avm"
-      });
-    } else if (location.pathname.startsWith('/dukkan/')) {
-      injectJsonLd({
-        "@context": "https://schema.org",
-        "@type": "LocalBusiness",
-        "name": "TamPazar Esnaf Mağazası",
-        "url": `https://tampazar.com${location.pathname}`
-      });
-    } else if (location.pathname.startsWith('/urun/')) {
-      injectJsonLd({
-        "@context": "https://schema.org",
-        "@type": "Product",
-        "name": "TamPazar Ürünü",
-        "offers": {
-          "@type": "Offer",
-          "priceCurrency": "TRY",
-          "availability": "https://schema.org/InStock"
-        }
-      });
+    // Only apply fallback SEO if not handled by dedicated detail views
+    if (!location.pathname.startsWith('/urun/') && !location.pathname.startsWith('/dukkan/')) {
+      applyPageSEO({ pathname: location.pathname });
     }
   }, [location.pathname]);
 
@@ -363,6 +325,14 @@ function MainLayout() {
               element={<CustomerAccountPage />} 
             />
             <Route 
+              path="/hesabim/dijital-arsivim" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
+              path="/hesabim/randevularim" 
+              element={<CustomerAccountPage />} 
+            />
+            <Route 
               path="/yonetim" 
               element={
                 <TampazarSellerDashboard 
@@ -405,7 +375,7 @@ function MainLayout() {
 
       {/* Footer */}
       <footer className="border-t border-slate-200 py-8 px-6 bg-white text-center text-xs text-slate-400 space-y-3 mt-auto">
-        <h1 className="sr-only">TamPazar Açık Dijital AVM ve Hibrit Pazaryeri</h1>
+        <p className="sr-only font-bold">TamPazar Açık Dijital AVM ve Hibrit Pazaryeri</p>
         <p className="font-semibold text-slate-600">tampazar.com · Açık Dijital AVM ve Entegre Ticaret İşletim Sistemi</p>
         <p className="max-w-2xl mx-auto text-[11px] text-slate-400 leading-relaxed">
           Fiziksel bir çarşı ve AVM'nin dijital dünyadaki bağımsız karşılığı. Sabit aidat modeli, %0 komisyon, esnafın doğrudan kendi Sanal POS'u ile tahsilat ve GİB UBL-TR 2.1 yerleşik ön muhasebe altyapısı.

@@ -16,6 +16,7 @@ import { useAuth } from '../context/AuthContext';
 import BrandLogo from './BrandLogo';
 import GlobalUserNav from './GlobalUserNav';
 import TamTeklifWizardModal from './TamTeklifWizardModal';
+import { applyPageSEO } from '../utils/seo';
 
 interface MarketplaceHomeProps {
   onNavigateToStore?: (storeId: string) => void;
@@ -79,6 +80,15 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       setFavorites([...favorites, productId]);
     }
   };
+
+  // SEO & Schema.org Enjeksiyonu
+  useEffect(() => {
+    applyPageSEO({
+      pathname: '/',
+      title: 'TamPazar | Komisyonsuz Hibrit Pazaryeri, Açık Dijital AVM & Ön Muhasebe',
+      description: 'Aracı komisyonu yok, doğrudan esnaf fiyatı var! Perakende, toptan B2B, TamDijital dosya indirme, TamSeans canlı randevu ve yerel esnaf tek platformda.'
+    });
+  }, []);
 
   // Body scroll lock when cart drawer or product modal is open
   useEffect(() => {
@@ -529,7 +539,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
                   <div className="relative h-56 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={product.image} 
-                      alt={product.title} 
+                      alt={`${product.title} - TamPazar`} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';
@@ -688,7 +698,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
                     <div className="relative h-60 w-full bg-slate-100 overflow-hidden">
                       <img 
                         src={product.image} 
-                        alt={product.title} 
+                        alt={`${product.title} - TamPazar`} 
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=600&auto=format&fit=crop&q=80';

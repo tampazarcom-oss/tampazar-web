@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, Phone, MessageCircle, Globe, Instagram, 
   CreditCard, ShieldCheck, Clock, Share2, Building2, 
   ShoppingBag, CheckCircle, ExternalLink, Navigation
 } from 'lucide-react';
+import { applyPageSEO } from '../utils/seo';
 
 // Tip Tanımları
 export interface ProductItem {
@@ -122,26 +123,48 @@ export default function StoreFrontPage({ store = STORE_MOCK }: { store?: StoreDa
     priceRange: '₺₺',
   };
 
+  const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    applyPageSEO({
+      pathname: `/magaza/${store.slug}`,
+      store: {
+        name: store.name,
+        slug: store.slug,
+        legalTitle: store.legalTitle,
+        slogan: store.slogan,
+        about: store.about,
+        avatarUrl: store.avatarUrl,
+        bannerUrl: store.bannerUrl,
+        phone: store.phone,
+        whatsapp: store.whatsapp,
+        websiteUrl: store.websiteUrl,
+        city: store.city,
+        district: store.district,
+        fullAddress: store.fullAddress,
+        googleMapsUrl: store.googleMapsUrl,
+        workingHours: store.workingHours,
+        taxOffice: store.taxOffice,
+        taxNumber: store.taxNumber
+      }
+    });
+  }, [store]);
+
   const handleShare = () => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(window.location.href);
-      alert('Dükkân bağlantısı panoya kopyalandı!');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
-      {/* Schema.org Entegrasyonu */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJsonLd) }}
-      />
-
       {/* 1. DÜKKÂN VİTRİN BANNERI */}
       <div className="relative h-64 md:h-80 w-full bg-slate-900 overflow-hidden">
         <img
           src={store.bannerUrl}
-          alt={store.name}
+          alt={`${store.name} - TamPazar`}
           className="w-full h-full object-cover opacity-75"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
@@ -150,7 +173,7 @@ export default function StoreFrontPage({ store = STORE_MOCK }: { store?: StoreDa
             onClick={handleShare}
             className="bg-white/90 backdrop-blur-md hover:bg-white text-slate-800 text-xs font-bold px-3 py-2 rounded-xl shadow-md flex items-center gap-1.5 transition cursor-pointer"
           >
-            <Share2 className="w-4 h-4 text-indigo-900" /> Dükkânı Paylaş
+            <Share2 className="w-4 h-4 text-indigo-900" /> {copied ? 'Kopyalandı!' : 'Dükkânı Paylaş'}
           </button>
         </div>
       </div>
@@ -163,7 +186,7 @@ export default function StoreFrontPage({ store = STORE_MOCK }: { store?: StoreDa
               <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-md bg-white shrink-0">
                 <img
                   src={store.avatarUrl}
-                  alt={store.name}
+                  alt={`${store.name} - TamPazar`}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -308,7 +331,7 @@ export default function StoreFrontPage({ store = STORE_MOCK }: { store?: StoreDa
                   <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={item.image} 
-                      alt={item.title} 
+                      alt={`${item.title} - TamPazar`} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                     />
                     <span className="absolute top-3 left-3 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-slate-950/80 text-white backdrop-blur-xs">

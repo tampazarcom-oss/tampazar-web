@@ -237,13 +237,16 @@ export const initialCashflowTransactions: CashflowTransaction[] = [
 ];
 
 // ==========================================
-// 3. ÜÇLÜ HİBRİT TİCARET SİPARİŞ MODELİ
+// ==========================================
+// 3. BEŞLİ HİBRİT TİCARET SİPARİŞ MODELİ
 // ==========================================
 
 export type HybridDeliveryType = 
-  | 'CARGO'           // 1. TamKargo (Ulusal E-Ticaret & Kargo Gönderimi)
-  | 'LOCAL_EXPRESS'   // 2. TamHızlı (30-45 Dk Anlık Yerel Teslimat)
-  | 'FIELD_SERVICE';  // 3. TamUsta (Yerel Hizmet & Saha Servisi)
+  | 'CARGO'             // 1. TamKargo (Ulusal E-Ticaret & Kargo Gönderimi)
+  | 'LOCAL_EXPRESS'     // 2. TamHızlı (30-45 Dk Anlık Yerel Teslimat & Masaüstü Zil)
+  | 'FIELD_SERVICE'     // 3. TamUsta (Yerel Hizmet & Saha Servisi)
+  | 'DIGITAL_DOWNLOAD'  // 4. TamDijital (Etsy & Gumroad Modeli Anında Dosya İndirme)
+  | 'ONLINE_SESSION';   // 5. TamSeans (Superpeer & Calendly Modeli Canlı Randevu)
 
 export interface HybridOrder {
   id: string;
@@ -280,7 +283,11 @@ export interface HybridOrder {
     // Local Express:
     | 'RINGING' | 'ACCEPTED' | 'KITCHEN_PREPARING' | 'COURIER_ON_WAY'
     // Field Service:
-    | 'DISPATCH_WAITING' | 'EN_ROUTE' | 'ON_SITE' | 'COMPLETED';
+    | 'DISPATCH_WAITING' | 'EN_ROUTE' | 'ON_SITE' | 'COMPLETED'
+    // Digital Download:
+    | 'DOWNLOAD_READY'
+    // Online Session:
+    | 'SCHEDULED' | 'IN_PROGRESS';
 
   // CARGO specifics
   cargoDetails?: {
@@ -310,6 +317,27 @@ export interface HybridOrder {
     quotationAmount?: number;
     isEmergency: boolean;
     vehiclePlate?: string;
+  };
+
+  // DIGITAL DOWNLOAD specifics
+  digitalDetails?: {
+    fileUrl: string;
+    fileName: string;
+    fileSize: string;
+    formatTags: string[];
+    licenseType: 'personal' | 'commercial';
+    downloadCount: number;
+  };
+
+  // ONLINE SESSION specifics
+  sessionDetails?: {
+    scheduledDate: string;
+    timeSlot: string;
+    durationMin: number;
+    channel: 'google_meet' | 'zoom' | 'whatsapp_phone';
+    meetingLink: string;
+    expertTitle?: string;
+    notes?: string;
   };
 
   invoiceNumber?: string;
@@ -563,6 +591,83 @@ export const initialHybridOrders: HybridOrder[] = [
     },
     invoiceNumber: 'GIB2026000000889',
     createdAt: '2026-09-22 18:30'
+  },
+
+  // 4. DİJİTAL DOSYA İNDİRME SİPARİŞİ (TamDijital)
+  {
+    id: 'ord-dig-401',
+    orderNumber: 'TPZ-DIG-2026-9041',
+    deliveryType: 'DIGITAL_DOWNLOAD',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat',
+    customerName: 'Gülşen Tekstil',
+    customerPhone: '+90 532 999 11 22',
+    customerEmail: 'gulsen@tekstil.com',
+    customerAddress: 'Dijital Teslimat (E-Posta & Anında İndirme)',
+    city: 'Bursa',
+    district: 'Yıldırım',
+    items: [
+      {
+        productId: 'dig-prod-101',
+        title: 'Geleneksel Maraş İşi Çiçekli Nakış Deseni Paketi',
+        price: 380,
+        qty: 1,
+        sku: 'DIG-NKS-01'
+      }
+    ],
+    totalAmount: 380,
+    paymentMethod: 'PAYTR_POS',
+    paymentStatus: 'PAID',
+    status: 'DOWNLOAD_READY',
+    digitalDetails: {
+      fileUrl: '#download-maras-nakis-v2',
+      fileName: 'Maras_Isi_Nakis_Paketi_v2.1.zip',
+      fileSize: '14.8 MB',
+      formatTags: ['DST', 'PES', 'JEF', 'EXP', 'PDF Kılavuz'],
+      licenseType: 'commercial',
+      downloadCount: 3
+    },
+    invoiceNumber: 'GIB2026000000910',
+    createdAt: '2026-09-24 10:15'
+  },
+
+  // 5. UZAKTAN CANLI SEANS SİPARİŞİ (TamSeans)
+  {
+    id: 'ord-sns-501',
+    orderNumber: 'TPZ-SNS-2026-4011',
+    deliveryType: 'ONLINE_SESSION',
+    tenantId: 's3',
+    storeName: 'FotoSentez Stüdyo & Danışmanlık',
+    customerName: 'Alperen Yılmaz',
+    customerPhone: '+90 532 999 88 77',
+    customerEmail: 'alperen@gmail.com',
+    customerAddress: 'Online Video Görüşmesi (Google Meet)',
+    city: 'İstanbul',
+    district: 'Kadıköy',
+    items: [
+      {
+        productId: 'sns-prod-201',
+        title: 'Bireysel Kariyer & E-Ticaret İşletme Danışmanlığı (45 Dk)',
+        price: 1250,
+        qty: 1,
+        sku: 'SNS-DAN-01'
+      }
+    ],
+    totalAmount: 1250,
+    paymentMethod: 'PAYTR_POS',
+    paymentStatus: 'PAID',
+    status: 'SCHEDULED',
+    sessionDetails: {
+      scheduledDate: 'Bugün (24 Eylül 2026)',
+      timeSlot: '15:00 - 15:45',
+      durationMin: 45,
+      channel: 'google_meet',
+      meetingLink: 'https://meet.google.com/tpz-danisman-alperen',
+      expertTitle: 'Kıdemli E-Ticaret Danışmanı',
+      notes: 'Yeni e-ticaret markası ürün lansmanı ve TamPazar mağaza kurulumu stratejisi.'
+    },
+    invoiceNumber: 'GIB2026000000911',
+    createdAt: '2026-09-24 09:30'
   }
 ];
 

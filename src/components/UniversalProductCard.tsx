@@ -7,10 +7,10 @@ import React, { useState } from 'react';
 import { 
   ShoppingBag, Calendar, Phone, MessageCircle, 
   MapPin, Clock, ShieldCheck, Layers, AlertCircle, 
-  Check, Star, ArrowUpRight, Zap
+  Check, Star, ArrowUpRight, Zap, Download, Video
 } from 'lucide-react';
 
-export type SectorType = 'RETAIL' | 'WHOLESALE' | 'SERVICE' | 'FOOD' | 'EMERGENCY';
+export type SectorType = 'RETAIL' | 'WHOLESALE' | 'SERVICE' | 'FOOD' | 'EMERGENCY' | 'DIGITAL' | 'CONSULTATION';
 
 export interface TierPrice {
   minQty: number;
@@ -27,6 +27,9 @@ export interface UniversalCardData {
   price: number;
   vatRate: number; // KDV %
   currency?: string;
+  deliveryType?: 'national_cargo' | 'instant_courier' | 'service_call' | 'digital_download' | 'online_session';
+  digitalFormats?: string[];
+  sessionDurationMin?: number;
   
   // Mağaza / Esnaf Bilgileri
   store: {
@@ -104,13 +107,23 @@ export default function UniversalProductCard({
         <div className="relative h-52 w-full bg-slate-100 overflow-hidden">
           <img
             src={data.image}
-            alt={data.title}
+            alt={`${data.title} - TamPazar`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-60" />
 
           {/* Sektöre Özel Sol Üst Rozet */}
           <div className="absolute top-3 left-3 flex flex-col gap-1 z-10">
+            {(data.sector === 'DIGITAL' || data.deliveryType === 'digital_download') && (
+              <span className="bg-purple-700 text-white font-black text-[10px] uppercase px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+                <Download className="w-3 h-3" /> Anında Dijital İndirme
+              </span>
+            )}
+            {(data.sector === 'CONSULTATION' || data.deliveryType === 'online_session') && (
+              <span className="bg-cyan-600 text-white font-black text-[10px] uppercase px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
+                <Video className="w-3 h-3" /> Uzaktan Canlı Seans
+              </span>
+            )}
             {data.sector === 'WHOLESALE' && (
               <span className="bg-amber-500 text-slate-950 font-black text-[10px] uppercase px-2.5 py-1 rounded-full shadow-md flex items-center gap-1">
                 <Layers className="w-3 h-3" /> Toptan (B2B)
@@ -350,7 +363,51 @@ export default function UniversalProductCard({
             </div>
           )}
 
-          {/* D. Perakende & Toptan Klasik Satış */}
+          {/* D. Dijital İndirilebilir Dosya Satışı (TamDijital) */}
+          {(data.sector === 'DIGITAL' || data.deliveryType === 'digital_download') && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => onNavigateToProduct?.(data.slug)}
+                className="flex-1 py-3 px-3 rounded-2xl bg-purple-700 hover:bg-purple-800 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Download className="w-4 h-4 text-purple-200" />
+                <span>Anında İndir & Al</span>
+              </button>
+              <a
+                href={`https://wa.me/${data.store.whatsapp}?text=${encodeURIComponent(getWhatsAppMessage())}`}
+                target="_blank"
+                rel="noreferrer"
+                className="py-3 px-3 rounded-2xl bg-purple-50 hover:bg-purple-100 text-purple-800 border border-purple-200 text-xs font-bold transition flex items-center justify-center"
+                title="Formatlar Hakkında Sor"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+
+          {/* E. Uzaktan Canlı Seans (TamSeans) */}
+          {(data.sector === 'CONSULTATION' || data.deliveryType === 'online_session') && (
+            <div className="flex gap-2">
+              <button
+                onClick={() => onNavigateToProduct?.(data.slug)}
+                className="flex-1 py-3 px-3 rounded-2xl bg-cyan-700 hover:bg-cyan-800 text-white font-extrabold text-xs shadow-sm transition flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <Video className="w-4 h-4 text-cyan-200" />
+                <span>Tarih & Saat Seç</span>
+              </button>
+              <a
+                href={`https://wa.me/${data.store.whatsapp}?text=${encodeURIComponent(getWhatsAppMessage())}`}
+                target="_blank"
+                rel="noreferrer"
+                className="py-3 px-3 rounded-2xl bg-cyan-50 hover:bg-cyan-100 text-cyan-800 border border-cyan-200 text-xs font-bold transition flex items-center justify-center"
+                title="Uzmana Soru Sor"
+              >
+                <MessageCircle className="w-4 h-4" />
+              </a>
+            </div>
+          )}
+
+          {/* F. Perakende & Toptan Klasik Satış */}
           {(data.sector === 'RETAIL' || data.sector === 'WHOLESALE') && (
             <div className="flex gap-2">
               <button

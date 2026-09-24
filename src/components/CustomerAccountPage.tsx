@@ -7,12 +7,21 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Calendar, Heart, MapPin, Package, Clock, 
   CheckCircle2, Truck, FileText, Phone, MessageCircle, 
-  Trash2, Plus, ArrowRight, User, AlertCircle, Sparkles, ExternalLink, ChevronRight, X
+  Trash2, Plus, ArrowRight, User, AlertCircle, Sparkles, ExternalLink, ChevronRight, X,
+  Download, Video, HardDrive, FileCode, ShieldCheck, Award, Copy, Check, MessageSquare
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate, useLocation, useParams } from 'react-router-dom';
 import CustomerQuotationsTab from './CustomerQuotationsTab';
 import { getStoredQuotationRequests } from '../data/quotationRequestData';
+import { 
+  getStoredDigitalPurchases, 
+  incrementDigitalDownload, 
+  triggerBrowserDownload, 
+  DigitalPurchaseRecord,
+  getStoredOnlineAppointments,
+  OnlineAppointmentRecord 
+} from '../data/digitalAndSessionData';
 
 interface CustomerOrder {
   id: string;
@@ -58,18 +67,45 @@ export default function CustomerAccountPage() {
   const searchParams = new URLSearchParams(location.search);
   const initialTabFromQuery = searchParams.get('tab');
 
-  const [activeTab, setActiveTab] = useState<'orders' | 'services' | 'quotes' | 'favorites' | 'addresses'>(() => {
+  const [activeTab, setActiveTab] = useState<'orders' | 'services' | 'quotes' | 'digital' | 'appointments' | 'favorites' | 'addresses'>(() => {
     if (initialTabFromQuery === 'quotes' || location.pathname.includes('/taleplerim')) return 'quotes';
+    if (initialTabFromQuery === 'digital' || location.pathname.includes('/dijital-arsivim')) return 'digital';
+    if (initialTabFromQuery === 'appointments' || location.pathname.includes('/randevularim')) return 'appointments';
     return 'orders';
   });
 
   const [quotationRequests, setQuotationRequests] = useState(() => getStoredQuotationRequests());
+  const [digitalPurchases, setDigitalPurchases] = useState<DigitalPurchaseRecord[]>(() => getStoredDigitalPurchases());
+  const [onlineAppointments, setOnlineAppointments] = useState<OnlineAppointmentRecord[]>(() => getStoredOnlineAppointments());
+  const [downloadSuccessToast, setDownloadSuccessToast] = useState('');
 
   useEffect(() => {
     if (initialTabFromQuery === 'quotes' || location.pathname.includes('/taleplerim')) {
       setActiveTab('quotes');
+    } else if (initialTabFromQuery === 'digital' || location.pathname.includes('/dijital-arsivim')) {
+      setActiveTab('digital');
+    } else if (initialTabFromQuery === 'appointments' || location.pathname.includes('/randevularim')) {
+      setActiveTab('appointments');
     }
   }, [initialTabFromQuery, location.pathname]);
+
+  useEffect(() => {
+    const handleDigital = () => setDigitalPurchases(getStoredDigitalPurchases());
+    const handleAppointments = () => setOnlineAppointments(getStoredOnlineAppointments());
+    window.addEventListener('tampazar_digital_updated', handleDigital);
+    window.addEventListener('tampazar_appointments_updated', handleAppointments);
+    return () => {
+      window.removeEventListener('tampazar_digital_updated', handleDigital);
+      window.removeEventListener('tampazar_appointments_updated', handleAppointments);
+    };
+  }, []);
+
+  const handleDownloadFile = (item: DigitalPurchaseRecord) => {
+    incrementDigitalDownload(item.id);
+    triggerBrowserDownload(item.fileName, item.productTitle);
+    setDownloadSuccessToast(`"${item.productTitle}" dosyası başarıyla indirildi. Lisansınız onaylandı.`);
+    setTimeout(() => setDownloadSuccessToast(''), 4500);
+  };
 
   // Load orders from local storage or mock
   const [orders, setOrders] = useState<CustomerOrder[]>([
@@ -274,31 +310,54 @@ export default function CustomerAccountPage() {
         </div>
 
         {/* Hızlı İstatistikler */}
-        <div className="flex items-center gap-4 text-center divide-x divide-slate-100 bg-slate-50 p-3 rounded-2xl border border-slate-100">
-          <div className="px-3">
+        <div className="flex items-center gap-3 sm:gap-4 text-center divide-x divide-slate-100 bg-slate-50 p-3 rounded-2xl border border-slate-100 overflow-x-auto">
+          <div className="px-2.5">
             <span className="text-lg font-black text-slate-900 font-mono block">{orders.length}</span>
             <span className="text-[10px] font-bold text-slate-400">Sipariş</span>
           </div>
-          <div className="px-3">
-            <span className="text-lg font-black text-indigo-900 font-mono block">{serviceBookings.length}</span>
-            <span className="text-[10px] font-bold text-slate-400">Hizmet / Çağrı</span>
+          <div className="px-2.5">
+            <span className="text-lg font-black text-purple-700 font-mono block">{digitalPurchases.length}</span>
+            <span className="text-[10px] font-bold text-purple-600">Dijital Dosya</span>
           </div>
-          <div className="px-3">
+          <div className="px-2.5">
+            <span className="text-lg font-black text-cyan-700 font-mono block">{onlineAppointments.length}</span>
+            <span className="text-[10px] font-bold text-cyan-600">Canlı Seans</span>
+          </div>
+          <div className="px-2.5">
             <span className="text-lg font-black text-amber-600 font-mono block">{quotationRequests.length}</span>
             <span className="text-[10px] font-bold text-slate-400">TamTeklif</span>
           </div>
-          <div className="px-3">
-            <span className="text-lg font-black text-rose-600 font-mono block">{favorites.length}</span>
-            <span className="text-[10px] font-bold text-slate-400">Favori</span>
+          <div className="px-2.5">
+            <span className="text-lg font-black text-indigo-900 font-mono block">{serviceBookings.length}</span>
+            <span className="text-[10px] font-bold text-slate-400">Usta Çağrı</span>
           </div>
         </div>
       </div>
 
+      {/* SUCCESS TOAST */}
+      {downloadSuccessToast && (
+        <div className="p-4 bg-emerald-600 text-white rounded-2xl shadow-lg flex items-center justify-between animate-fade-in">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" />
+            <span className="font-bold text-sm">{downloadSuccessToast}</span>
+          </div>
+          <button 
+            onClick={() => setDownloadSuccessToast('')}
+            className="text-white/80 hover:text-white text-xs font-bold px-2 py-1"
+          >
+            Kapat
+          </button>
+        </div>
+      )}
+
       {/* 2. SEKME MENÜSÜ */}
       <div className="flex bg-white p-1 rounded-2xl border border-slate-200 gap-1 text-xs font-bold text-slate-600 shadow-xs overflow-x-auto">
         <button
-          onClick={() => setActiveTab('orders')}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+          onClick={() => {
+            setActiveTab('orders');
+            navigate('/hesabim');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
             activeTab === 'orders' ? 'bg-indigo-900 text-white shadow-xs' : 'hover:bg-slate-50'
           }`}
         >
@@ -306,9 +365,50 @@ export default function CustomerAccountPage() {
           <span>Siparişlerim ({orders.length})</span>
         </button>
 
+        {/* DİJİTAL ARŞİVİM SEKME BUTONU */}
         <button
-          onClick={() => setActiveTab('quotes')}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+          onClick={() => {
+            setActiveTab('digital');
+            navigate('/hesabim/dijital-arsivim');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+            activeTab === 'digital' 
+              ? 'bg-purple-700 text-white shadow-xs font-black' 
+              : 'hover:bg-purple-50 text-purple-900'
+          }`}
+        >
+          <Download className="w-4 h-4 text-purple-400" />
+          <span>Dijital Arşivim ({digitalPurchases.length})</span>
+          <span className="bg-purple-100 text-purple-800 font-bold text-[9px] px-1.5 py-0.5 rounded-full">
+            TamDijital
+          </span>
+        </button>
+
+        {/* CANLI RANDEVULARIM SEKME BUTONU */}
+        <button
+          onClick={() => {
+            setActiveTab('appointments');
+            navigate('/hesabim/randevularim');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+            activeTab === 'appointments' 
+              ? 'bg-cyan-700 text-white shadow-xs font-black' 
+              : 'hover:bg-cyan-50 text-cyan-900'
+          }`}
+        >
+          <Video className="w-4 h-4 text-cyan-400" />
+          <span>Online Seanslarım ({onlineAppointments.length})</span>
+          <span className="bg-cyan-100 text-cyan-800 font-bold text-[9px] px-1.5 py-0.5 rounded-full">
+            TamSeans
+          </span>
+        </button>
+
+        <button
+          onClick={() => {
+            setActiveTab('quotes');
+            navigate('/hesabim/taleplerim');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
             activeTab === 'quotes' ? 'bg-indigo-900 text-white shadow-xs' : 'hover:bg-slate-50 text-slate-700'
           }`}
         >
@@ -320,18 +420,24 @@ export default function CustomerAccountPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('services')}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+          onClick={() => {
+            setActiveTab('services');
+            navigate('/hesabim?tab=services');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
             activeTab === 'services' ? 'bg-indigo-900 text-white shadow-xs' : 'hover:bg-slate-50'
           }`}
         >
           <Calendar className="w-4 h-4" />
-          <span>Randevularım & Usta Çağrılarım ({serviceBookings.length})</span>
+          <span>Saha Randevularım ({serviceBookings.length})</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('favorites')}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+          onClick={() => {
+            setActiveTab('favorites');
+            navigate('/hesabim?tab=favorites');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
             activeTab === 'favorites' ? 'bg-indigo-900 text-white shadow-xs' : 'hover:bg-slate-50'
           }`}
         >
@@ -340,8 +446,11 @@ export default function CustomerAccountPage() {
         </button>
 
         <button
-          onClick={() => setActiveTab('addresses')}
-          className={`flex items-center gap-2 px-5 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
+          onClick={() => {
+            setActiveTab('addresses');
+            navigate('/hesabim?tab=addresses');
+          }}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl transition cursor-pointer whitespace-nowrap ${
             activeTab === 'addresses' ? 'bg-indigo-900 text-white shadow-xs' : 'hover:bg-slate-50'
           }`}
         >
@@ -493,6 +602,271 @@ export default function CustomerAccountPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* TAB: DİJİTAL ARŞİVİM (TAM-DİJİTAL ETSY/GUMROAD DOSYA İNDİRME) */}
+      {activeTab === 'digital' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-gradient-to-r from-purple-900 to-indigo-900 rounded-3xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200 text-xs font-bold border border-purple-400/30">
+                <Download className="w-3.5 h-3.5" />
+                <span>TamDijital • Lisanslı Dosya Kütüphanesi</span>
+              </div>
+              <h3 className="text-xl font-black">Satın Alınan İndirilebilir Dosyalarım</h3>
+              <p className="text-xs text-purple-200/90 max-w-xl">
+                Nakış desenleri, CNC lazer kesim şablonları, 3D baskı modelleri ve kılavuzlarınız hesabınızda ömür boyu saklanır. İstediğiniz an sınırsızca indirebilirsiniz.
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-2xl font-black font-mono">{digitalPurchases.length}</span>
+              <span className="text-xs text-purple-200 block">Kayıtlı Dijital Paket</span>
+            </div>
+          </div>
+
+          {digitalPurchases.length === 0 ? (
+            <div className="py-16 text-center bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-xs">
+              <FileCode className="w-12 h-12 text-purple-400 mx-auto" />
+              <h4 className="text-base font-black text-slate-900">Henüz Dijital Dosya Satın Almadınız</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Pazaryerimizdeki nakış, lazer kesim ve 3D tasarımcılarından anında indirilebilir ürünleri inceleyin.
+              </p>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+              >
+                <span>Dijital Tasarımları Keşfet</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {digitalPurchases.map((item) => (
+                <div 
+                  key={item.id} 
+                  className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs hover:border-purple-300 hover:shadow-md transition flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3">
+                    {/* Header */}
+                    <div className="flex items-start gap-4">
+                      <img 
+                        src={item.productImage} 
+                        alt={item.productTitle} 
+                        className="w-20 h-20 rounded-2xl object-cover border border-slate-100 shrink-0" 
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded uppercase">
+                            {item.storeName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 font-mono">
+                            {item.orderId}
+                          </span>
+                        </div>
+                        <h4 className="font-black text-slate-900 text-sm mt-1 line-clamp-2 leading-snug">
+                          {item.productTitle}
+                        </h4>
+                        <div className="text-[11px] text-slate-400 mt-1">
+                          Satın Alma: {item.purchasedAt}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Dosya ve Lisans Ayrıntıları */}
+                    <div className="bg-slate-50 p-3.5 rounded-2xl border border-slate-200 space-y-2 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="font-bold text-slate-800 font-mono truncate text-[11px]">
+                          📁 {item.fileName}
+                        </span>
+                        <span className="text-[10px] bg-slate-200 text-slate-700 font-bold px-1.5 py-0.5 rounded shrink-0">
+                          {item.fileSize}
+                        </span>
+                      </div>
+
+                      {/* Format Etiketleri */}
+                      <div className="flex flex-wrap gap-1">
+                        {item.formatTags.map((tag) => (
+                          <span key={tag} className="px-1.5 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-bold font-mono rounded">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Lisans Türü & Sayaç */}
+                      <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-[11px]">
+                        <span className="flex items-center gap-1 font-bold text-purple-900">
+                          <ShieldCheck className="w-3.5 h-3.5 text-purple-600" />
+                          {item.licenseType === 'commercial' ? 'Ticari Üretime Uygun' : 'Kişisel Kullanım'}
+                        </span>
+                        <span className="text-emerald-700 font-black font-mono">
+                          {item.downloadCount} kez indirildi
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* PROMINENT GREEN DOWNLOAD BUTTON */}
+                  <div className="space-y-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadFile(item)}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer active:scale-98"
+                    >
+                      <Download className="w-4 h-4" />
+                      <span>Dosyayı Hemen İndir ({item.formatTags[0] || 'ZIP'})</span>
+                    </button>
+                    
+                    <p className="text-[10px] text-center text-slate-400">
+                      Sınırsız yeniden indirme garantisi • Hash: {item.checksum?.slice(0, 16) || 'SHA256: 9e88...'}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* TAB: ONLINE SEANSLARIM (TAM-SEANS SUPERPEER CANLI GÖRÜŞME) */}
+      {activeTab === 'appointments' && (
+        <div className="space-y-6 animate-fade-in">
+          <div className="bg-gradient-to-r from-cyan-900 via-teal-900 to-slate-900 rounded-3xl p-6 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-lg">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/30 text-cyan-200 text-xs font-bold border border-cyan-400/30">
+                <Video className="w-3.5 h-3.5" />
+                <span>TamSeans • Canlı Uzman Görüşmeleri</span>
+              </div>
+              <h3 className="text-xl font-black">Online Seanslarım & Randevularım</h3>
+              <p className="text-xs text-cyan-200/90 max-w-xl">
+                Psikolog, eğitmen ve danışman randevularınızın bağlantıları burada yer alır. Randevu saatinizde yeşil butona basarak doğrudan Google Meet odasına katılabilirsiniz.
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <span className="text-2xl font-black font-mono">{onlineAppointments.length}</span>
+              <span className="text-xs text-cyan-200 block">Kayıtlı Seans</span>
+            </div>
+          </div>
+
+          {onlineAppointments.length === 0 ? (
+            <div className="py-16 text-center bg-white rounded-3xl border border-slate-200 p-8 space-y-4 shadow-xs">
+              <Video className="w-12 h-12 text-cyan-400 mx-auto" />
+              <h4 className="text-base font-black text-slate-900">Henüz Online Seans Randevunuz Yok</h4>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                Birebir uzman danışmanlığı, kariyer koçluğu ve özel ders seanslarını inceleyerek dilediğiniz saati rezerve edin.
+              </p>
+              <Link
+                to="/"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-xl shadow-xs transition"
+              >
+                <span>Uzmanları Keşfet</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {onlineAppointments.map((apt) => {
+                const isCompleted = apt.status === 'completed';
+
+                return (
+                  <div 
+                    key={apt.id} 
+                    className={`bg-white rounded-3xl border p-5 shadow-xs transition flex flex-col justify-between space-y-4 ${
+                      isCompleted 
+                        ? 'border-slate-200 opacity-80' 
+                        : 'border-cyan-200 ring-2 ring-cyan-500/10 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="space-y-3">
+                      {/* Üst Satır */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 bg-cyan-600 text-white font-black text-xs rounded-xl flex items-center gap-1.5 shadow-xs">
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>{apt.timeSlot}</span>
+                          </span>
+                          <span className="text-xs font-bold text-slate-700">{apt.date}</span>
+                        </div>
+
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                          isCompleted ? 'bg-slate-100 text-slate-600' : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {isCompleted ? 'Tamamlandı' : 'Görüşme Hazır'}
+                        </span>
+                      </div>
+
+                      {/* Başlık ve Mağaza */}
+                      <div className="flex items-start gap-3">
+                        <img 
+                          src={apt.serviceImage} 
+                          alt={apt.serviceTitle} 
+                          className="w-16 h-16 rounded-2xl object-cover border border-slate-100 shrink-0" 
+                        />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-[10px] font-bold text-cyan-800 bg-cyan-50 px-2 py-0.5 rounded">
+                            {apt.storeName}
+                          </span>
+                          <h4 className="font-black text-slate-900 text-sm mt-1 line-clamp-2 leading-snug">
+                            {apt.serviceTitle}
+                          </h4>
+                          <div className="text-[11px] text-slate-500 mt-1">
+                            Süre: {apt.durationMin} Dakika • Kanal: {apt.channel === 'google_meet' ? 'Google Meet (HD)' : apt.channel === 'zoom' ? 'Zoom' : 'Telefon'}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bilgilendirme Notu */}
+                      {apt.notes && (
+                        <div className="p-3 bg-slate-50 rounded-xl text-[11px] text-slate-600 border border-slate-100 italic">
+                          "{apt.notes}"
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ACTIONS */}
+                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                      {/* PROMINENT GOOGLE MEET BUTTON */}
+                      <a
+                        href={apt.meetingLink}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-2xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
+                      >
+                        <Video className="w-4 h-4" />
+                        <span>Google Meet'e Katıl (Canlı Görüşme)</span>
+                        <ExternalLink className="w-3.5 h-3.5 opacity-80" />
+                      </a>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard.writeText(apt.meetingLink);
+                            setDownloadSuccessToast('Toplantı bağlantısı panoya kopyalandı.');
+                            setTimeout(() => setDownloadSuccessToast(''), 3000);
+                          }}
+                          className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>Linki Kopyala</span>
+                        </button>
+
+                        <a
+                          href={`https://wa.me/${apt.customerPhone.replace(/[^0-9]/g, '')}?text=Merhaba,%20${encodeURIComponent(apt.serviceTitle)}%20seansımız%20hakkında%20yazıyorum.`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="flex-1 py-2 bg-slate-100 hover:bg-emerald-50 hover:text-emerald-700 text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
+                        >
+                          <MessageSquare className="w-3.5 h-3.5" />
+                          <span>Uzmana Yaz</span>
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

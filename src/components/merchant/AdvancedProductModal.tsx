@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   X, Check, AlertCircle, Sparkles, Plus, Trash2, 
   Upload, Image as ImageIcon, DollarSign, Package, 
-  Truck, ShieldCheck, Tag, Info, Layers, RefreshCw, Star
+  Truck, ShieldCheck, Tag, Info, Layers, RefreshCw, Star,
+  Download, Video, FileCode, Clock, Globe, Calendar as CalendarIcon, CheckCircle2
 } from 'lucide-react';
 import { Product } from '../../data/mockData';
 
@@ -74,8 +75,8 @@ export default function AdvancedProductModal({
     { id: 'v4', size: '42', color: 'Beyaz', sku: 'PRD-42-BYZ', barcode: '868000100422', stock: 5, priceDiff: 25 },
   ]);
 
-  // Tab 4: Teslimat & Lojistik
-  const [productType, setProductType] = useState<'physical_cargo' | 'local_express' | 'field_service'>('physical_cargo');
+  // Tab 4: Teslimat & Lojistik (5 Temel Ticaret Bacağı)
+  const [productType, setProductType] = useState<'physical_cargo' | 'local_express' | 'field_service' | 'digital_download' | 'online_session'>('physical_cargo');
   const [desi, setDesi] = useState<number>(2);
   const [carrierCompany, setCarrierCompany] = useState('Yurtiçi Kargo');
   const [isFreeShipping, setIsFreeShipping] = useState(false);
@@ -89,6 +90,22 @@ export default function AdvancedProductModal({
   const [fixedServiceFee, setFixedServiceFee] = useState<number>(450);
   const [serviceRadiusKm, setServiceRadiusKm] = useState<number>(25);
   const [isOnSiteService, setIsOnSiteService] = useState(true);
+
+  // TamDijital (Etsy & Gumroad Modeli)
+  const [digitalFileName, setDigitalFileName] = useState('Nakis_Deseni_Tasarim_v1.zip');
+  const [digitalFileSize, setDigitalFileSize] = useState('14.8 MB');
+  const [digitalFileUrl, setDigitalFileUrl] = useState('https://storage.tampazar.com/dijital/nakis-deseni-v1.zip');
+  const [digitalFormats, setDigitalFormats] = useState<string[]>(['DST', 'PES', 'JEF', 'PDF']);
+  const [newFormatInput, setNewFormatInput] = useState('');
+  const [licenseType, setLicenseType] = useState<'personal' | 'commercial'>('commercial');
+
+  // TamSeans (Superpeer & Calendly Modeli)
+  const [sessionDurationMin, setSessionDurationMin] = useState<30 | 45 | 60>(45);
+  const [availableDays, setAvailableDays] = useState<string[]>(['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma']);
+  const [availableHours, setAvailableHours] = useState<string[]>(['10:00', '11:30', '14:00', '15:30', '17:00']);
+  const [sessionChannel, setSessionChannel] = useState<'google_meet' | 'zoom' | 'whatsapp_phone'>('google_meet');
+  const [meetingLink, setMeetingLink] = useState('https://meet.google.com/tpz-danisman-oda');
+  const [expertTitle, setExpertTitle] = useState('Kıdemli Uzman Danışman');
 
   if (!isOpen) return null;
 
@@ -201,11 +218,23 @@ export default function AdvancedProductModal({
 
     const selectedImage = images[coverImageIndex] || images[0] || 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600';
 
+    const mappedType = 
+      productType === 'field_service' ? 'service' :
+      productType === 'digital_download' ? 'digital' :
+      productType === 'online_session' ? 'consultation' : 'retail';
+
+    const mappedBadge = 
+      productType === 'digital_download' ? 'Anında Dijital İndirme' :
+      productType === 'online_session' ? 'Uzaktan Canlı Seans' :
+      productType === 'field_service' ? 'Yerinde Saha Servisi' :
+      productType === 'local_express' ? '30-45 Dk Anlık Teslimat' :
+      isFreeShipping ? 'Ücretsiz Kargo' : 'Doğrudan Esnaf';
+
     const newProduct: Product = {
       id: 'prd-' + Date.now(),
       tenantId,
       storeName,
-      type: productType === 'field_service' ? 'service' : 'retail',
+      type: mappedType,
       title: title.trim(),
       slug: title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
       category,
@@ -217,7 +246,7 @@ export default function AdvancedProductModal({
       image: selectedImage,
       rating: 5.0,
       salesCount: 0,
-      badge: isFreeShipping ? 'Ücretsiz Kargo' : 'Doğrudan Esnaf',
+      badge: mappedBadge,
       brand: brand.trim() || undefined,
       modelNo: modelNo.trim() || undefined,
       costPrice: Number(costPrice),
@@ -241,7 +270,20 @@ export default function AdvancedProductModal({
         isTakeawayAllowed: productType === 'local_express' ? isTakeawayAllowed : undefined,
         fixedServiceFee: productType === 'field_service' ? fixedServiceFee : undefined,
         serviceRadiusKm: productType === 'field_service' ? serviceRadiusKm : undefined,
-        isOnSiteService: productType === 'field_service' ? isOnSiteService : undefined
+        isOnSiteService: productType === 'field_service' ? isOnSiteService : undefined,
+        // TamDijital Alanları
+        digitalFileName: productType === 'digital_download' ? digitalFileName : undefined,
+        digitalFileSize: productType === 'digital_download' ? digitalFileSize : undefined,
+        digitalFileUrl: productType === 'digital_download' ? digitalFileUrl : undefined,
+        digitalFormats: productType === 'digital_download' ? digitalFormats : undefined,
+        licenseType: productType === 'digital_download' ? licenseType : undefined,
+        // TamSeans Alanları
+        sessionDurationMin: productType === 'online_session' ? sessionDurationMin : undefined,
+        availableDays: productType === 'online_session' ? availableDays : undefined,
+        availableHours: productType === 'online_session' ? availableHours : undefined,
+        sessionChannel: productType === 'online_session' ? sessionChannel : undefined,
+        meetingLink: productType === 'online_session' ? meetingLink : undefined,
+        expertTitle: productType === 'online_session' ? expertTitle : undefined
       }
     };
 
@@ -865,17 +907,17 @@ export default function AdvancedProductModal({
           {activeTab === 'logistics' && (
             <div className="space-y-6 animate-fade-in">
               
-              {/* Ürün Tipi Seçimi (3'lü Model) */}
+              {/* Ürün Tipi Seçimi (5 Temel Ticaret Bacağı) */}
               <div>
                 <label className="font-black text-slate-900 block mb-2">
                   Teslimat & Hizmet Modeli Seçimi:
                 </label>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                   
                   {/* 1. Fiziksel Kargo */}
                   <div
                     onClick={() => setProductType('physical_cargo')}
-                    className={`p-4 rounded-2xl border-2 transition cursor-pointer space-y-2 ${
+                    className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
                       productType === 'physical_cargo' 
                         ? 'border-indigo-600 bg-indigo-50/60 ring-2 ring-indigo-500/10' 
                         : 'border-slate-200 hover:border-slate-300 bg-white'
@@ -887,16 +929,16 @@ export default function AdvancedProductModal({
                         TamKargo
                       </span>
                     </div>
-                    <strong className="text-sm font-black text-slate-900 block">TamKargo (Ulusal Gönderi)</strong>
-                    <p className="text-[11px] text-slate-500">
-                      Tüm Türkiye'ye Yurtiçi, Aras, MNG veya PTT kargo anlaşması ile sevk edilir.
+                    <strong className="text-xs font-black text-slate-900 block">TamKargo (Ulusal Gönderi)</strong>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Yurtiçi, Aras, MNG veya PTT kargo anlaşması ile tüm Türkiye'ye sevk edilir.
                     </p>
                   </div>
 
                   {/* 2. Yerel Yemek / Market */}
                   <div
                     onClick={() => setProductType('local_express')}
-                    className={`p-4 rounded-2xl border-2 transition cursor-pointer space-y-2 ${
+                    className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
                       productType === 'local_express' 
                         ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-400/10' 
                         : 'border-slate-200 hover:border-slate-300 bg-white'
@@ -908,8 +950,8 @@ export default function AdvancedProductModal({
                         TamHızlı (Zil)
                       </span>
                     </div>
-                    <strong className="text-sm font-black text-slate-900 block">TamHızlı (Ekspres & Zil)</strong>
-                    <p className="text-[11px] text-slate-500">
+                    <strong className="text-xs font-black text-slate-900 block">TamHızlı (Ekspres & Zil)</strong>
+                    <p className="text-[11px] text-slate-500 leading-tight">
                       30-45 dk anlık kurye teslimatı veya işletmeden Gel-Al (Takeaway) modeli.
                     </p>
                   </div>
@@ -917,7 +959,7 @@ export default function AdvancedProductModal({
                   {/* 3. Saha Hizmeti */}
                   <div
                     onClick={() => setProductType('field_service')}
-                    className={`p-4 rounded-2xl border-2 transition cursor-pointer space-y-2 ${
+                    className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
                       productType === 'field_service' 
                         ? 'border-emerald-600 bg-emerald-50/60 ring-2 ring-emerald-500/10' 
                         : 'border-slate-200 hover:border-slate-300 bg-white'
@@ -929,9 +971,51 @@ export default function AdvancedProductModal({
                         TamUsta
                       </span>
                     </div>
-                    <strong className="text-sm font-black text-slate-900 block">TamUsta (Yerinde Servis)</strong>
-                    <p className="text-[11px] text-slate-500">
+                    <strong className="text-xs font-black text-slate-900 block">TamUsta (Yerinde Servis)</strong>
+                    <p className="text-[11px] text-slate-500 leading-tight">
                       Tesisat, montaj, çekici, çilingir gibi konuma usta yönlendirme servisi.
+                    </p>
+                  </div>
+
+                  {/* 4. DİJİTAL DOSYA İNDİRME (Etsy & Gumroad Modeli) */}
+                  <div
+                    onClick={() => setProductType('digital_download')}
+                    className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
+                      productType === 'digital_download' 
+                        ? 'border-purple-600 bg-purple-50/70 ring-2 ring-purple-500/15' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Download className={`w-5 h-5 ${productType === 'digital_download' ? 'text-purple-600' : 'text-slate-400'}`} />
+                      <span className="text-[10px] font-black uppercase text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
+                        TamDijital
+                      </span>
+                    </div>
+                    <strong className="text-xs font-black text-slate-900 block">TamDijital (İndirilebilir Dosya)</strong>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Nakış (DST/PES), CNC Lazer (DXF/SVG), 3D STL, e-Kitap ve tasarım şablonları.
+                    </p>
+                  </div>
+
+                  {/* 5. UZAKTAN CANLI SEANS (Superpeer Modeli) */}
+                  <div
+                    onClick={() => setProductType('online_session')}
+                    className={`p-3.5 rounded-2xl border-2 transition cursor-pointer space-y-1.5 ${
+                      productType === 'online_session' 
+                        ? 'border-cyan-600 bg-cyan-50/70 ring-2 ring-cyan-500/15' 
+                        : 'border-slate-200 hover:border-slate-300 bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <Video className={`w-5 h-5 ${productType === 'online_session' ? 'text-cyan-600' : 'text-slate-400'}`} />
+                      <span className="text-[10px] font-black uppercase text-cyan-700 bg-cyan-100 px-2 py-0.5 rounded">
+                        TamSeans
+                      </span>
+                    </div>
+                    <strong className="text-xs font-black text-slate-900 block">TamSeans (Canlı Görüşme)</strong>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Online psikolog, özel ders, diyetisyen ve uzman danışmanlık randevuları.
                     </p>
                   </div>
 
@@ -1065,6 +1149,375 @@ export default function AdvancedProductModal({
                         <span>Müşteri Adresine Git (Mobil Usta)</span>
                       </label>
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* TamDijital (Etsy & Gumroad Modeli) Detayları */}
+              {productType === 'digital_download' && (
+                <div className="bg-purple-50/50 p-5 rounded-2xl border border-purple-200 space-y-5 animate-fade-in">
+                  <div className="flex items-center justify-between pb-2 border-b border-purple-100">
+                    <div className="flex items-center gap-2">
+                      <Download className="w-5 h-5 text-purple-600" />
+                      <h4 className="font-black text-purple-950">TamDijital Dosya ve Lisans Yapılandırması</h4>
+                    </div>
+                    <span className="text-xs bg-purple-100 text-purple-800 font-bold px-2.5 py-1 rounded-full">
+                      Kargo Adresi İstenmez • Anında Teslim
+                    </span>
+                  </div>
+
+                  {/* Dosya Bilgileri */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1 text-xs">
+                        Dijital Dosya Adı / Arşiv Başlığı
+                      </label>
+                      <input
+                        type="text"
+                        value={digitalFileName}
+                        onChange={(e) => setDigitalFileName(e.target.value)}
+                        placeholder="Örn: Maras_Nakis_Paketi_v2.zip"
+                        className="w-full px-3.5 py-2.5 bg-white border border-purple-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-purple-400 outline-none"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1 text-xs">
+                        Dosya Boyutu (MB veya GB)
+                      </label>
+                      <input
+                        type="text"
+                        value={digitalFileSize}
+                        onChange={(e) => setDigitalFileSize(e.target.value)}
+                        placeholder="Örn: 14.8 MB"
+                        className="w-full px-3.5 py-2.5 bg-white border border-purple-200 rounded-xl text-sm font-medium text-slate-900 focus:ring-2 focus:ring-purple-400 outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Güvenli Dosya URL'i veya Yükleme */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1 text-xs">
+                      Güvenli Dosya İndirme Bağlantısı / Sunucu Depolama URL
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={digitalFileUrl}
+                        onChange={(e) => setDigitalFileUrl(e.target.value)}
+                        placeholder="https://storage.tampazar.com/dijital/dosya.zip veya Google Drive / Dropbox linki"
+                        className="flex-1 px-3.5 py-2.5 bg-white border border-purple-200 rounded-xl text-xs font-mono text-slate-900 focus:ring-2 focus:ring-purple-400 outline-none"
+                      />
+                      <label className="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition shrink-0 shadow-xs">
+                        <Upload className="w-4 h-4" />
+                        <span>Dosya Seç</span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              setDigitalFileName(file.name);
+                              setDigitalFileSize((file.size / (1024 * 1024)).toFixed(1) + ' MB');
+                              setDigitalFileUrl('https://storage.tampazar.com/uploads/' + encodeURIComponent(file.name));
+                            }
+                          }}
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[11px] text-purple-700/80 mt-1">
+                      Desteklenen formatlar: ZIP, PDF, DST, PES, JEF, DXF, SVG, STL, OBJ, CDR, PSD, AI.
+                    </p>
+                  </div>
+
+                  {/* Dosya Formatı Etiketleri */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1 text-xs">
+                      Paket İçi Format Etiketleri (Örn: DST, PES, SVG, STL, PDF)
+                    </label>
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {digitalFormats.map((fmt, idx) => (
+                        <span 
+                          key={idx} 
+                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-100 text-purple-800 font-bold text-xs rounded-lg border border-purple-200"
+                        >
+                          {fmt}
+                          <button 
+                            type="button" 
+                            onClick={() => setDigitalFormats(digitalFormats.filter((_, i) => i !== idx))}
+                            className="hover:text-red-600 cursor-pointer"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={newFormatInput}
+                        onChange={(e) => setNewFormatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (newFormatInput.trim() && !digitalFormats.includes(newFormatInput.trim().toUpperCase())) {
+                              setDigitalFormats([...digitalFormats, newFormatInput.trim().toUpperCase()]);
+                              setNewFormatInput('');
+                            }
+                          }
+                        }}
+                        placeholder="Yeni format ekle (örn: STL, DXF, PDF) ve Enter'a bas"
+                        className="flex-1 px-3.5 py-2 bg-white border border-purple-200 rounded-xl text-xs font-bold text-slate-900 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (newFormatInput.trim() && !digitalFormats.includes(newFormatInput.trim().toUpperCase())) {
+                            setDigitalFormats([...digitalFormats, newFormatInput.trim().toUpperCase()]);
+                            setNewFormatInput('');
+                          }
+                        }}
+                        className="px-3.5 py-2 bg-purple-100 hover:bg-purple-200 text-purple-800 font-bold text-xs rounded-xl cursor-pointer transition"
+                      >
+                        + Ekle
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <span className="text-[11px] text-slate-500">Hızlı Ekle:</span>
+                      {['DST', 'PES', 'DXF', 'SVG', 'STL', 'PDF', 'ZIP'].map(tag => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => {
+                            if (!digitalFormats.includes(tag)) setDigitalFormats([...digitalFormats, tag]);
+                          }}
+                          className="text-[10px] bg-white border border-purple-200 hover:border-purple-400 text-purple-700 px-2 py-0.5 rounded cursor-pointer transition font-mono"
+                        >
+                          +{tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Lisans Tipi */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-2 text-xs">
+                      Lisans & Kullanım Hakları:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div
+                        onClick={() => setLicenseType('personal')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition ${
+                          licenseType === 'personal'
+                            ? 'border-purple-600 bg-white ring-2 ring-purple-500/20'
+                            : 'border-purple-100 bg-white/60 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <strong className="text-xs font-black text-slate-900">Kişisel Kullanım Lisansı</strong>
+                          {licenseType === 'personal' && <CheckCircle2 className="w-4 h-4 text-purple-600" />}
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-tight">
+                          Alıcı yalnızca kendi şahsi hobisi/projeleri için kullanabilir. Seri üretim ve yeniden satış yasaktır.
+                        </p>
+                      </div>
+
+                      <div
+                        onClick={() => setLicenseType('commercial')}
+                        className={`p-3 rounded-xl border-2 cursor-pointer transition ${
+                          licenseType === 'commercial'
+                            ? 'border-purple-600 bg-white ring-2 ring-purple-500/20'
+                            : 'border-purple-100 bg-white/60 hover:bg-white'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <strong className="text-xs font-black text-slate-900">Ticari Üretime Uygun Lisans</strong>
+                          {licenseType === 'commercial' && <CheckCircle2 className="w-4 h-4 text-purple-600" />}
+                        </div>
+                        <p className="text-[11px] text-slate-500 leading-tight">
+                          Atölye ve imalathanelerde fiziksel son ürün (nakışlı kıyafet, kesilmiş ahşap, 3D baskı vb.) üretip satmaya tam izinlidir.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-purple-100/60 rounded-xl text-purple-900 text-xs flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-purple-600 shrink-0" />
+                    <span>
+                      Bu ürün satın alındığında alıcıya fiziksel kargo sorulmaz; ödeme onaylandığı an <strong>Dosyayı Hemen İndir</strong> butonu açılır.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* TamSeans (Superpeer & Calendly Modeli) Detayları */}
+              {productType === 'online_session' && (
+                <div className="bg-cyan-50/50 p-5 rounded-2xl border border-cyan-200 space-y-5 animate-fade-in">
+                  <div className="flex items-center justify-between pb-2 border-b border-cyan-100">
+                    <div className="flex items-center gap-2">
+                      <Video className="w-5 h-5 text-cyan-600" />
+                      <h4 className="font-black text-cyan-950">TamSeans Randevu ve Canlı Görüşme Ayarları</h4>
+                    </div>
+                    <span className="text-xs bg-cyan-100 text-cyan-800 font-bold px-2.5 py-1 rounded-full">
+                      Canlı Video & Takvim Entegrasyonu
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Seans Süresi */}
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1 text-xs">
+                        Görüşme / Seans Süresi:
+                      </label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[30, 45, 60].map((dur) => (
+                          <button
+                            key={dur}
+                            type="button"
+                            onClick={() => setSessionDurationMin(dur as 30 | 45 | 60)}
+                            className={`py-2 px-3 rounded-xl font-black text-xs transition cursor-pointer border ${
+                              sessionDurationMin === dur
+                                ? 'bg-cyan-600 text-white border-cyan-600 shadow-xs'
+                                : 'bg-white text-slate-700 border-cyan-200 hover:bg-cyan-50'
+                            }`}
+                          >
+                            {dur} Dakika
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Uzman Unvanı */}
+                    <div>
+                      <label className="font-bold text-slate-800 block mb-1 text-xs">
+                        Görüşmeyi Yürütecek Uzman / Eğitmen Unvanı
+                      </label>
+                      <input
+                        type="text"
+                        value={expertTitle}
+                        onChange={(e) => setExpertTitle(e.target.value)}
+                        placeholder="Örn: Uzman Psikolog, E-Ticaret Danışmanı"
+                        className="w-full px-3.5 py-2.5 bg-white border border-cyan-200 rounded-xl text-xs font-bold text-slate-900 outline-none focus:ring-2 focus:ring-cyan-400"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Görüşme Kanalı */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-2 text-xs">
+                      Tercih Edilen Canlı Görüşme Kanalı:
+                    </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {[
+                        { id: 'google_meet', label: 'Google Meet', desc: 'Otomatik toplantı odası oluşturur', icon: Globe },
+                        { id: 'zoom', label: 'Zoom Video', desc: 'Sabit Zoom oda linkiniz', icon: Video },
+                        { id: 'whatsapp_phone', label: 'Telefon / WhatsApp', desc: 'Sesli veya görüntülü direkt arama', icon: Clock }
+                      ].map(chan => {
+                        const Icon = chan.icon;
+                        return (
+                          <div
+                            key={chan.id}
+                            onClick={() => setSessionChannel(chan.id as any)}
+                            className={`p-3 rounded-xl border-2 cursor-pointer transition ${
+                              sessionChannel === chan.id
+                                ? 'border-cyan-600 bg-white ring-2 ring-cyan-500/20'
+                                : 'border-cyan-100 bg-white/60 hover:bg-white'
+                            }`}
+                          >
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <Icon className="w-4 h-4 text-cyan-600" />
+                              <strong className="text-xs font-bold text-slate-900">{chan.label}</strong>
+                            </div>
+                            <p className="text-[10px] text-slate-500">{chan.desc}</p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Görüşme Linki */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1 text-xs">
+                      Sabit Toplantı Bağlantısı (Google Meet / Zoom URL):
+                    </label>
+                    <input
+                      type="text"
+                      value={meetingLink}
+                      onChange={(e) => setMeetingLink(e.target.value)}
+                      placeholder="https://meet.google.com/xyz-abcd-efg"
+                      className="w-full px-3.5 py-2 bg-white border border-cyan-200 rounded-xl text-xs font-mono text-slate-900 outline-none focus:ring-2 focus:ring-cyan-400"
+                    />
+                  </div>
+
+                  {/* Haftalık Müsait Günler */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1 text-xs">
+                      Haftalık Müsait Günler:
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'].map(day => {
+                        const isSelected = availableDays.includes(day);
+                        return (
+                          <button
+                            key={day}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setAvailableDays(availableDays.filter(d => d !== day));
+                              } else {
+                                setAvailableDays([...availableDays, day]);
+                              }
+                            }}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition border ${
+                              isSelected
+                                ? 'bg-cyan-600 text-white border-cyan-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
+                            }`}
+                          >
+                            {day}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Günlük Saat Dilimleri */}
+                  <div>
+                    <label className="font-bold text-slate-800 block mb-1 text-xs">
+                      Müsait Seans Saat Aralıkları:
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['09:00', '10:00', '11:30', '13:00', '14:00', '15:30', '17:00', '18:30', '20:00'].map(slot => {
+                        const isSelected = availableHours.includes(slot);
+                        return (
+                          <button
+                            key={slot}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setAvailableHours(availableHours.filter(s => s !== slot));
+                              } else {
+                                setAvailableHours([...availableHours, slot]);
+                              }
+                            }}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold cursor-pointer transition border ${
+                              isSelected
+                                ? 'bg-cyan-100 text-cyan-800 border-cyan-300'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-cyan-300'
+                            }`}
+                          >
+                            {slot}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-cyan-100/60 rounded-xl text-cyan-900 text-xs flex items-center gap-2">
+                    <CalendarIcon className="w-4 h-4 text-cyan-600 shrink-0" />
+                    <span>
+                      Müşteri ürün sayfasında "Sepete Ekle" yerine doğrudan <strong>Tarih ve Saat</strong> seçerek randevusunu onaylar.
+                    </span>
                   </div>
                 </div>
               )}

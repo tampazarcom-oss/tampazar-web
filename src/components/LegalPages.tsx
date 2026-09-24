@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Shield, FileText, Lock, Cookie, RefreshCw, ArrowLeft } from 'lucide-react';
+import { applyPageSEO } from '../utils/seo';
 
 interface LegalPageProps {
   type: 'mesafeli-satis' | 'gizlilik' | 'kvkk' | 'cerez-politikasi' | 'iade-ve-degisim';
@@ -19,6 +20,14 @@ export default function LegalPages({ type, onBack }: LegalPageProps) {
     'cerez-politikasi': 'Çerez (Cookie) Politikası',
     'iade-ve-degisim': 'İade ve Değişim Koşulları'
   };
+
+  useEffect(() => {
+    applyPageSEO({
+      pathname: `/${type}`,
+      title: `${titles[type]} | TamPazar Yasal Mevzuat`,
+      description: `TamPazar ${titles[type]}. 6502 sayılı Tüketicinin Korunması Kanunu ve UBL-TR e-Fatura mevzuatına uygun kurumsal şartlar.`
+    });
+  }, [type]);
 
   const icons = {
     'mesafeli-satis': FileText,

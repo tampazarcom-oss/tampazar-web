@@ -28,7 +28,7 @@ export interface Product {
   id: string;
   tenantId: string;
   storeName?: string;
-  type: 'retail' | 'wholesale' | 'service';
+  type: 'retail' | 'wholesale' | 'service' | 'digital' | 'consultation';
   title: string;
   slug: string;
   category: string;
@@ -63,7 +63,7 @@ export interface Product {
     priceDiff: number;
   }[];
   deliveryOptions?: {
-    type: 'physical_cargo' | 'local_express' | 'field_service';
+    type: 'physical_cargo' | 'local_express' | 'field_service' | 'digital_download' | 'online_session';
     desi?: number;
     carrierCompany?: string;
     isFreeShipping?: boolean;
@@ -73,6 +73,19 @@ export interface Product {
     fixedServiceFee?: number;
     serviceRadiusKm?: number;
     isOnSiteService?: boolean;
+    // TamDijital Alanları
+    digitalFileUrl?: string;
+    digitalFileName?: string;
+    digitalFileSize?: string;
+    digitalFormats?: string[];
+    licenseType?: 'personal' | 'commercial';
+    // TamSeans Alanları
+    sessionDurationMin?: 30 | 45 | 60;
+    availableDays?: string[];
+    availableHours?: string[];
+    sessionChannel?: 'google_meet' | 'zoom' | 'whatsapp_phone';
+    meetingLink?: string;
+    expertTitle?: string;
   };
 
   // Retail specific
@@ -93,6 +106,18 @@ export interface Product {
   durationMin?: number;
   bookingSlots?: string[];
   serviceAreaRadiusKm?: number;
+
+  // Fulfillment and Pillar Integration
+  fulfillment?: {
+    pillar?: 'tamkargo' | 'tamhizli' | 'tamusta' | 'tamdijital' | 'tamseans';
+    fileName?: string;
+    fileSize?: string;
+    digitalFormats?: string[];
+    licenseType?: 'personal' | 'commercial';
+    sessionDurationMin?: number;
+    meetingLink?: string;
+    [key: string]: any;
+  };
 }
 
 export interface PosConfig {
@@ -590,6 +615,146 @@ export const initialProducts: Product[] = [
     durationMin: 360,
     serviceAreaRadiusKm: 100,
     bookingSlots: ['10:00 - 16:00', '14:00 - 20:00']
+  },
+
+  // ==========================================================
+  // TAMDİJİTAL (ETSY & GUMROAD MODELİ DİJİTAL İNDİRİLEBİLİR ÜRÜNLER)
+  // ==========================================================
+  {
+    id: 'dig-prod-101',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat',
+    type: 'digital',
+    title: 'Geleneksel Maraş İşi Çiçekli Nakış Deseni Paketi',
+    slug: 'maras-isi-cicekli-nakis-deseni-paketi',
+    category: 'Dijital Tasarım & Nakış',
+    categorySlug: 'dijital-tasarim',
+    description: 'Ev tekstili, çeyiz ve giyim için yüksek çözünürlüklü endüstriyel nakış makinesi deseni. Tüm popüler nakış formatlarını ve renk yerleşim tablosunu içerir.',
+    price: 380,
+    sku: 'DIG-NKS-01',
+    vatRate: 20,
+    rating: 4.9,
+    salesCount: 420,
+    badge: 'Anında Dijital İndirme',
+    image: 'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'digital_download',
+      digitalFileName: 'Maras_Isi_Nakis_Paketi_v2.1.zip',
+      digitalFileSize: '14.8 MB',
+      digitalFormats: ['DST', 'PES', 'JEF', 'EXP', 'PDF Kılavuz'],
+      licenseType: 'commercial',
+      digitalFileUrl: '#download-maras-nakis-v2'
+    }
+  },
+  {
+    id: 'dig-prod-102',
+    tenantId: 's1',
+    storeName: 'Atölye Zanaat',
+    type: 'digital',
+    title: 'CNC & Lazer Kesim Geometrik Ahşap Duvar Tablosu (Vektörel)',
+    slug: 'cnc-lazer-kesim-geometrik-ahsap-duvar-tablosu',
+    category: 'Lazer & Vektör Çizim',
+    categorySlug: 'dijital-tasarim',
+    description: '3mm ve 6mm MDF/Kontrplak lazer kesim makineleri için sıfır toleransla çizilmiş parametrik vektör şablonu.',
+    price: 260,
+    sku: 'DIG-CNC-02',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 290,
+    badge: 'Anında Dijital İndirme',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'digital_download',
+      digitalFileName: 'Geometrik_Duvar_Paneli_Vektorel.zip',
+      digitalFileSize: '8.4 MB',
+      digitalFormats: ['DXF', 'SVG', 'CDR', 'AI', 'PDF'],
+      licenseType: 'commercial',
+      digitalFileUrl: '#download-cnc-wallart'
+    }
+  },
+  {
+    id: 'dig-prod-103',
+    tenantId: 's2',
+    storeName: 'Mega Endüstriyel',
+    type: 'digital',
+    title: '3D Yazıcı Baskıya Hazır Mitolojik Heykel STL Modeli',
+    slug: '3d-yazici-mitolojik-heykel-stl-modeli',
+    category: '3D STL & Modelleme',
+    categorySlug: 'dijital-tasarim',
+    description: 'Reçine (SLA) ve filament (FDM) yazıcılar için önceden destekleri (pre-supported) eklenmiş kusursuz detaylı büst STL dosyası.',
+    price: 490,
+    sku: 'DIG-STL-03',
+    vatRate: 20,
+    rating: 4.8,
+    salesCount: 155,
+    badge: 'Anında Dijital İndirme',
+    image: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'digital_download',
+      digitalFileName: 'Zeus_Bust_HighPoly_PreSupported.stl',
+      digitalFileSize: '42.6 MB',
+      digitalFormats: ['STL', 'OBJ', '3MF'],
+      licenseType: 'personal',
+      digitalFileUrl: '#download-stl-statue'
+    }
+  },
+
+  // ==========================================================
+  // TAMSEANS (SUPERPEER & CALENDLY MODELİ UZAKTAN CANLI GÖRÜŞMELER)
+  // ==========================================================
+  {
+    id: 'sns-prod-201',
+    tenantId: 's3',
+    storeName: 'FotoSentez Stüdyo & Danışmanlık',
+    type: 'consultation',
+    title: 'Bireysel Kariyer & E-Ticaret İşletme Danışmanlığı (45 Dk)',
+    slug: 'bireysel-kariyer-eticaret-danismanligi',
+    category: 'Online Danışmanlık',
+    categorySlug: 'online-seans',
+    description: 'Google Meet üzerinden birebir canlı video seansı. Marka konumlandırma, ürün fiyatlandırma ve online satış stratejinizi birlikte çiziyoruz.',
+    price: 1250,
+    sku: 'SNS-DAN-01',
+    vatRate: 20,
+    rating: 5.0,
+    salesCount: 64,
+    badge: 'Uzaktan Canlı Seans',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'online_session',
+      sessionDurationMin: 45,
+      availableDays: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma'],
+      availableHours: ['10:00', '11:30', '14:00', '15:30', '17:00'],
+      sessionChannel: 'google_meet',
+      meetingLink: 'https://meet.google.com/tpz-danisman-alperen',
+      expertTitle: 'Kıdemli E-Ticaret Danışmanı'
+    }
+  },
+  {
+    id: 'sns-prod-202',
+    tenantId: 'tenant-3',
+    storeName: 'Bursa Spa & Sağlık',
+    type: 'consultation',
+    title: 'Klinik Diyetisyen Online Beslenme & Yaşam Seansı (45 Dk)',
+    slug: 'klinik-diyetisyen-online-beslenme-seansi',
+    category: 'Beslenme & Sağlık',
+    categorySlug: 'online-seans',
+    description: 'Kan tahlilleri ve yaşam tarzınıza göre hazırlanan haftalık beslenme programı ve birebir online motivasyon takibi.',
+    price: 950,
+    sku: 'SNS-DYT-02',
+    vatRate: 10,
+    rating: 4.9,
+    salesCount: 110,
+    badge: 'Uzaktan Canlı Seans',
+    image: 'https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=600&auto=format&fit=crop&q=80',
+    deliveryOptions: {
+      type: 'online_session',
+      sessionDurationMin: 45,
+      availableDays: ['Pazartesi', 'Çarşamba', 'Cuma', 'Cumartesi'],
+      availableHours: ['09:30', '11:00', '14:00', '16:00'],
+      sessionChannel: 'google_meet',
+      meetingLink: 'https://meet.google.com/tpz-diyet-zeynep',
+      expertTitle: 'Uzman Klinik Diyetisyen'
+    }
   }
 ];
 

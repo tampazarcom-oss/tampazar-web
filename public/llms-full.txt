@@ -1,0 +1,62 @@
+# TamPazar Tam Semantik Mimari & GEO Manifestosu (llms-full.txt)
+# Sürüm: 2026.3 | https://tampazar.com
+
+## 1. Platform Özeti & Misyon
+TamPazar, geleneksel pazaryerlerinin yüksek komisyon oranlarına (%15 - %35) ve kapalı ekosistemlerine karşı geliştirilmiş, Türkiye'nin ilk komisyonsuz (%0) Açık Dijital AVM'si ve modüler ticaret işletim sistemidir. 
+
+Fiziksel dünyadaki çarşı, han ve sanayi sitelerinin dijital karşılığıdır. Esnaf doğrudan kendi Sanal POS'unu (BYO POS) bağlar; müşteri ödemesi doğrudan esnafın banka hesabına geçer. İletişim sansürsüzdür: müşteriler esnafın fiziki adresini, telefon numarasını ve WhatsApp hattını görebilir.
+
+---
+
+## 2. Beş Temel Hibrit Ticaret Bacağı
+
+### A. TamKargo (Ulusal E-Ticaret & Sevkiyat)
+- **Kapsam:** Ayakkabı, giyim, organik gıda, zanaatkâr mobilya, endüstriyel sarf malzemeleri.
+- **Lojistik:** Esnafın kendi kargo anlaşması (Yurtiçi, Aras, MNG, Sürat, PTT) veya platform havuz lojistiği.
+- **Fatura:** GİB UBL-TR 2.1 e-İrsaliye ve e-Fatura entegrasyonuyla otomatik barkodlu sevk irsaliyesi.
+
+### B. TamHızlı (30 Dakika Yerel Ekspres & Sıcak Teslimat)
+- **Kapsam:** Sıcak döner menüleri, fırın ürünleri, acil market siparişleri.
+- **Model:** Müşterinin GPS konumuna göre en yakın esnaflar sıralanır; hazırlık ve moto-kurye teslimatı ortalama 20-30 dakikada gerçekleşir.
+
+### C. TamUsta (Saha Hizmetleri, Keşif & 7/24 Acil Müdahale)
+- **Kapsam:** 7/24 Nöbetçi Çilingir & Kapı Açma, Acil Oto Kurtarma & Çekici, Termal Kameralı Su Kaçağı Tespiti, Elektrik Arıza Servisi.
+- **İşleyiş:** Konum bazlı çağrı butonuyla usta anında haberdar edilir; tahmini varış süresi (10-15 dk) ve sabit servis taban ücreti gösterilir.
+
+### D. TamDijital (Etsy & Gumroad Modeli Dijital Dosya Dağıtımı)
+- **Kapsam:** Endüstriyel nakış desenleri (DST, PES, JEF, EXP), CNC ve lazer kesim şablonları (DXF, SVG, AI, CDR), 3D yazıcı modelleri (STL, OBJ, 3MF), dijital planlayıcılar ve e-kitaplar.
+- **Teslimat:** Sıfır kargo süresi; ödeme tamamlandığı anda SHA-256 hash korumalı indirme bağlantısı oluşturulur ve tüketicinin `/hesabim/dijital-arsivim` kütüphanesine kaydedilir.
+- **Lisans:** Kişisel kullanım veya Ticari Üretim lisansı.
+
+### E. TamSeans (Superpeer & Calendly Modeli Canlı Randevular)
+- **Kapsam:** Bireysel Kariyer & E-Ticaret Danışmanlığı, Klinik Diyetisyen & Beslenme Seansları, Online Hukuk & Muhasebe Danışmanlığı.
+- **İşleyiş:** İnteraktif gün ve saat dilimi seçimi, Google Meet ve Zoom otomatik görüşme bağlantısı oluşturma, ajanda senkronizasyonu.
+
+---
+
+## 3. Doğrulanmış Örnek Esnaf & Ürün Portföyü
+
+### Örnek Dükkânlar:
+1. **Atölye Zanaat (Bursa):** Masif meşe el yapımı mobilyalar ve geleneksel nakış desenleri. Slug: `/dukkan/atolye-zanaat`
+2. **Mega Endüstriyel (İstanbul / İkitelli):** B2B toptan ambalaj malzemeleri, koli bandı ve 3D modeller. Slug: `/dukkan/mega-endustriyel`
+3. **Mert Kundura (Gaziantep):** Hakiki deri el yapımı Oxford ayakkabılar ve toptan deri imalatı. Slug: `/dukkan/mert-kundura`
+4. **Bursa Spa & Sağlık (Bursa):** Doğal keçi sütlü sabunlar ve klinik diyetisyen online danışmanlığı. Slug: `/dukkan/bursa-spa`
+5. **FotoSentez Stüdyo (Ordu):** Sinematik video çekimleri, drone klip prodüksiyonu ve e-ticaret danışmanlığı. Slug: `/dukkan/fotosentez-studyo`
+6. **Karadeniz Çilingir & Anahtar (Ordu):** 7/24 nöbetçi çelik kapı ve oto açma servisi. Slug: `/dukkan/karadeniz-cilingir`
+7. **Öz Kardeşler 7/24 Oto Kurtarma (Ordu):** Ağır vasıta ve binek oto acil çekici servisi. Slug: `/dukkan/oz-kardesler-cekici`
+8. **Tarihi Karadeniz Dönercisi (Ordu):** Odun ateşinde yaprak et döner ve yerel sıcak servis. Slug: `/dukkan/tarihi-karadeniz-doner`
+
+---
+
+## 4. API & Entegrasyon Standartları
+- **Sanal POS (BYO POS):** PayTR iFrame/Direct API, iyzico Checkout Form, Sipay 3D Secure, Stripe Connect.
+- **GİB e-Fatura / e-Arşiv / e-İrsaliye:** UBL-TR 2.1 standardında XML ve XSLT çıktıları, tevkifatlı fatura, e-İrsaliye taşıyıcı plaka ve şoför TC no doğrulama.
+- **Schema.org:** Product, LocalBusiness, Service, DigitalDocument, ProfessionalService, ShoppingCenter, BreadcrumbList.
+- **OpenGraph & Twitter Cards:** Otomatik rel="canonical", optimize edilmiş og:image ve görsel alt etiketleri.
+
+---
+
+## 5. İletişim & Şeffaflık
+- **Merkez Web:** https://tampazar.com
+- **Destek:** destek@tampazar.com
+- **Yasal:** 6502 Sayılı Tüketici Hakları Kanunu ve KVKK Aydınlatma Metni https://tampazar.com/kvkk adresindedir.

@@ -8,7 +8,7 @@ import {
   Utensils, Wrench, Truck, ShoppingBag, 
   MapPin, Phone, MessageCircle, Clock, ShieldCheck, Search, Zap,
   Star, CheckCircle2, ArrowRight, X, AlertCircle, Sparkles, Navigation, ChevronRight, Calendar, Layers,
-  LocateFixed, ArrowUpDown, RefreshCw, Send, Check
+  LocateFixed, ArrowUpDown, RefreshCw, Send, Check, Download, Video, FileCode
 } from 'lucide-react';
 import UniversalProductCard, { UniversalCardData } from './UniversalProductCard';
 import BrandLogo from './BrandLogo';
@@ -20,6 +20,7 @@ import {
   PRESET_LOCATIONS, 
   UserLocation 
 } from '../utils/geolocation';
+import { applyPageSEO } from '../utils/seo';
 
 export const SAMPLE_PRODUCTS: UniversalCardData[] = [
   // 1. Tesisat / Hizmet Kartı
@@ -183,6 +184,56 @@ export const SAMPLE_PRODUCTS: UniversalCardData[] = [
       paymentProvider: 'Doğrudan PayTR',
       isPhysicalVerified: true,
     }
+  },
+  // 7. TamDijital - Nakış Deseni & Tasarım Dosyası (Etsy/Gumroad Modeli)
+  {
+    id: 'dig-prod-101',
+    slug: 'maras-isi-cicekli-nakis-deseni-paketi',
+    sector: 'DIGITAL',
+    title: 'Geleneksel Maraş İşi Çiçekli Nakış Deseni Paketi (DST, PES, JEF)',
+    category: 'Dijital Tasarım & Nakış',
+    image: 'https://images.unsplash.com/photo-1606744824163-985d376605aa?w=800',
+    price: 380,
+    vatRate: 20,
+    deliveryType: 'digital_download',
+    digitalFormats: ['DST', 'PES', 'JEF', 'EXP', 'PDF'],
+    store: {
+      name: 'Atölye Zanaat',
+      slug: 'atolye-zanaat',
+      district: 'Tasarım Atölyesi',
+      city: 'İstanbul',
+      phone: '+905330001122',
+      whatsapp: '905330001122',
+      rating: 4.9,
+      reviewCount: 420,
+      paymentProvider: 'Doğrudan iyzico POS',
+      isPhysicalVerified: true,
+    }
+  },
+  // 8. TamSeans - Canlı Danışmanlık (Superpeer/Calendly Modeli)
+  {
+    id: 'sns-prod-201',
+    slug: 'bireysel-kariyer-eticaret-danismanligi',
+    sector: 'CONSULTATION',
+    title: 'Bireysel Kariyer & E-Ticaret İşletme Danışmanlığı (45 Dk)',
+    category: 'Online Danışmanlık',
+    image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=800',
+    price: 1250,
+    vatRate: 20,
+    deliveryType: 'online_session',
+    sessionDurationMin: 45,
+    store: {
+      name: 'FotoSentez Danışmanlık',
+      slug: 'fotosentez-studyo',
+      district: 'Uzaktan Görüşme',
+      city: 'Google Meet HD',
+      phone: '+905321112233',
+      whatsapp: '905321112233',
+      rating: 5.0,
+      reviewCount: 64,
+      paymentProvider: 'Doğrudan PayTR POS',
+      isPhysicalVerified: true,
+    }
   }
 ];
 
@@ -196,6 +247,8 @@ interface SuperMallHomeProps {
 export const SUPER_MALL_SECTORS = [
   { id: 'all', name: 'Tüm Sektörler', icon: Sparkles, desc: 'Şehrin tüm esnaf ve işletmeleri', count: '2.095 İşletme' },
   { id: 'retail', name: 'Alışveriş & Mağazalar', icon: ShoppingBag, desc: 'Ayakkabı, Giyim, Mobilya, Tasarım', count: '1.420 Dükkân' },
+  { id: 'digital', name: 'TamDijital (Dosya İndir)', icon: Download, desc: 'Nakış DST, Lazer DXF, 3D STL, E-Kitap', count: '540 Dosya' },
+  { id: 'session', name: 'TamSeans (Canlı Seans)', icon: Video, desc: 'Online Psikolog, Seans & Özel Ders', count: '180 Uzman' },
   { id: 'food', name: 'Yeme & İçme (Sıcak Paket)', icon: Utensils, desc: 'Döner, Kebap, Fırın, Kafe & Tatlı', count: '380 İşletme' },
   { id: 'service', name: 'Usta & Tesisat Hizmeti', icon: Wrench, desc: 'Su Tesisatı, Boya, Elektrik, Keşif', count: '210 Esnaf' },
   { id: 'emergency', name: 'Acil Çekici & Yol Yardım', icon: Truck, desc: '7/24 Konuma En Yakın Nöbetçi Çekici', count: '85 Araç' },
@@ -419,9 +472,20 @@ export default function SuperMallHome({
   const [dispatchPhoneInput, setDispatchPhoneInput] = useState('');
   const [dispatchConfirmed, setDispatchConfirmed] = useState(false);
 
-  // Geolocation detector on mount
+  // Geolocation detector on mount & SEO enjeksiyonu
   useEffect(() => {
     requestBrowserLocation();
+    applyPageSEO({
+      pathname: '/sehir-avm',
+      title: "Şehrin Açık Dijital AVM'si - Konuma En Yakın Esnaf, Usta & Dönerci | TamPazar",
+      description: "Fiziksel çarşıların ve mahalle esnafının dijital buluşma noktası. Konumuna en yakın tesisatçı, nöbetçi çekici, çilingir, dönerci ve zanaatkârlar bir arada.",
+      collectionItems: SAMPLE_PRODUCTS.map(p => ({
+        name: p.title,
+        url: `/urun/${p.slug}`,
+        image: p.image,
+        price: p.price
+      }))
+    });
   }, []);
 
   const requestBrowserLocation = () => {
@@ -495,17 +559,28 @@ export default function SuperMallHome({
       return 0;
     });
 
-  // Calculate distances for SAMPLE_PRODUCTS
-  const productsWithDistance = SAMPLE_PRODUCTS.map(p => {
-    const dist = calculateDistance(userLocation.lat, userLocation.lng, p.lat || DEFAULT_USER_LOCATION.lat, p.lng || DEFAULT_USER_LOCATION.lng);
-    return {
-      ...p,
-      distanceKm: dist
-    };
-  }).sort((a, b) => {
-    if (sortBy === 'distance') return (a.distanceKm || 0) - (b.distanceKm || 0);
-    return 0;
-  });
+  // Calculate distances for SAMPLE_PRODUCTS & filter by sector
+  const productsWithDistance = SAMPLE_PRODUCTS
+    .filter(p => {
+      if (selectedSector === 'all') return true;
+      if (selectedSector === 'digital') return p.sector === 'DIGITAL' || p.deliveryType === 'digital_download';
+      if (selectedSector === 'session') return p.sector === 'CONSULTATION' || p.deliveryType === 'online_session';
+      if (selectedSector === 'retail') return p.sector === 'RETAIL' || p.sector === 'WHOLESALE';
+      if (selectedSector === 'food') return p.sector === 'FOOD';
+      if (selectedSector === 'service') return p.sector === 'SERVICE';
+      if (selectedSector === 'emergency') return p.sector === 'EMERGENCY';
+      return true;
+    })
+    .map(p => {
+      const dist = calculateDistance(userLocation.lat, userLocation.lng, p.lat || DEFAULT_USER_LOCATION.lat, p.lng || DEFAULT_USER_LOCATION.lng);
+      return {
+        ...p,
+        distanceKm: dist
+      };
+    }).sort((a, b) => {
+      if (sortBy === 'distance') return (a.distanceKm || 0) - (b.distanceKm || 0);
+      return 0;
+    });
 
   // Open Dispatch Modal
   const openDispatchModal = (item: {
@@ -826,7 +901,7 @@ export default function SuperMallHome({
                   <div className="relative h-44 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={b.image} 
-                      alt={b.name} 
+                      alt={`${b.name} - TamPazar`} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                     />
                     

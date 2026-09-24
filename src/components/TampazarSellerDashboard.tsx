@@ -11,7 +11,7 @@ import {
   TrendingUp, TrendingDown, ArrowUpRight, DollarSign, Euro,
   ChevronDown, PlusCircle, CheckCircle2, ShieldCheck, Download,
   Layers, ArrowLeft, ExternalLink, Sparkles, MessageCircle,
-  Printer, Eye, AlertCircle, RefreshCw, Check, Edit2, Trash2, X, Plus, Filter
+  Printer, Eye, AlertCircle, RefreshCw, Check, Edit2, Trash2, X, Plus, Filter, Video
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -32,6 +32,8 @@ import AdvancedProductModal from './merchant/AdvancedProductModal';
 import AdvancedLedgerAccountModal from './merchant/AdvancedLedgerAccountModal';
 import StoreSettingsModule from './merchant/StoreSettingsModule';
 import TamTeklifOpportunitiesModule from './merchant/TamTeklifOpportunitiesModule';
+import TamDigitalModule from './merchant/TamDigitalModule';
+import TamSessionModule from './merchant/TamSessionModule';
 import { getStoredQuotationRequests } from '../data/quotationRequestData';
 
 interface TampazarSellerDashboardProps {
@@ -48,6 +50,8 @@ export type DashboardTab =
   | 'orders_cargo' 
   | 'orders_local' 
   | 'orders_service' 
+  | 'tamdijital'
+  | 'tamseans'
   | 'tamteklif'
   | 'pos' 
   | 'subscription'
@@ -607,6 +611,42 @@ export default function TampazarSellerDashboard({
             </div>
             <span className="text-[10px] bg-amber-950/80 text-amber-300 font-bold px-1.5 py-0.5 rounded">
               {hybridOrders.filter(o => o.deliveryType === 'FIELD_SERVICE').length}
+            </span>
+          </button>
+
+          {/* 4. DİJİTAL DOSYA SATIŞI (TamDijital - Etsy Modeli) */}
+          <button
+            onClick={() => setActiveTab('tamdijital')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'tamdijital' 
+                ? 'bg-purple-600 text-white font-black shadow-md' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Download className="w-4 h-4 text-purple-400" />
+              <span>TamDijital (Dosya & İndirmeler)</span>
+            </div>
+            <span className="text-[10px] bg-purple-950/80 text-purple-300 font-bold px-1.5 py-0.5 rounded">
+              {products.filter(p => p.deliveryOptions?.type === 'digital_download' || p.type === 'digital').length || 3}
+            </span>
+          </button>
+
+          {/* 5. UZAKTAN CANLI SEANS (TamSeans - Superpeer Modeli) */}
+          <button
+            onClick={() => setActiveTab('tamseans')}
+            className={`w-full flex items-center justify-between px-3 py-2 rounded-xl transition text-left cursor-pointer ${
+              activeTab === 'tamseans' 
+                ? 'bg-cyan-600 text-white font-black shadow-md' 
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              <Video className="w-4 h-4 text-cyan-400" />
+              <span>TamSeans (Canlı Randevu Takvimi)</span>
+            </div>
+            <span className="text-[10px] bg-cyan-950/80 text-cyan-300 font-bold px-1.5 py-0.5 rounded">
+              3 Aktif
             </span>
           </button>
 
@@ -1437,6 +1477,26 @@ export default function TampazarSellerDashboard({
               <ServiceOrdersModule
                 orders={hybridOrders}
                 onUpdateOrderStatus={handleUpdateOrderStatus}
+              />
+            </div>
+          )}
+
+          {/* TAB: TAMDİJİTAL (ETSY/GUMROAD DOSYA SATIŞLARI & İNDİRMELER) */}
+          {activeTab === 'tamdijital' && (
+            <div className="animate-fade-in">
+              <TamDigitalModule
+                products={products}
+                onOpenNewProductModal={() => setShowAddProductModal(true)}
+              />
+            </div>
+          )}
+
+          {/* TAB: TAMSEANS (SUPERPEER/CALENDLY CANLI RANDEVU TAKVİMİ) */}
+          {activeTab === 'tamseans' && (
+            <div className="animate-fade-in">
+              <TamSessionModule
+                products={products}
+                onOpenNewProductModal={() => setShowAddProductModal(true)}
               />
             </div>
           )}

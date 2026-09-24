@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   MapPin, Phone, Globe, Instagram, MessageCircle, 
   CreditCard, ShieldCheck, Mail, Clock, FileText, CheckCircle2,
@@ -12,6 +12,7 @@ import {
 import { Tenant, Product, initialProducts, initialTenants } from '../data/mockData';
 import QuickAddProductForm from './QuickAddProductForm';
 import BookingAndStoreEngine, { DEFAULT_SERVICES, ServiceItem } from './BookingAndStoreEngine';
+import { applyPageSEO } from '../utils/seo';
 
 export interface ProductItem {
   id: string;
@@ -314,24 +315,35 @@ export default function StoreProfilePage({
     }));
   const effectiveServices = storeServices.length > 0 ? storeServices : DEFAULT_SERVICES;
 
-  // Schema.org LocalBusiness JSON-LD (Sansürsüz Dükkân Verisi)
-  const schemaJsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'LocalBusiness',
-    name: store.name,
-    legalName: store.legalTitle,
-    telephone: store.phone,
-    url: store.websiteUrl,
-    address: {
-      '@type': 'PostalAddress',
-      streetAddress: store.fullAddress,
-      addressLocality: store.district,
-      addressRegion: store.city,
-      addressCountry: 'TR',
-    },
-    openingHours: store.workingHours,
-    priceRange: '₺₺',
-  };
+  // Kurumsal SEO & GEO Entegrasyonu (Schema.org LocalBusiness, OpenGraph, Canonical)
+  useEffect(() => {
+    if (store) {
+      applyPageSEO({
+        pathname: `/dukkan/${store.slug}`,
+        store: {
+          name: store.name,
+          slug: store.slug,
+          legalTitle: store.legalTitle,
+          slogan: store.slogan,
+          about: store.about,
+          avatarUrl: store.avatarUrl,
+          bannerUrl: store.bannerUrl,
+          phone: store.phone,
+          whatsapp: store.whatsapp,
+          websiteUrl: store.websiteUrl,
+          city: store.city,
+          district: store.district,
+          fullAddress: store.fullAddress,
+          googleMapsUrl: store.googleMapsUrl,
+          workingHours: store.workingHours,
+          rating: 4.9,
+          reviewCount: 145,
+          taxOffice: store.taxOffice,
+          taxNumber: store.taxNumber
+        }
+      });
+    }
+  }, [store]);
 
   const handleCopyStoreLink = () => {
     navigator.clipboard.writeText(window.location.href);
@@ -341,12 +353,6 @@ export default function StoreProfilePage({
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 pb-20 font-sans">
-      
-      {/* Schema.org JSON-LD Entegrasyonu */}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJsonLd) }}
-      />
 
       {/* Top Floating Back & Switcher Bar */}
       <div className="bg-slate-950/95 text-white backdrop-blur-md px-4 sm:px-6 py-2.5 flex flex-wrap items-center justify-between sticky top-0 z-50 border-b border-slate-800 text-xs gap-3">
@@ -384,7 +390,7 @@ export default function StoreProfilePage({
       <div className="relative h-64 md:h-80 w-full bg-slate-900 overflow-hidden">
         <img
           src={store.bannerUrl}
-          alt={store.name}
+          alt={`${store.name} - TamPazar`}
           className="w-full h-full object-cover opacity-75"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
@@ -407,7 +413,7 @@ export default function StoreProfilePage({
               <div className="relative w-24 h-24 md:w-28 md:h-28 rounded-2xl overflow-hidden border-4 border-white shadow-md bg-white shrink-0">
                 <img
                   src={store.avatarUrl}
-                  alt={store.name}
+                  alt={`${store.name} - TamPazar`}
                   className="w-full h-full object-cover"
                 />
               </div>
@@ -615,7 +621,7 @@ export default function StoreProfilePage({
                   <div className="relative h-48 w-full bg-slate-100 overflow-hidden">
                     <img 
                       src={item.image} 
-                      alt={item.title} 
+                      alt={`${item.title} - TamPazar`} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                     />
                     <span className="absolute top-3 left-3 text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-full bg-slate-950/80 text-white backdrop-blur-xs">
