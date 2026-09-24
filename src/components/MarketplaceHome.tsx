@@ -17,6 +17,7 @@ import { useAuth } from '../context/AuthContext';
 import BrandLogo from './BrandLogo';
 import GlobalUserNav from './GlobalUserNav';
 import TamTeklifWizardModal from './TamTeklifWizardModal';
+import MegaMenu from './MegaMenu';
 import { applyPageSEO } from '../utils/seo';
 
 interface MarketplaceHomeProps {
@@ -545,17 +546,28 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-6">
           
-          <BrandLogo 
-            size="lg" 
-            onClick={() => { 
-              setSelectedScope('all'); 
-              setSelectedTypeFilter('all'); 
-              setActiveStoryFilter(null);
-              setSearchQuery(''); 
-              setActiveModalProduct(null); 
-              setIsCartOpen(false); 
-            }} 
-          />
+          <div className="flex items-center gap-4 shrink-0">
+            <BrandLogo 
+              size="lg" 
+              onClick={() => { 
+                setSelectedScope('all'); 
+                setSelectedTypeFilter('all'); 
+                setActiveStoryFilter(null);
+                setSearchQuery(''); 
+                setActiveModalProduct(null); 
+                setIsCartOpen(false); 
+              }} 
+            />
+
+            {/* EVRENSEL MEGA MENÜ (Trendyol Stili Kategori Ağacı) */}
+            <MegaMenu 
+              onSelectCategory={(catName) => setSearchQuery(catName)}
+              onOpenTamTeklif={() => {
+                setTamTeklifCategory(undefined);
+                setIsTamTeklifModalOpen(true);
+              }}
+            />
+          </div>
 
           {/* Akıllı Hibrit Arama Çubuğu */}
           <div className="flex-1 max-w-2xl relative">

@@ -7,6 +7,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams, Link } from 'react-router-dom';
 import { initialTenants, Tenant } from './data/mockData';
 import BrandLogo from './components/BrandLogo';
+import MegaMenu from './components/MegaMenu';
 import { applyPageSEO } from './utils/seo';
 import { Store, ChevronDown, Check, Globe, Layers, CreditCard, Tags, FileText, Code, ShoppingCart, Sparkles, Truck, QrCode, Briefcase, FileSpreadsheet, LayoutDashboard, User, ShoppingBag } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
@@ -27,6 +28,7 @@ const CourierDirectoryPage = lazy(() => import('./components/courier/CourierDire
 const CourierOnboardingAndDashboard = lazy(() => import('./components/courier/CourierOnboardingAndDashboard'));
 const BlogPage = lazy(() => import('./pages/Blog'));
 const BlogSitemap = lazy(() => import('./pages/BlogSitemap'));
+const PazaryeriDiscoveryPage = lazy(() => import('./components/PazaryeriDiscoveryPage'));
 
 const SystemArchitecture = lazy(() => import('./components/SystemArchitecture'));
 const ByoPosConfigurator = lazy(() => import('./components/ByoPosConfigurator'));
@@ -187,6 +189,16 @@ function MainLayout() {
             🏛️ Şehrin Açık AVM'si
           </Link>
           <Link
+            to="/pazaryeri"
+            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
+              location.pathname.startsWith('/pazaryeri') 
+                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
+                : 'text-amber-200 hover:text-white'
+            }`}
+          >
+            🔍 Keşif & Katalog
+          </Link>
+          <Link
             to="/hesabim"
             className={`px-2.5 py-1 rounded transition-colors ${
               location.pathname === '/hesabim' 
@@ -261,6 +273,7 @@ function MainLayout() {
             </Link>
             <span className="text-slate-300">|</span>
             <BrandLogo size="md" />
+            <MegaMenu />
           </div>
 
           <div className="flex items-center gap-3">
@@ -343,7 +356,19 @@ function MainLayout() {
               } 
             />
             <Route 
+              path="/pazaryeri" 
+              element={<PazaryeriDiscoveryPage />} 
+            />
+            <Route 
+              path="/pazaryeri/:categorySlug" 
+              element={<PazaryeriDiscoveryPage />} 
+            />
+            <Route 
               path="/dukkan/:slug" 
+              element={<StoreProfileRouteWrapper />} 
+            />
+            <Route 
+              path="/magaza/:slug" 
               element={<StoreProfileRouteWrapper />} 
             />
             <Route 
