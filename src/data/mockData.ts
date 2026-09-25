@@ -504,6 +504,24 @@ export const initialPosConfigs: PosConfig[] = [
 ];
 
 export const initialProducts: Product[] = [
+  {
+    id: 'prod_test_001',
+    tenantId: 'atolye-zanaat',
+    storeName: 'Atölye Zanaat',
+    title: 'El Yapımı Ahşap Tablo',
+    slug: 'el-yapimi-ahsap-tablo',
+    type: 'retail',
+    price: 450.00,
+    vatRate: 20,
+    sku: 'TABLO-001',
+    stockCount: 15,
+    category: 'Ev & Yaşam',
+    categorySlug: 'ev-yasam',
+    description: 'Özel el işçiliği ahşap sanatı duvar tablosu.',
+    image: 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80',
+    rating: 5.0,
+    salesCount: 15
+  },
   // 1. YEMEK & RESTORAN (TamYemek Modeli - Malzeme Çıkarma & Ekstra Ekleme)
   {
     id: 'p-doner-hatay',

@@ -1,39 +1,34 @@
-name: Tampazar Otomatik Dagitim
+name: Deploy to Production
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Sunucuya Baglan ve Guvenli Canliya Al
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.VPS_IP }}
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            set -e
-            echo "1. Gecici derleme alanina geciliyor..."
-            rm -rf /tmp/tampazar-build
-            mkdir -p /tmp/tampazar-build
-            git clone https://github.com/tampazarcom-oss/tampazar-web.git /tmp/tampazar-build
+            cd ${{ secrets.PROJECT_PATH }}
+            git pull origin main
             
-            echo "2. Bagimliliklar kuruluyor ve build aliniyor..."
-            cd /tmp/tampazar-build
-            npm install --legacy-peer-deps
+            # Otomatik Ortam Değişkeni (.env) Yapılandırması ve Secrets Senkronizasyonu
+            cat << 'EOF' > .env
+            PORT=3000
+            NODE_ENV=production
+            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
+            GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
+            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+            EOF
+
             npm run build
-            
-            echo "3. Atomik gecis (atomic deployment) uygulaniyor..."
-            mkdir -p /var/www/tampazar/dist
-            rm -rf /var/www/tampazar/dist/*
-            cp -r dist/* /var/www/tampazar/dist/
-            
-            echo "4. Nginx konfigürasyonu test ediliyor ve yenileniyor..."
-            nginx -t
-            systemctl reload nginx
-            
-            echo "TamPazar Web sifir kesinti (zero-downtime) ile basariyla canliya alindi!"
+            pm2 restart all || docker compose restart
