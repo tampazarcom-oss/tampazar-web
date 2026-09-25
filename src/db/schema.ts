@@ -87,3 +87,17 @@ export const reviews = pgTable('reviews', {
   isVerifiedPurchase: boolean('is_verified_purchase').default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
+
+// 6. Users (Müşteri & Esnaf Kullanıcı Hesapları - Google OAuth)
+export const users = pgTable('users', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  email: varchar('email', { length: 255 }).unique().notNull(),
+  name: varchar('name', { length: 255 }),
+  role: varchar('role', { length: 32 }).default('customer'), // customer, merchant, courier, admin
+  avatar: text('avatar'),
+  googleId: varchar('google_id', { length: 255 }),
+  storeId: varchar('store_id', { length: 64 }),
+  storeName: varchar('store_name', { length: 255 }),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+

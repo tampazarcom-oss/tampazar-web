@@ -9,7 +9,7 @@ import { staticBlogPosts } from './src/data/blogData.js';
 import { encryptSecret } from './src/utils/cryptoSecurity.js';
 import { eq, desc, sql, and } from 'drizzle-orm';
 import { db } from './src/db/index.js';
-import { products, tenants, orders, orderAuditLogs, reviews } from './src/db/schema.js';
+import { products, tenants, orders, orderAuditLogs, reviews, users } from './src/db/schema.js';
 import { autoSeedDatabase } from './src/db/seed.js';
 import { GoogleGenAI } from '@google/genai';
 
@@ -596,18 +596,38 @@ async function startServer() {
    * 1. Google OAuth Giriş Yönlendirmesi
    */
   app.get('/api/auth/google', (req: Request, res: Response) => {
-    const role = (req.query.role as string) || 'buyer';
+    const role = (req.query.role as string) || 'customer';
     const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
 
     if (!googleClientId) {
       // Demo / Mock Fallback if Client ID is pending setup
-      const redirectPath = role === 'seller' ? '/yonetim' : '/hesabim';
-      res.cookie('tampazar_session', JSON.stringify({
+      const isSeller = role === 'seller' || role === 'merchant';
+      const redirectPath = isSeller ? '/yonetim' : '/hesabim';
+      const mockUser = {
+        id: 'usr_google_' + Date.now(),
         email: 'fotosentezordu@gmail.com',
-        name: 'Google Kullanıcısı',
-        picture: 'https://lh3.googleusercontent.com/a/default-user',
-        role
-      }), { httpOnly: false, maxAge: 24 * 60 * 60 * 1000 });
+        name: isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi',
+        avatar: 'https://lh3.googleusercontent.com/a/default-user',
+        role: isSeller ? 'merchant' : 'customer',
+        storeId: isSeller ? 's3' : undefined,
+        storeName: isSeller ? 'FotoSentez Stüdyo' : undefined
+      };
+
+      const token = generateJwtToken(mockUser);
+      res.cookie('tampazar_token', token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+      res.cookie('tampazar_session', JSON.stringify(mockUser), {
+        httpOnly: false,
+        secure: isProd,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
+      });
       return res.redirect(redirectPath);
     }
 
@@ -628,14 +648,21 @@ async function startServer() {
   });
 
   /**
-   * 2. Google OAuth Callback
+   * 2. Google OAuth Callback (Veritabanında otomatik müşteri/esnaf kaydı ve JWT/Çerez oluşturma)
    */
   app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
     try {
       const { code, state } = req.query;
-      let role = 'buyer';
+      let requestedRole = 'customer';
       try {
-        if (state) role = JSON.parse(state as string).role || 'buyer';
+        if (state) {
+          const parsedState = JSON.parse(state as string);
+          if (parsedState.role === 'seller' || parsedState.role === 'merchant') {
+            requestedRole = 'merchant';
+          } else {
+            requestedRole = 'customer';
+          }
+        }
       } catch (e) { /* ignore */ }
 
       const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
@@ -643,16 +670,37 @@ async function startServer() {
       const redirectUri = `${req.protocol}://${req.get('host')}/api/auth/google/callback`;
 
       if (!code || !googleClientId || !googleClientSecret) {
-        // Fallback user session
-        res.cookie('tampazar_session', JSON.stringify({
+        // Fallback user session if credentials missing
+        const isSeller = requestedRole === 'merchant';
+        const fallbackUser = {
+          id: 'usr_google_demo',
           email: 'fotosentezordu@gmail.com',
-          name: 'Google Kullanıcısı',
-          role
-        }), { httpOnly: false, maxAge: 24 * 60 * 60 * 1000 });
-        return res.redirect(role === 'seller' ? '/yonetim' : '/hesabim');
+          name: isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi',
+          avatar: 'https://lh3.googleusercontent.com/a/default-user',
+          role: requestedRole,
+          storeId: isSeller ? 's3' : undefined,
+          storeName: isSeller ? 'FotoSentez Stüdyo' : undefined
+        };
+
+        const token = generateJwtToken(fallbackUser);
+        res.cookie('tampazar_token', token, {
+          httpOnly: true,
+          secure: isProd,
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: '/'
+        });
+        res.cookie('tampazar_session', JSON.stringify(fallbackUser), {
+          httpOnly: false,
+          secure: isProd,
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000,
+          path: '/'
+        });
+        return res.redirect(isSeller ? '/yonetim' : '/hesabim');
       }
 
-      // Exchange code for token
+      // Exchange authorization code for token
       const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -667,26 +715,101 @@ async function startServer() {
 
       const tokenData = await tokenRes.json();
       if (!tokenData.access_token) {
-        return res.redirect('/?authError=google_token_failed');
+        console.error('Google token alma hatasi:', tokenData);
+        return res.redirect('/giris?authError=google_token_failed');
       }
 
-      // Fetch User Info
+      // Fetch Google User Profile
       const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
         headers: { Authorization: `Bearer ${tokenData.access_token}` }
       });
-      const userInfo = await userRes.json();
+      const googleUser = await userRes.json();
 
-      res.cookie('tampazar_session', JSON.stringify({
-        email: userInfo.email,
-        name: userInfo.name,
-        picture: userInfo.picture,
-        role
-      }), { httpOnly: false, maxAge: 24 * 60 * 60 * 1000 });
+      if (!googleUser.email) {
+        return res.redirect('/giris?authError=google_email_missing');
+      }
 
-      return res.redirect(role === 'seller' ? '/yonetim' : '/hesabim');
+      // Check or create user in Database
+      let existingUser: any = null;
+      try {
+        const foundUsers = await db.select().from(users).where(eq(users.email, googleUser.email)).limit(1);
+        if (foundUsers.length > 0) {
+          existingUser = foundUsers[0];
+        }
+      } catch (dbErr) {
+        console.warn('Google OAuth DB arama uyarisi:', dbErr);
+      }
+
+      let activeUserPayload: any = null;
+
+      if (existingUser) {
+        // Müşteri/Esnaf veritabanında zaten kayıtlı -> profili eşleştir
+        activeUserPayload = {
+          id: existingUser.id,
+          email: existingUser.email,
+          name: googleUser.name || existingUser.name,
+          avatar: googleUser.picture || existingUser.avatar,
+          role: existingUser.role || requestedRole,
+          storeId: existingUser.storeId || (existingUser.role === 'merchant' ? 's3' : undefined),
+          storeName: existingUser.storeName || (existingUser.role === 'merchant' ? 'FotoSentez Stüdyo' : undefined)
+        };
+      } else {
+        // Ilk kez giriş yapıyor -> Otomatik kullanıcı kaydı aç
+        const newUserId = 'usr_' + crypto.randomUUID();
+        const newUserObj = {
+          id: newUserId,
+          email: googleUser.email,
+          name: googleUser.name || 'Google Kullanıcısı',
+          role: requestedRole,
+          avatar: googleUser.picture || 'https://lh3.googleusercontent.com/a/default-user',
+          googleId: googleUser.id,
+          storeId: requestedRole === 'merchant' ? 's3' : undefined,
+          storeName: requestedRole === 'merchant' ? 'Yeni Google Mağazası' : undefined
+        };
+
+        try {
+          await db.insert(users).values({
+            id: newUserObj.id,
+            email: newUserObj.email,
+            name: newUserObj.name,
+            role: newUserObj.role,
+            avatar: newUserObj.avatar,
+            googleId: newUserObj.googleId,
+            storeId: newUserObj.storeId,
+            storeName: newUserObj.storeName
+          }).onConflictDoNothing();
+        } catch (insertErr) {
+          console.warn('Google kullanici kayit DB uyarisi:', insertErr);
+        }
+
+        activeUserPayload = newUserObj;
+      }
+
+      // JWT ve Çerezleri üret
+      const jwtToken = generateJwtToken(activeUserPayload);
+
+      res.cookie('tampazar_token', jwtToken, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+
+      res.cookie('tampazar_session', JSON.stringify(activeUserPayload), {
+        httpOnly: false,
+        secure: isProd,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        path: '/'
+      });
+
+      const redirectDestination = activeUserPayload.role === 'merchant' ? '/yonetim' : '/hesabim';
+      return res.redirect(redirectDestination);
+
     } catch (error) {
-      console.error('Google OAuth callback hatası:', error);
-      return res.redirect('/?authError=google_failed');
+      console.error('Google OAuth callback genel hata:', error);
+      return res.redirect('/giris?authError=google_failed');
     }
   });
 
