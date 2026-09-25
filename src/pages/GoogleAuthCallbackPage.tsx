@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Loader2, AlertCircle, ArrowLeft, CheckCircle2, ShieldCheck, Sparkles } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -17,108 +17,123 @@ export default function GoogleAuthCallbackPage() {
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'idle'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
-  const [customClientIdInput, setCustomClientIdInput] = useState(() => {
-    try {
-      return localStorage.getItem('tpz_google_client_id') || '';
-    } catch {
-      return '';
-    }
-  });
-  const [showConfig, setShowConfig] = useState(false);
-  const [configSaved, setConfigSaved] = useState(false);
-
-  const handleSaveClientId = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (customClientIdInput.trim()) {
-      try {
-        localStorage.setItem('tpz_google_client_id', customClientIdInput.trim());
-        setConfigSaved(true);
-        setTimeout(() => {
-          handleGoogleLogin('buyer');
-        }, 300);
-      } catch {}
-    }
-  };
+  const hasProcessedRef = useRef(false);
 
   useEffect(() => {
-    const processCallback = async () => {
+    // Çift çağrıları önlemek için ref koruması
+    if (hasProcessedRef.current) return;
+
+    const searchParams = new URLSearchParams(window.location.search || location.search);
+    const code = searchParams.get('code');
+    const stateStr = searchParams.get('state');
+    const oauthError = searchParams.get('error');
+
+    // Google tarafından dönen yetkilendirme hatası kontrolü
+    if (oauthError) {
+      hasProcessedRef.current = true;
+      const errorText = `Google yetkilendirmesi başarısız oldu: ${oauthError}`;
+      setStatus('error');
+      setErrorMessage(errorText);
+      setTimeout(() => {
+        navigate(`/giris?authError=${encodeURIComponent(errorText)}`, { replace: true });
+      }, 2000);
+      return;
+    }
+
+    // Kod yoksa ve kullanıcı zaten oturum açmışsa doğrudan yönlendir
+    if (!code) {
+      if (isAuthenticated && user) {
+        const isSeller = user.role === 'merchant' || user.role === 'seller';
+        navigate(isSeller ? '/satici-paneli' : '/hesabim', { replace: true });
+        return;
+      }
+      setStatus('idle');
+      return;
+    }
+
+    hasProcessedRef.current = true;
+
+    // State içerisinden role bilgisini çözümle
+    let targetRole = 'buyer';
+    if (stateStr) {
       try {
-        const searchParams = new URLSearchParams(location.search);
-        const code = searchParams.get('code');
-        const stateStr = searchParams.get('state');
-        const oauthError = searchParams.get('error');
-
-        if (oauthError) {
-          setStatus('error');
-          if (oauthError === 'invalid_client_unconfigured') {
-            setShowConfig(true);
-            setErrorMessage('Google Cloud Web Client ID henüz girilmemiş veya geçersiz. Lütfen Google Cloud Console > APIs & Services > Credentials sayfasından aldığınız OAuth 2.0 Web Client ID değerini aşağıdaki alana yapıştırıp kaydedin.');
-          } else {
-            setErrorMessage(`Google yetkilendirme iptal edildi veya başarısız oldu: ${oauthError}`);
-          }
-          return;
-        }
-
-        if (!code) {
-          if (isAuthenticated && user) {
-            const isSeller = user.role === 'merchant' || user.role === 'seller';
-            navigate(isSeller ? '/satici-paneli' : '/hesabim', { replace: true });
-            return;
-          }
-          setStatus('idle');
-          return;
-        }
-
-        let role = 'buyer';
+        const parsed = JSON.parse(decodeURIComponent(stateStr));
+        if (parsed.role) targetRole = parsed.role;
+      } catch {
         try {
-          if (stateStr) {
-            const parsed = JSON.parse(decodeURIComponent(stateStr));
-            if (parsed.role) role = parsed.role;
-          }
+          const parsed = JSON.parse(stateStr);
+          if (parsed.role) targetRole = parsed.role;
         } catch {
-          if (stateStr === 'seller' || stateStr === 'merchant') {
-            role = 'seller';
+          if (stateStr.includes('seller') || stateStr.includes('merchant')) {
+            targetRole = 'seller';
           }
         }
+      }
+    }
 
-        const redirectUri = `${window.location.origin}/auth/google/callback`;
+    const redirectUri = `${window.location.origin}/auth/google/callback`;
 
-        const response = await fetch('/api/auth/google/verify-code', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            code,
-            redirectUri,
-            role
-          })
-        });
-
+    // POST /api/auth/google/verify-code uç noktasına doğrulama isteği
+    fetch('/api/auth/google/verify-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        code,
+        redirectUri,
+        role: targetRole
+      })
+    })
+      .then(async (response) => {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
           throw new Error(data.message || 'Google oturumu doğrulanamadı.');
         }
 
-        setStatus('success');
+        // Token ve kullanıcı verilerini localStorage ve çerez içerisine kaydet
+        if (data.token) {
+          try {
+            localStorage.setItem('tampazar_token', data.token);
+            document.cookie = `tampazar_token=${encodeURIComponent(data.token)}; path=/; max-age=604800; SameSite=Lax`;
+          } catch (e) {
+            console.warn('Storage write error:', e);
+          }
+        }
+
         if (data.user) {
+          try {
+            localStorage.setItem('tampazar_auth_user', JSON.stringify(data.user));
+            document.cookie = `tampazar_session=${encodeURIComponent(JSON.stringify(data.user))}; path=/; max-age=604800; SameSite=Lax`;
+          } catch (e) {
+            console.warn('Storage write error:', e);
+          }
           setAuthUser(data.user);
         }
 
-        // Kısa bir başarı animasyonundan sonra panele yönlendir
+        setStatus('success');
+
+        // State içindeki role bilgisine göre doğrudan yönlendir
+        const isSeller = targetRole === 'seller' || data.user?.role === 'merchant' || data.user?.role === 'seller';
+        const targetPath = isSeller ? '/satici-paneli' : '/hesabim';
+
         setTimeout(() => {
-          const isSeller = role === 'seller' || data.user?.role === 'merchant' || data.user?.role === 'seller';
-          navigate(isSeller ? '/satici-paneli' : '/hesabim', { replace: true });
-        }, 700);
-
-      } catch (err: any) {
+          navigate(targetPath, { replace: true });
+        }, 500);
+      })
+      .catch((err: any) => {
         console.error('Google callback error:', err);
+        const errText = err.message || 'Google ile giriş sırasında bir hata oluştu.';
         setStatus('error');
-        setErrorMessage(err.message || 'Google ile giriş sırasında bir bağlantı hatası oluştu.');
-      }
-    };
+        setErrorMessage(errText);
 
-    processCallback();
+        // Hata durumunda kullanıcıyı hata parametresiyle giriş sayfasına yönlendir
+        setTimeout(() => {
+          navigate(`/giris?authError=${encodeURIComponent(errText)}`, { replace: true });
+        }, 2200);
+      });
   }, [location.search, navigate, setAuthUser, isAuthenticated, user]);
 
   return (
@@ -128,18 +143,20 @@ export default function GoogleAuthCallbackPage() {
           <BrandLogo size="md" />
         </div>
 
+        {/* 1. Yükleme Göstergesi */}
         {status === 'loading' && (
           <div className="space-y-4 py-6">
             <div className="relative inline-flex items-center justify-center">
               <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
             </div>
-            <h2 className="text-lg font-black text-slate-900">Google Oturumu Doğrulanıyor</h2>
+            <h2 className="text-lg font-black text-slate-900">Giriş yapılıyor, lütfen bekleyin...</h2>
             <p className="text-xs text-slate-500 font-medium">
-              Google hesabınız güvenle doğrulanıyor ve profiliniz hazırlanıyor, lütfen bekleyin...
+              Google hesabınız güvenle doğrulanıyor ve oturumunuz hazırlanıyor...
             </p>
           </div>
         )}
 
+        {/* 2. Başarılı Oturum */}
         {status === 'success' && (
           <div className="space-y-4 py-6 animate-fade-in">
             <div className="inline-flex p-3 rounded-full bg-emerald-100 text-emerald-600">
@@ -147,11 +164,12 @@ export default function GoogleAuthCallbackPage() {
             </div>
             <h2 className="text-lg font-black text-slate-900">Giriş Başarılı!</h2>
             <p className="text-xs text-slate-500 font-medium">
-              Hesabınıza güvenle yönlendiriliyorsunuz...
+              Hesabınıza güvenle aktarılıyorsunuz...
             </p>
           </div>
         )}
 
+        {/* 3. Kodsuz Boş Giriş Ekranı */}
         {status === 'idle' && (
           <div className="space-y-4 py-4 animate-fade-in">
             <div className="inline-flex p-3 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-700">
@@ -201,6 +219,7 @@ export default function GoogleAuthCallbackPage() {
           </div>
         )}
 
+        {/* 4. Hata Durumu */}
         {status === 'error' && (
           <div className="space-y-5 py-4 animate-fade-in">
             <div className="inline-flex p-3 rounded-full bg-rose-100 text-rose-600">
@@ -210,61 +229,21 @@ export default function GoogleAuthCallbackPage() {
             <p className="text-xs text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-200 text-left font-medium leading-relaxed">
               {errorMessage}
             </p>
+            <p className="text-[11px] text-slate-500">
+              Giriş ekranına yönlendiriliyorsunuz...
+            </p>
             <div className="space-y-2 pt-2">
-              <button
-                type="button"
-                onClick={() => handleGoogleLogin('buyer')}
-                className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Google ile Tekrar Dene</span>
-              </button>
-
               <Link
                 to="/giris"
-                className="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center justify-center gap-2"
+                className="w-full py-3 bg-indigo-900 hover:bg-indigo-800 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span>Giriş Ekranına Dön</span>
+                <span>Giriş Ekranına Hemen Dön</span>
               </Link>
             </div>
           </div>
         )}
-
-        {/* Hızlı Google Client ID Tanımlama Paneli */}
-        <div className="pt-3 border-t border-slate-100 text-left">
-          <button
-            type="button"
-            onClick={() => setShowConfig(!showConfig)}
-            className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
-          >
-            <span>⚙️ Google OAuth Client ID Tanımla / Güncelle</span>
-          </button>
-
-          {showConfig && (
-            <form onSubmit={handleSaveClientId} className="mt-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
-              <p className="text-[11px] text-slate-600 font-medium">
-                Google Cloud Console'dan aldığınız Web Client ID'yi buraya yapıştırıp kaydedebilirsiniz:
-              </p>
-              <input
-                type="text"
-                value={customClientIdInput}
-                onChange={(e) => setCustomClientIdInput(e.target.value)}
-                placeholder="Örn: 123456789-xxx.apps.googleusercontent.com"
-                className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-[11px]"
-              />
-              <div className="flex gap-2 pt-1">
-                <button
-                  type="submit"
-                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm cursor-pointer"
-                >
-                  {configSaved ? '✓ Kaydedildi, Yönlendiriliyor...' : 'Kaydet ve Google ile Giriş Yap'}
-                </button>
-              </div>
-            </form>
-          )}
-        </div>
       </div>
     </div>
   );
 }
-
