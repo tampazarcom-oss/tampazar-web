@@ -621,6 +621,17 @@ async function startServer() {
   });
 
   /**
+   * Google OAuth Public Client ID Endpoint
+   */
+  app.get('/api/auth/google/client-id', (_req: Request, res: Response) => {
+    const googleClientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+    return res.status(200).json({
+      success: true,
+      clientId: googleClientId
+    });
+  });
+
+  /**
    * 2. Google OAuth Callback (Doğrulama, PostgreSQL Eşleme/Oluşturma, JWT & Çerez)
    */
   app.get(['/api/auth/google/callback', '/auth/google/callback'], async (req: Request, res: Response, next: NextFunction) => {

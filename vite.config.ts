@@ -59,6 +59,13 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    define: {
+      'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(
+        process.env.VITE_GOOGLE_CLIENT_ID || 
+        process.env.GOOGLE_CLIENT_ID || 
+        '329969897207-usdb3sbbn8j6c3m61qflv2i7i9j18bco.apps.googleusercontent.com'
+      ),
+    },
     build: {
       rollupOptions: {
         output: {

@@ -17,6 +17,28 @@ export default function GoogleAuthCallbackPage() {
 
   const [status, setStatus] = useState<'loading' | 'success' | 'error' | 'idle'>('loading');
   const [errorMessage, setErrorMessage] = useState<string>('');
+  const [customClientIdInput, setCustomClientIdInput] = useState(() => {
+    try {
+      return localStorage.getItem('tpz_google_client_id') || '';
+    } catch {
+      return '';
+    }
+  });
+  const [showConfig, setShowConfig] = useState(false);
+  const [configSaved, setConfigSaved] = useState(false);
+
+  const handleSaveClientId = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (customClientIdInput.trim()) {
+      try {
+        localStorage.setItem('tpz_google_client_id', customClientIdInput.trim());
+        setConfigSaved(true);
+        setTimeout(() => {
+          handleGoogleLogin('buyer');
+        }, 300);
+      } catch {}
+    }
+  };
 
   useEffect(() => {
     const processCallback = async () => {
@@ -202,6 +224,40 @@ export default function GoogleAuthCallbackPage() {
             </div>
           </div>
         )}
+
+        {/* Hızlı Google Client ID Tanımlama Paneli */}
+        <div className="pt-3 border-t border-slate-100 text-left">
+          <button
+            type="button"
+            onClick={() => setShowConfig(!showConfig)}
+            className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+          >
+            <span>⚙️ Google OAuth Client ID Tanımla / Güncelle</span>
+          </button>
+
+          {showConfig && (
+            <form onSubmit={handleSaveClientId} className="mt-2.5 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
+              <p className="text-[11px] text-slate-600 font-medium">
+                Google Cloud Console'dan aldığınız Web Client ID'yi buraya yapıştırıp kaydedebilirsiniz:
+              </p>
+              <input
+                type="text"
+                value={customClientIdInput}
+                onChange={(e) => setCustomClientIdInput(e.target.value)}
+                placeholder="Örn: 123456789-xxx.apps.googleusercontent.com"
+                className="w-full text-xs px-3 py-2 bg-white border border-slate-300 rounded-xl text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono text-[11px]"
+              />
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="submit"
+                  className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition shadow-sm cursor-pointer"
+                >
+                  {configSaved ? '✓ Kaydedildi, Yönlendiriliyor...' : 'Kaydet ve Google ile Giriş Yap'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );
