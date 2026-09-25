@@ -8,9 +8,23 @@ export const tenants = pgTable('tenants', {
   taxOffice: varchar('tax_office', { length: 128 }),
   taxId: varchar('tax_id', { length: 32 }),
   slug: varchar('slug', { length: 255 }).unique().notNull(),
-  plan: varchar('plan', { length: 32 }).default('Starter'),
-  subscriptionStatus: varchar('subscription_status', { length: 32 }).default('trial'),
+  
+  // Abonelik & Deneme Takibi
+  plan: varchar('plan', { length: 32 }).default('Starter'), // Starter, Pro, Enterprise
+  subscriptionStatus: varchar('subscription_status', { length: 32 }).default('trial'), // trial, active, expired, suspended
+  trialStartedAt: timestamp('trial_started_at', { withTimezone: true }),
   trialEndsAt: timestamp('trial_ends_at', { withTimezone: true }),
+  
+  // Başvuru Durumu
+  onboardingStatus: varchar('onboarding_status', { length: 32 }).default('submitted'), // draft, submitted, under_review, approved, rejected
+  applicationTrackingCode: varchar('application_tracking_code', { length: 64 }).unique(),
+  rejectionReason: text('rejection_reason'),
+
+  // KVKK ve İletişim İzinleri
+  kvkkConsent: boolean('kvkk_consent').default(false).notNull(),
+  commercialMessageConsent: boolean('commercial_message_consent').default(false).notNull(),
+  consentGivenAt: timestamp('consent_given_at', { withTimezone: true }),
+
   byoPosConnected: boolean('byo_pos_connected').default(false),
   encryptedPosKeys: text('encrypted_pos_keys'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()

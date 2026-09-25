@@ -632,6 +632,125 @@ async function startServer() {
     }
   });
 
+  /**
+   * 1. Yeni Satıcı Başvurusu (POST /api/merchants/apply)
+   */
+  app.post('/api/merchants/apply', async (req: Request, res: Response) => {
+    try {
+      const { 
+        storeName, 
+        legalTitle, 
+        taxOffice, 
+        taxId, 
+        slug, 
+        plan = 'Starter', 
+        kvkkConsent, 
+        commercialMessageConsent 
+      } = req.body;
+
+      if (!storeName || !taxId || !taxOffice) {
+        return res.status(400).json({ success: false, message: 'İşletme adı, vergi dairesi ve vergi kimlik numarası zorunludur.' });
+      }
+
+      if (!kvkkConsent) {
+        return res.status(400).json({ success: false, message: 'KVKK aydınlatma metnini onaylamanız gerekmektedir.' });
+      }
+
+      // Slug benzersizlik kontrolü
+      const targetSlug = slug || storeName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+      try {
+        const existing = await db.select().from(tenants).where(eq(tenants.slug, targetSlug)).limit(1);
+        if (existing.length > 0) {
+          return res.status(409).json({ success: false, message: 'Bu mağaza adresi (URL) kullanımda.' });
+        }
+      } catch (dbErr) {
+        console.warn('Slug kontrolü DB uyarısı:', dbErr);
+      }
+
+      const tenantId = `ten_${crypto.randomUUID()}`;
+      const trackingCode = `TP-ONB-${Date.now().toString().slice(-6)}`;
+      const now = new Date();
+      const trialEnds = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000); // Tam 14 gün sonrası
+
+      let createdTenantId = tenantId;
+
+      try {
+        const [newTenant] = await db.insert(tenants).values({
+          id: tenantId,
+          name: storeName,
+          legalTitle: legalTitle || storeName,
+          taxOffice,
+          taxId,
+          slug: targetSlug,
+          plan,
+          subscriptionStatus: 'trial',
+          trialStartedAt: now,
+          trialEndsAt: trialEnds,
+          onboardingStatus: 'under_review',
+          applicationTrackingCode: trackingCode,
+          kvkkConsent: Boolean(kvkkConsent),
+          commercialMessageConsent: Boolean(commercialMessageConsent),
+          consentGivenAt: now
+        }).returning();
+
+        if (newTenant) {
+          createdTenantId = newTenant.id;
+        }
+      } catch (insertErr) {
+        console.warn('Satıcı kaydı DB uyarısı:', insertErr);
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: 'Başvurunuz alındı. 14 günlük deneme süreniz onay sürecinden sonra başlayacaktır.',
+        trackingCode,
+        trialEndsAt: trialEnds,
+        tenantId: createdTenantId
+      });
+
+    } catch (error) {
+      console.error('Satıcı başvuru hatası:', error);
+      return res.status(500).json({ success: false, message: 'Başvuru işlenirken sunucu hatası oluştu.' });
+    }
+  });
+
+  /**
+   * 2. Başvuru Durumunu Takip Etme (GET /api/merchants/status/:code)
+   */
+  app.get('/api/merchants/status/:code', async (req: Request, res: Response) => {
+    try {
+      const { code } = req.params;
+      let tenant: any = null;
+
+      try {
+        const found = await db.select().from(tenants).where(eq(tenants.applicationTrackingCode, code)).limit(1);
+        if (found && found.length > 0) {
+          tenant = found[0];
+        }
+      } catch (dbErr) {
+        console.warn('Başvuru takibi DB uyarısı:', dbErr);
+      }
+
+      if (!tenant) {
+        return res.status(404).json({ success: false, message: 'Başvuru bulunamadı.' });
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          storeName: tenant.name,
+          status: tenant.onboardingStatus,
+          plan: tenant.plan,
+          trialEndsAt: tenant.trialEndsAt,
+          rejectionReason: tenant.rejectionReason || null
+        }
+      });
+    } catch (error) {
+      console.error('Durum sorgulama hatası:', error);
+      return res.status(500).json({ success: false, message: 'Durum bilgisi alınamadı.' });
+    }
+  });
+
   // =========================================================================
   // 4. DINAMIK ROBOTS.TXT, LLMS.TXT VE XML SITEMAP ROTALARI
   // =========================================================================

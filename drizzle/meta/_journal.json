@@ -8,6 +8,13 @@
       "when": 1790320076429,
       "tag": "0000_giant_sleeper",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790320397411,
+      "tag": "0001_broad_scrambler",
+      "breakpoints": true
     }
   ]
 }
