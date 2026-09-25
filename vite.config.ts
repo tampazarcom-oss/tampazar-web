@@ -63,7 +63,7 @@ export default defineConfig(() => {
       'import.meta.env.VITE_GOOGLE_CLIENT_ID': JSON.stringify(
         process.env.VITE_GOOGLE_CLIENT_ID || 
         process.env.GOOGLE_CLIENT_ID || 
-        '329969897207-usdb3sbbn8j6c3m61qflv2i7i9j18bco.apps.googleusercontent.com'
+        'GERCEK_CLIENT_ID_BURAYA_YAPISTIRIN'
       ),
     },
     build: {

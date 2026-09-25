@@ -50,7 +50,12 @@ export default function GoogleAuthCallbackPage() {
 
         if (oauthError) {
           setStatus('error');
-          setErrorMessage(`Google yetkilendirme iptal edildi veya başarısız oldu: ${oauthError}`);
+          if (oauthError === 'invalid_client_unconfigured') {
+            setShowConfig(true);
+            setErrorMessage('Google Cloud Web Client ID henüz girilmemiş veya geçersiz. Lütfen Google Cloud Console > APIs & Services > Credentials sayfasından aldığınız OAuth 2.0 Web Client ID değerini aşağıdaki alana yapıştırıp kaydedin.');
+          } else {
+            setErrorMessage(`Google yetkilendirme iptal edildi veya başarısız oldu: ${oauthError}`);
+          }
           return;
         }
 

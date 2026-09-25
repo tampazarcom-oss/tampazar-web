@@ -3,20 +3,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+// Google Cloud projesinde tanımlanan doğrulanmış Web Client ID
+export const VERIFIED_GOOGLE_CLIENT_ID = 'GERCEK_CLIENT_ID_BURAYA_YAPISTIRIN';
+
 /**
- * Google OAuth 2.0 Web Client ID değerini güvenli şekilde çözer.
- * 1. import.meta.env.VITE_GOOGLE_CLIENT_ID (Çevre Değişkeni)
- * 2. localStorage ('tpz_google_client_id') (Arayüzden hızlı tanımlama)
- * 3. Proje varsayılan fallback Client ID
+ * Google OAuth 2.0 Web Client ID değerini dinamik ve güvenli şekilde çözer.
+ * 1. Tarayıcı Hafızasındaki Override (kullanıcı/admin tarafından anında girilen kimlik)
+ * 2. import.meta.env.VITE_GOOGLE_CLIENT_ID (.env yapılandırması)
+ * 3. VERIFIED_GOOGLE_CLIENT_ID doğrulanmış kimlik sabiti
  */
 export const getGoogleClientId = (): string => {
-  // 1. Vite Ortam Değişkeni
-  const envId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
-  if (envId && !envId.includes('BURAYA_') && !envId.includes('CLIENT_IDYI') && envId !== 'placeholder') {
-    return envId;
-  }
-
-  // 2. Tarayıcı Depolaması (kullanıcı UI üzerinden girdiğinde anında çalışması için)
+  // 1. Tarayıcı Depolaması (Arayüzden tanımlanmış güncel kimlik)
   try {
     const localId = localStorage.getItem('tpz_google_client_id');
     if (localId && localId.trim() && localId.includes('.apps.googleusercontent.com')) {
@@ -24,8 +21,14 @@ export const getGoogleClientId = (): string => {
     }
   } catch {}
 
-  // 3. Fallback (Derleme sırasında asla boş kalmayacak şekilde)
-  return '329969897207-usdb3sbbn8j6c3m61qflv2i7i9j18bco.apps.googleusercontent.com';
+  // 2. Vite Ortam Değişkeni (.env / VITE_GOOGLE_CLIENT_ID)
+  const envId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
+  if (envId && !envId.includes('BURAYA_') && !envId.includes('CLIENT_IDYI') && envId !== 'placeholder') {
+    return envId;
+  }
+
+  // 3. Doğrulanmış Proje Web Client ID Değeri
+  return VERIFIED_GOOGLE_CLIENT_ID;
 };
 
 /**
@@ -46,10 +49,22 @@ export const setCustomGoogleClientId = (clientId: string): boolean => {
 
 /**
  * Tarayıcı seviyesinde doğrudan Google OAuth 2.0 yetkilendirme ekranına yönlendirir.
- * SPA router çakışmalarını ve boş sayfa kalma sorununu engeller.
+ * Eğer henüz Google Cloud Console'dan geçerli bir Web Client ID atanmamışsa
+ * kullanıcıyı Google'ın 401 invalid_client hata sayfasına göndermek yerine
+ * bilgilendirici arayüz yapılandırma ekranına yönlendirir.
  */
 export const handleGoogleLogin = (role: 'buyer' | 'seller' = 'buyer') => {
   const clientId = getGoogleClientId();
+
+  // Şablon metni veya eksik client id kontrolü (401 invalid_client hatasını önler)
+  if (!clientId || clientId.includes('BURAYA_') || clientId === 'placeholder' || !clientId.includes('.apps.googleusercontent.com')) {
+    const targetUrl = `/auth/google/callback?error=invalid_client_unconfigured&role=${encodeURIComponent(role)}`;
+    if (window.location.pathname !== '/auth/google/callback') {
+      window.location.href = targetUrl;
+    }
+    return;
+  }
+
   const redirectUri = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
   const scope = encodeURIComponent('openid email profile');
   const state = encodeURIComponent(JSON.stringify({ role }));
