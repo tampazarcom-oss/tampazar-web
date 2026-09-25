@@ -16,18 +16,6 @@ export const VERIFIED_GOOGLE_CLIENT_ID = '329969897207-usdbp11an516r0qtjo6k0tr26
  * Google Client ID'yi alır.
  */
 export const getGoogleClientId = (): string => {
-  try {
-    const localId = localStorage.getItem('tpz_google_client_id');
-    if (localId && localId.trim().includes('.apps.googleusercontent.com')) {
-      return localId.trim();
-    }
-  } catch {}
-
-  const envId = (import.meta.env.VITE_GOOGLE_CLIENT_ID || '').trim();
-  if (envId && envId.includes('.apps.googleusercontent.com')) {
-    return envId;
-  }
-
   return VERIFIED_GOOGLE_CLIENT_ID;
 };
 

@@ -31,15 +31,15 @@ export default function CustomerAuthPage() {
     e.preventDefault();
     if (isRegisterMode) {
       registerBuyer({
-        name: name || 'Ahmet Yılmaz',
-        email: email || 'ahmet.yilmaz@tampazar.com',
-        phone: phone || '+90 532 555 12 34',
+        name: name.trim() || 'Müşteri',
+        email: email.trim(),
+        phone: phone.trim(),
         city,
         district,
         password
       });
     } else {
-      loginAsCustomer(email || 'ahmet.yilmaz@tampazar.com');
+      loginAsCustomer(email.trim(), name.trim());
     }
     navigate('/hesabim');
   };
@@ -222,25 +222,10 @@ export default function CustomerAuthPage() {
           </button>
         </form>
 
-        {/* Demo Fast Login */}
-        <div className="pt-4 border-t border-slate-100 space-y-2">
-          <button
-            type="button"
-            onClick={() => {
-              loginAsCustomer();
-              navigate('/hesabim');
-            }}
-            className="w-full py-2.5 bg-amber-50 hover:bg-amber-100 text-amber-900 font-extrabold text-xs rounded-xl border border-amber-200 transition cursor-pointer flex items-center justify-center gap-2"
-          >
-            <Sparkles className="w-4 h-4 text-amber-600" />
-            <span>Tek Tıkla Hızlı Müşteri Demosu Olarak Başla</span>
-          </button>
-
-          <div className="text-center pt-2">
-            <Link to="/saticipaneli" className="text-xs font-bold text-emerald-700 hover:underline">
-              Esnaf mısınız? Kendi Mağazanıza Giriş Yapın →
-            </Link>
-          </div>
+        <div className="pt-4 border-t border-slate-100 text-center">
+          <Link to="/saticipaneli" className="text-xs font-bold text-emerald-700 hover:underline">
+            Esnaf mısınız? Kendi Mağazanıza Giriş Yapın →
+          </Link>
         </div>
 
       </div>

@@ -227,37 +227,6 @@ export default function GlobalUserNav() {
             )}
           </div>
 
-          {/* Quick Role Switcher for Demo Testing */}
-          <div className="p-2 bg-slate-50 border-t border-slate-100 space-y-1 text-[10px]">
-            <span className="text-slate-400 font-mono uppercase block font-bold px-2">Hızlı Rol Değiştir (Demo)</span>
-            <div className="grid grid-cols-2 gap-1">
-              <button 
-                onClick={() => { switchRole('customer'); setDropdownOpen(false); navigate('/hesabim'); }}
-                className="px-2 py-1 rounded bg-white hover:bg-indigo-50 border border-slate-200 font-semibold text-slate-700 text-left"
-              >
-                👤 Müşteri
-              </button>
-              <button 
-                onClick={() => { switchRole('merchant'); setDropdownOpen(false); navigate('/yonetim'); }}
-                className="px-2 py-1 rounded bg-white hover:bg-amber-50 border border-slate-200 font-semibold text-slate-700 text-left"
-              >
-                🏪 Esnaf
-              </button>
-              <button 
-                onClick={() => { switchRole('courier'); setDropdownOpen(false); navigate('/kurye/panel'); }}
-                className="px-2 py-1 rounded bg-white hover:bg-emerald-50 border border-slate-200 font-semibold text-slate-700 text-left"
-              >
-                🛵 Kurye
-              </button>
-              <button 
-                onClick={() => { switchRole('admin'); setDropdownOpen(false); navigate('/sistem-admin'); }}
-                className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 font-bold text-amber-400 text-left"
-              >
-                🛡️ Admin
-              </button>
-            </div>
-          </div>
-
           {/* Logout */}
           <div className="py-1">
             <button

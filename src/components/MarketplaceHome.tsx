@@ -16,7 +16,9 @@ import { HybridOrder, playOrderAlertChime } from '../data/hybridCommerceData';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from './BrandLogo';
 import GlobalUserNav from './GlobalUserNav';
+import ModernHeader from './ModernHeader';
 import TamTeklifWizardModal from './TamTeklifWizardModal';
+import SellerOnboardingWizardModal from './SellerOnboardingWizardModal';
 import MegaMenu from './MegaMenu';
 import QuickCategoryBar from './QuickCategoryBar';
 import { applyPageSEO } from '../utils/seo';
@@ -56,10 +58,14 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
 
   // Search & Filter State
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedScope, setSelectedScope] = useState<'all' | 'retail' | 'wholesale' | 'service' | 'stores'>('all');
   const [selectedTypeFilter, setSelectedTypeFilter] = useState<'all' | 'retail' | 'wholesale' | 'service'>('all');
   const [activeStoryFilter, setActiveStoryFilter] = useState<string | null>(null);
   const [favorites, setFavorites] = useState<string[]>([]);
+
+  // Esnaf Kurulum Sihirbazı Modal State
+  const [isSellerWizardOpen, setIsSellerWizardOpen] = useState(false);
 
   // 5 Hibrit Ticaret Vitrini Tab Filtresi
   const [activeCommerceModelTab, setActiveCommerceModelTab] = useState<'all' | 'cargo' | 'local_food' | 'emergency' | 'venue' | 'digital' | 'session'>('all');
@@ -144,12 +150,21 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
     };
   }, [isCartOpen, activeModalProduct]);
 
-  // Filter products based on search, scope, type filter, and story filter
+  // Filter products based on search, category, scope, type filter, and story filter
   const filteredProducts = products.filter(item => {
     const matchesSearch = searchQuery === '' || 
       item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       item.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (item.storeName && item.storeName.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const categoryLower = selectedCategory.toLowerCase();
+    const matchesCategory = selectedCategory === 'all' ||
+      item.category.toLowerCase().includes(categoryLower) ||
+      (categoryLower === 'mahalle-hizli' && (item.category.includes('Gıda') || item.category.includes('Hızlı') || item.category.includes('Yemek') || item.category.includes('Kasap') || item.category.includes('Fırın') || item.category.includes('Manav'))) ||
+      (categoryLower === 'moda-giyim-zanaat' && (item.category.includes('Moda') || item.category.includes('Giyim') || item.category.includes('Ayakkabı') || item.category.includes('Zanaat') || item.category.includes('Tekstil'))) ||
+      (categoryLower === 'ev-yasam-yapi-market' && (item.category.includes('Ev') || item.category.includes('Mutfak') || item.category.includes('Yapı') || item.category.includes('Hırdavat'))) ||
+      (categoryLower === 'hizmet-ustalik-bakim' && (item.type === 'service' || item.category.includes('Hizmet') || item.category.includes('Usta') || item.category.includes('Çilingir'))) ||
+      (categoryLower === 'tamdijital' && (item.category.includes('Dijital') || item.category.includes('Yazılım') || item.category.includes('Tasarım')));
 
     const matchesScope = 
       selectedScope === 'all' ||
@@ -172,7 +187,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       matchesStory = Boolean(item.badge?.includes('Kargo')) || item.price > 1000;
     }
 
-    return matchesSearch && matchesScope && matchesTypeFilter && matchesStory;
+    return matchesSearch && matchesCategory && matchesScope && matchesTypeFilter && matchesStory;
   });
 
   const handleOpenProductModal = (product: Product) => {
@@ -597,252 +612,84 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   return (
     <div className="min-h-screen bg-[#f8f9fa] text-slate-900 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
-      {/* 0. TOP BAR (Üst Bilgi Şeridi) - Sadece Zorunlu Vurgular & Navigasyon */}
-      <div className="bg-[#0B132B] text-slate-300 text-xs py-2 px-4 border-b border-slate-800/90 shadow-2xs">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          {/* Sol Güvenlik & Komisyonsuzluk Vurgusu */}
-          <div className="flex items-center gap-2 font-medium text-[11px] sm:text-xs">
-            <span className="text-amber-400 font-bold">🛡️ %0 Komisyon Doğrudan Esnaf Kasası</span>
-            <span className="text-slate-600 hidden sm:inline">•</span>
-            <span className="text-emerald-400 font-semibold hidden sm:inline">GİB e-Fatura Garantisi</span>
-          </div>
-
-          {/* Sağ Sadeleştirilmiş Navigasyon Linkleri */}
-          <div className="flex items-center gap-4 text-[11px] font-semibold">
-            <button 
-              onClick={() => onNavigateToSuperMall?.()}
-              className="hover:text-amber-300 transition-colors flex items-center gap-1 cursor-pointer text-slate-200"
-            >
-              <Store className="w-3.5 h-3.5 text-amber-400" />
-              <span>Şehrin Açık AVM'si</span>
-            </button>
-            <Link to="/kuryeler" className="hover:text-amber-300 transition-colors flex items-center gap-1 text-slate-200">
-              <Bike className="w-3.5 h-3.5 text-sky-400" />
-              <span>TamKurye</span>
-            </Link>
-            <Link to="/blog" className="hover:text-amber-300 transition-colors text-slate-200">
-              Rehber & Blog
-            </Link>
-            <button 
-              onClick={() => onOpenSellerDashboard?.('overview')}
-              className="text-amber-400 hover:text-amber-300 transition-colors font-bold cursor-pointer flex items-center gap-1 bg-amber-400/10 px-2 py-0.5 rounded border border-amber-400/20"
-            >
-              <Briefcase className="w-3 h-3" />
-              <span>Esnaf Paneli</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* 1. ÜST HEADER: Amazon Arama Genişliği + Airbnb Tipografisi */}
-      <header className="sticky top-0 z-40 bg-white border-b border-slate-200/90 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between gap-3 sm:gap-4">
-          
-          <div className="flex items-center shrink-0">
-            <BrandLogo 
-              size="lg" 
-              onClick={() => { 
-                setSelectedScope('all'); 
-                setSelectedTypeFilter('all'); 
-                setActiveStoryFilter(null);
-                setSearchQuery(''); 
-                setActiveModalProduct(null); 
-                setIsCartOpen(false); 
-              }} 
-            />
-          </div>
-
-          {/* Amazon Kalitesinde Genişletilmiş Akıllı Hibrit Arama Çubuğu */}
-          <div className="flex-1 max-w-2xl mx-2 sm:mx-4 relative">
-            <div className="flex items-center rounded-xl border-2 border-slate-200/90 focus-within:border-[#F59E0B] focus-within:ring-3 focus-within:ring-[#F59E0B]/20 overflow-hidden bg-white shadow-xs transition-all duration-200">
-              {/* Sol: Açılır Kategori Filtresi */}
-              <select 
-                value={selectedScope}
-                onChange={(e) => setSelectedScope(e.target.value as any)}
-                className="bg-slate-100/80 hover:bg-slate-200/80 px-2.5 sm:px-3 text-xs font-bold text-slate-700 border-r border-slate-200 outline-none cursor-pointer transition-colors h-11 shrink-0"
-              >
-                <option value="all">Tüm Pazar ▾</option>
-                <option value="retail">Perakende</option>
-                <option value="wholesale">Toptan (B2B)</option>
-                <option value="service">Hizmet & Rezervasyon</option>
-                <option value="stores">Doğrudan Mağazalar</option>
-              </select>
-
-              {/* Orta: Geniş ve Okunaklı Arama Inputu */}
-              <input 
-                type="text" 
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Mahallenizdeki esnafı, ürünü veya hizmeti arayın..."
-                className="w-full min-w-0 px-3.5 py-2 text-xs sm:text-sm font-medium outline-none bg-transparent text-slate-900 placeholder:text-slate-400 h-11"
-              />
-
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="px-2 text-slate-400 hover:text-slate-600 transition-colors cursor-pointer shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-
-              {/* Sağ: Zümrüt Yeşili Arama Butonu */}
-              <button 
-                className="bg-[#0F4C3A] hover:bg-[#0B382B] text-white w-12 h-11 flex items-center justify-center shrink-0 transition-colors cursor-pointer font-bold shadow-xs active:scale-95"
-                title="Arama Yap"
-              >
-                <Search className="w-5 h-5 text-white" />
-              </button>
-            </div>
-          </div>
-
-          {/* Sağ Eylemler: Nefes Payı Açılmış Butonlar */}
-          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
-            <Link 
-              to="/saticipaneli"
-              className="hidden xl:flex items-center gap-1.5 bg-[#0F4C3A] hover:bg-[#0B382B] text-white px-3 py-2 rounded-xl font-bold text-[11px] transition-all cursor-pointer shadow-xs border border-emerald-600/40"
-            >
-              <Store className="w-3.5 h-3.5 text-amber-400" />
-              <span>Satıcı Ol / Dükkan Aç</span>
-              <span className="bg-[#F59E0B] text-[#0B132B] text-[8.5px] font-black px-1 py-0.2 rounded uppercase">14 Gün Ücretsiz</span>
-            </Link>
-
-            <Link 
-              to="/toptan"
-              className="hidden lg:flex items-center gap-1.5 bg-[#0B132B] hover:bg-[#111B38] text-amber-300 px-3 py-2 rounded-xl font-extrabold text-[11px] transition-all cursor-pointer shadow-xs border border-slate-700/80"
-            >
-              <Layers className="w-3.5 h-3.5 text-amber-400" />
-              <span>B2B Toptan</span>
-              <span className="bg-[#F59E0B] text-[#0B132B] text-[8.5px] font-black px-1 py-0.2 rounded uppercase">Toptan</span>
-            </Link>
-
-            <button 
-              onClick={() => {
-                setTamTeklifCategory(undefined);
-                setIsTamTeklifModalOpen(true);
-              }}
-              className="hidden md:flex items-center gap-1.5 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B132B] px-3 py-2 rounded-xl font-extrabold text-[11px] transition-all transform hover:scale-102 cursor-pointer shadow-xs border border-amber-400/40"
-            >
-              <Sparkles className="w-3.5 h-3.5 fill-[#0B132B]" />
-              <span>Ücretsiz Teklif Al</span>
-              <span className="bg-[#0B132B] text-amber-300 text-[8.5px] font-mono px-1 rounded uppercase">TamTeklif</span>
-            </button>
-
-            <GlobalUserNav />
-
-            <button 
-              onClick={() => setIsCartOpen(true)}
-              className="relative flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 px-3.5 py-2 rounded-xl font-bold text-xs sm:text-sm transition-colors cursor-pointer text-[#0B132B]"
-            >
-              <ShoppingBag className="w-4 h-4 text-[#0F4C3A]" />
-              <span className="hidden sm:inline">Sepet</span>
-              {cart.length > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 bg-[#F59E0B] text-[#0B132B] font-black text-[10px] w-5 h-5 rounded-full flex items-center justify-center shadow">
-                  {cart.length}
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* 2. ÜST HIZLI YATAY KATEGORİ İKON ÇUBUĞU (QUICK CATEGORY BAR) */}
-      <QuickCategoryBar 
+      {/* 1. & 2. KATMAN MODERN HEADER (Sadeleştirilmiş 2 Katmanlı Mimarî) */}
+      <ModernHeader
+        searchQuery={searchQuery}
+        onSearchChange={(q) => setSearchQuery(q)}
+        selectedScope={selectedScope}
+        onScopeChange={(scope) => setSelectedScope(scope)}
+        selectedCategory={selectedCategory}
+        onSelectCategory={(cat) => setSelectedCategory(cat)}
+        onOpenCart={() => setIsCartOpen(true)}
+        cartCount={cart.length}
         onOpenTamTeklif={() => {
           setTamTeklifCategory(undefined);
           setIsTamTeklifModalOpen(true);
         }}
+        onOpenSellerModal={() => setIsSellerWizardOpen(true)}
+        products={products}
+        tenants={tenants}
       />
-
-      {/* KATEGORİ BARI ALTI ESNAF KAZANIM MİNİ DÖNÜŞÜM ŞERİDİ */}
-      <div className="bg-[#0F4C3A] text-white py-2 px-4 text-xs font-bold shadow-2xs border-b border-emerald-800 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-center">
-        <span className="bg-[#F59E0B] text-[#0B132B] text-[9.5px] font-black uppercase px-2.5 py-0.5 rounded-full shadow-xs">
-          Esnaf mısınız?
-        </span>
-        <span className="text-emerald-100">Kendi Dijital Dükkanınızı & Reyonunuzu 2 Dakikada Açın (%0 Komisyon · Doğrudan Esnaf POS'u)</span>
-        <Link 
-          to="/saticipaneli" 
-          className="bg-white text-[#0F4C3A] hover:bg-[#F59E0B] hover:text-[#0B132B] text-[11px] font-extrabold px-3 py-1 rounded-xl transition-all shadow-xs"
-        >
-          Hemen Mağaza Aç →
-        </Link>
-      </div>
 
       <main className="max-w-7xl mx-auto px-4 pt-6 pb-12 space-y-10 flex-1 w-full">
         
-        {/* 3. BUGÜNÜN FIRSAT KAMPANYALARI BANNERI (Stripe Kart Derinliği & Airbnb Tipografisi) */}
-        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0B132B] via-[#0F4C3A]/90 to-[#0B132B] text-white p-6 sm:p-8 md:p-11 shadow-2xl border border-slate-800/80 flex flex-col md:flex-row items-center justify-between gap-8">
-          <div className="space-y-4 max-w-xl text-center md:text-left">
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-black bg-[#F59E0B] text-[#0B132B] uppercase tracking-widest shadow-md">
-              <Zap className="w-3.5 h-3.5 fill-[#0B132B]" /> Esnaf Fırsat Haftası
-            </span>
-            <h1 className="text-3xl sm:text-4xl md:text-[2.6rem] font-black tracking-tight leading-tight text-white">
+        {/* 3. FERAH VE OKUNAKLI HERO BANNER (Stripe & Airbnb Tarzı) */}
+        <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0B132B] via-[#0F4C3A] to-[#0B132B] text-white p-6 sm:p-8 md:p-10 shadow-xl border border-emerald-900/60 flex flex-col md:flex-row items-center justify-between gap-8">
+          <div className="space-y-4 max-w-2xl text-center md:text-left">
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-[#F59E0B] text-[#0B132B] uppercase tracking-wider shadow-sm">
+                <Zap className="w-3.5 h-3.5 fill-[#0B132B]" /> Komisyonsuz Açık Dijital AVM
+              </span>
+              <span className="bg-emerald-500/20 text-emerald-200 text-xs font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                GİB e-Fatura & Doğrudan Esnaf Kasası
+              </span>
+            </div>
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tight leading-tight text-white">
               Aracı Komisyonu Yok, Doğrudan Esnaf Fiyatı Var!
             </h1>
-            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium max-w-lg">
-              Milyonlarca ürünü ve yerel esnaf hizmetini %0 komisyonla doğrudan üreticiden veya ustadan sepetinize ekleyin. GİB e-Fatura garantisiyle hemen alışverişe başlayın.
+            
+            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-medium max-w-xl">
+              Mahallenizdeki fırından ustaya, butik üreticiden toptancıya doğrudan esnaf raf fiyatıyla alışveriş yapın. Satışlardan komisyon kesilmez, ödemeler anında esnafın hesabına geçer.
             </p>
+
             <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-3">
               <button 
                 onClick={() => { setSelectedTypeFilter('retail'); }}
-                className="px-5 py-3 bg-[#F59E0B] hover:bg-[#D97706] text-[#0B132B] font-black text-xs rounded-xl shadow-lg hover:shadow-xl transition-all cursor-pointer transform hover:-translate-y-0.5"
+                className="px-5 py-3 bg-[#F59E0B] hover:bg-amber-400 text-[#0B132B] font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-2"
               >
-                Perakende Ürünleri İncele →
+                <span>Vitrin Ürünlerini İncele</span>
+                <ArrowRight className="w-3.5 h-3.5" />
               </button>
+
               <button 
                 onClick={() => {
                   setTamTeklifCategory(undefined);
                   setIsTamTeklifModalOpen(true);
                 }}
-                className="px-5 py-3 bg-white text-[#0F4C3A] hover:bg-emerald-50 font-black text-xs rounded-xl shadow-lg transition-all cursor-pointer flex items-center gap-2 border border-white/40 transform hover:-translate-y-0.5"
+                className="px-5 py-3 bg-white hover:bg-slate-100 text-[#0F4C3A] font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer flex items-center gap-2"
               >
                 <Sparkles className="w-4 h-4 text-amber-500" />
-                <span>Ücretsiz Fiyat Teklifi Al (TamTeklif)</span>
+                <span>Teklif Al (TamTeklif)</span>
               </button>
-              <button 
-                onClick={() => onNavigateToSuperMall?.()}
-                className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition-all cursor-pointer"
+
+              <Link
+                to="/saticipaneli"
+                className="px-5 py-3 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-xl border border-white/20 transition cursor-pointer flex items-center gap-2"
               >
-                Şehrin Açık AVM'sini Gez
-              </button>
+                <Store className="w-3.5 h-3.5 text-amber-400" />
+                <span>Dükkan Aç (%0 Komisyon)</span>
+              </Link>
             </div>
           </div>
+
           <div className="w-full md:w-auto shrink-0 text-center">
             <div className="bg-white/10 backdrop-blur-md p-6 rounded-2xl border border-white/20 space-y-2 shadow-2xl">
-              <span className="text-[10px] uppercase font-mono tracking-widest text-[#F59E0B] block font-black">Anlık Aktif Esnaf</span>
-              <span className="text-4xl sm:text-5xl font-black text-white">2.095 Dükkân</span>
-              <span className="text-xs text-emerald-200 block font-medium">7/24 Doğrudan İletişim & POS</span>
+              <span className="text-[10px] uppercase font-mono tracking-widest text-[#F59E0B] block font-black">Aktif Esnaf & Reyon</span>
+              <span className="text-4xl sm:text-5xl font-black text-white">{tenants.length > 0 ? tenants.length : 1} Dükkân</span>
+              <span className="text-xs text-emerald-200 block font-medium">Doğrudan POS & İletişim</span>
             </div>
           </div>
-        </div>
-
-        {/* HERO BANNER ALTI STRATEJİK SATICI DÖNÜŞÜM BANTI */}
-        <div className="bg-gradient-to-r from-[#0B132B] via-[#0F4C3A] to-[#0B132B] rounded-3xl p-6 sm:p-8 text-white border border-emerald-800/80 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="space-y-2 text-center md:text-left max-w-2xl">
-            <div className="flex flex-wrap items-center justify-center md:justify-start gap-2">
-              <span className="bg-[#F59E0B] text-[#0B132B] text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
-                🛡️ %0 Komisyon Garantisi
-              </span>
-              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                Doğrudan Esnaf IBAN / POS
-              </span>
-            </div>
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-white tracking-tight">
-              Aracı Komisyonu Ödemeyin, Mahallenizin Dijital Dükkanı Olun!
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-300 font-medium">
-              %0 komisyon, doğrudan esnaf IBAN'ı/POS'u ve 81 ilde anında görünürlük. Satışlarınızdan 1 ₺ bile komisyon kesilmez.
-            </p>
-          </div>
-
-          <Link 
-            to="/saticipaneli"
-            className="bg-[#F59E0B] hover:bg-[#D97706] text-[#0B132B] font-black text-xs sm:text-sm px-6 py-3.5 rounded-2xl shadow-xl transition-all whitespace-nowrap cursor-pointer transform hover:-translate-y-0.5 shrink-0 flex items-center gap-2"
-          >
-            <Store className="w-4 h-4" />
-            <span>Hemen Mağaza Aç (İlk 14 Gün Ücretsiz)</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
 
         {/* 4. İNDİRİM ORANLARINA GÖRE KEŞFET KUTULARI */}
@@ -1361,20 +1208,35 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
             </div>
           </div>
 
-          {/* Ürün Grid */}
+          {/* Ürün Grid & Boş Durum (Empty State) */}
           {filteredProducts.length === 0 ? (
-            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
-              <div className="w-14 h-14 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center mx-auto text-xl font-bold">
-                !
+            <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4 max-w-xl mx-auto shadow-xs">
+              <div className="w-16 h-16 bg-emerald-50 text-[#0F4C3A] rounded-2xl flex items-center justify-center mx-auto shadow-2xs">
+                <Store className="w-8 h-8 text-[#0F4C3A]" />
               </div>
-              <h3 className="text-base font-black text-slate-900">Aradığınız kriterde ürün veya hizmet bulunamadı</h3>
-              <p className="text-xs text-slate-500">Lütfen arama teriminizi değiştirin veya filtreleri sıfırlayın.</p>
-              <button
-                onClick={() => { setSearchQuery(''); setSelectedTypeFilter('all'); setSelectedScope('all'); setActiveStoryFilter(null); }}
-                className="px-4 py-2 bg-indigo-900 text-white text-xs font-bold rounded-xl cursor-pointer"
-              >
-                Filtreleri Temizle
-              </button>
+              <div className="space-y-1">
+                <h3 className="text-lg font-black text-slate-900">
+                  Henüz bu kategoride vitrin ürünü bulunmuyor.
+                </h3>
+                <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                  İlk ürünü siz ekleyin ve komisyonsuz yerel pazaryeri vitrininde hemen yerinizi alın!
+                </p>
+              </div>
+              <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+                <Link
+                  to="/saticipaneli"
+                  className="px-5 py-3 bg-[#0F4C3A] hover:bg-[#0B382B] text-white text-xs font-black rounded-xl shadow-md transition flex items-center gap-2"
+                >
+                  <Store className="w-4 h-4 text-amber-400" />
+                  <span>Dükkan Aç & Ürün Ekle</span>
+                </Link>
+                <button
+                  onClick={() => { setSearchQuery(''); setSelectedTypeFilter('all'); setSelectedScope('all'); setActiveStoryFilter(null); }}
+                  className="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition cursor-pointer"
+                >
+                  Filtreleri Sıfırla
+                </button>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -1816,6 +1678,12 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
         isOpen={isTamTeklifModalOpen}
         onClose={() => setIsTamTeklifModalOpen(false)}
         defaultCategoryId={tamTeklifCategory}
+      />
+
+      {/* 9. ESNAF KURULUM SİHİRBAZI MODAL */}
+      <SellerOnboardingWizardModal
+        isOpen={isSellerWizardOpen}
+        onClose={() => setIsSellerWizardOpen(false)}
       />
 
     </div>

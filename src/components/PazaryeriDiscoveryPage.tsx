@@ -822,20 +822,29 @@ export default function PazaryeriDiscoveryPage() {
 
             {/* PRODUCT CATALOG GRID / LIST */}
             {sortedProducts.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-4">
+              <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 space-y-4 shadow-sm">
                 <div className="w-16 h-16 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-                  🔍
+                  🏪
                 </div>
-                <h3 className="text-lg font-black text-slate-900">Aramanıza Uygun Sonuç Bulunamadı</h3>
+                <h3 className="text-lg font-black text-slate-900">Henüz bu kategoride vitrin ürünü bulunmuyor</h3>
                 <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
-                  Seçtiğiniz filtreler veya arama terimleri için şu anda ilan bulunamadı. Filtreleri temizleyerek tüm esnaf ürünlerini listeleyebilirsiniz.
+                  İlk ürünü siz ekleyin! Komisyonsuz bağımsız dükkânınızı 2 dakikada açarak ürünlerinizi doğrudan satışa sunabilirsiniz.
                 </p>
-                <button
-                  onClick={clearAllFilters}
-                  className="px-6 py-2.5 bg-[#0F4C3A] hover:bg-[#0B132B] text-white font-bold text-xs rounded-xl shadow transition cursor-pointer"
-                >
-                  Filtreleri Temizle
-                </button>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <button
+                    onClick={clearAllFilters}
+                    className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
+                  >
+                    Filtreleri Temizle
+                  </button>
+                  <Link
+                    to="/saticipaneli"
+                    className="px-6 py-2.5 bg-[#0F4C3A] hover:bg-[#0B132B] text-white font-extrabold text-xs rounded-xl shadow-md transition cursor-pointer inline-flex items-center gap-2"
+                  >
+                    <Store className="w-4 h-4 text-amber-400" />
+                    <span>Dükkan Aç (%0 Komisyon)</span>
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className={viewMode === 'grid' 

@@ -64,8 +64,8 @@ interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  loginAsBuyer: (email?: string) => void;
-  loginAsCustomer: (email?: string) => void;
+  loginAsBuyer: (email?: string, name?: string) => void;
+  loginAsCustomer: (email?: string, name?: string) => void;
   loginAsSeller: (email?: string, storeName?: string) => void;
   loginAsMerchant: (email?: string, storeName?: string) => void;
   loginAsCourier: (email?: string) => void;
@@ -204,11 +204,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     return '/hesabim';
   };
 
-  const loginAsBuyer = (email = 'ahmet.yilmaz@tampazar.com') => {
+  const loginAsBuyer = (email?: string, name?: string) => {
     const buyerUser: AuthUser = {
-      ...DEFAULT_BUYER,
-      email,
-      role: 'customer'
+      id: 'usr_' + Date.now(),
+      name: name || 'TamPazar Müşterisi',
+      email: email || 'musteri@tampazar.com',
+      role: 'customer',
+      city: 'Ordu',
+      district: 'Altınordu',
+      avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80'
     };
     setUser(buyerUser);
     setIsAuthModalOpen(false);
@@ -216,12 +220,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginAsCustomer = loginAsBuyer;
 
-  const loginAsSeller = (email = 'serkan@fotosentez.com', storeName = 'FotoSentez Stüdyo') => {
+  const loginAsSeller = (email?: string, storeName?: string) => {
     const sellerUser: AuthUser = {
-      ...DEFAULT_SELLER,
-      email,
-      storeName,
-      role: 'merchant'
+      id: 'merchant_' + Date.now(),
+      name: storeName ? `${storeName} Yetkilisi` : 'Esnaf Yetkilisi',
+      email: email || 'esnaf@tampazar.com',
+      storeName: storeName || 'TamPazar Esnafı',
+      storeId: 's3',
+      role: 'merchant',
+      city: 'Ordu',
+      district: 'Altınordu',
+      posPreference: 'PayTR Doğrudan POS',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80'
     };
     setUser(sellerUser);
     setIsAuthModalOpen(false);
@@ -229,21 +239,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const loginAsMerchant = loginAsSeller;
 
-  const loginAsCourier = (email = 'kurye.murat@tampazar.com') => {
+  const loginAsCourier = (email?: string, name?: string) => {
     const courierUser: AuthUser = {
-      ...DEFAULT_COURIER,
-      email,
-      role: 'courier'
+      id: 'courier_' + Date.now(),
+      name: name || 'TamKurye Sürücüsü',
+      email: email || 'kurye@tampazar.com',
+      role: 'courier',
+      city: 'Ordu',
+      district: 'Altınordu',
+      courierStatus: 'available',
+      courierVehicle: 'Motosiklet (125cc)',
+      courierRating: 5.0,
+      avatar: 'https://images.unsplash.com/photo-1570295999919-56ceb5ecca61?w=100&auto=format&fit=crop&q=80'
     };
     setUser(courierUser);
     setIsAuthModalOpen(false);
   };
 
-  const loginAsAdmin = (email = 'admin@tampazar.com') => {
+  const loginAsAdmin = (email?: string) => {
     const adminUser: AuthUser = {
-      ...DEFAULT_ADMIN,
-      email,
-      role: 'admin'
+      id: 'admin_' + Date.now(),
+      name: 'Platform Yetkilisi',
+      email: email || 'admin@tampazar.com',
+      role: 'admin',
+      city: 'İstanbul',
+      district: 'Maslak',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
     };
     setUser(adminUser);
     setIsAuthModalOpen(false);

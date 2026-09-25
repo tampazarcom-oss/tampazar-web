@@ -52,12 +52,12 @@ export default function AuthModal() {
   const handleBuyerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (authMode === 'login') {
-      loginAsBuyer(buyerEmail || 'ahmet.yilmaz@tampazar.com');
+      loginAsBuyer(buyerEmail, buyerName);
     } else {
       registerBuyer({
-        name: buyerName || 'Ahmet Yılmaz',
-        email: buyerEmail || 'ahmet.yilmaz@tampazar.com',
-        phone: buyerPhone || '+90 532 555 12 34',
+        name: buyerName.trim() || 'Müşteri',
+        email: buyerEmail.trim(),
+        phone: buyerPhone.trim(),
         city: buyerCity,
         district: buyerDistrict
       });
@@ -68,19 +68,19 @@ export default function AuthModal() {
   const handleSellerSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (authMode === 'login') {
-      loginAsSeller(sellerEmail || 'serkan@fotosentez.com', sellerStoreName || 'FotoSentez Stüdyo');
+      loginAsSeller(sellerEmail, sellerStoreName);
     } else {
       registerSeller({
-        storeName: sellerStoreName || 'Karadeniz Butik',
-        legalTitle: sellerLegalTitle || `${sellerStoreName || 'Karadeniz Butik'} Ticaret Ltd. Şti.`,
-        taxId: sellerTaxId || '2910394821',
+        storeName: sellerStoreName.trim() || 'Yeni Dükkân',
+        legalTitle: sellerLegalTitle.trim() || `${sellerStoreName.trim()} Ticaret`,
+        taxId: sellerTaxId.trim(),
         taxOffice: sellerTaxOffice,
         city: sellerCity,
         district: sellerDistrict,
         sector: sellerSector,
         posPreference: sellerPosPreference,
-        email: sellerEmail || 'esnaf@tampazar.com',
-        phone: sellerPhone || '+90 542 000 11 22'
+        email: sellerEmail.trim(),
+        phone: sellerPhone.trim()
       });
     }
     navigate('/yonetim');
@@ -292,21 +292,6 @@ export default function AuthModal() {
                 <span>{authMode === 'login' ? 'Müşteri Girişi Yap' : 'Hesabımı Oluştur'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              {/* Hızlı Demo Butonu */}
-              <div className="pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    loginAsBuyer();
-                    navigate('/hesabim');
-                  }}
-                  className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Tek Tıkla Demo Müşteri Olarak Giriş Yap</span>
-                </button>
-              </div>
             </form>
             </div>
           )}
@@ -500,22 +485,6 @@ export default function AuthModal() {
                 <span>{authMode === 'login' ? 'Yönetim Paneline Giriş Yap' : 'Mağazayı Aç & Yönetime Geç'}</span>
                 <ArrowRight className="w-4 h-4" />
               </button>
-
-              {/* Hızlı Demo Esnaf Girişi */}
-              <div className="pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => {
-                    loginAsSeller('serkan@fotosentez.com', 'FotoSentez Stüdyo');
-                    navigate('/yonetim');
-                  }}
-                  className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Tek Tıkla Demo Esnaf Olarak Yönetime Geç (/yonetim)</span>
-                </button>
-              </div>
-
             </form>
             </div>
           )}

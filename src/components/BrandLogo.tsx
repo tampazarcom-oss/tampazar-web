@@ -4,7 +4,6 @@
  */
 
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 interface BrandLogoProps {
   className?: string;
@@ -13,15 +12,12 @@ interface BrandLogoProps {
 }
 
 export default function BrandLogo({ className = '', size = 'md', onClick }: BrandLogoProps) {
-  const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
   const handleClick = (e: React.MouseEvent) => {
-    e.preventDefault();
     if (onClick) {
+      e.preventDefault();
       onClick();
-    } else {
-      navigate('/');
     }
   };
 
@@ -38,10 +34,9 @@ export default function BrandLogo({ className = '', size = 'md', onClick }: Bran
   };
 
   return (
-    <a
-      href="/"
-      onClick={handleClick}
-      className={`flex items-center gap-2.5 select-none cursor-pointer group shrink-0 ${className}`}
+    <div
+      onClick={onClick ? handleClick : undefined}
+      className={`flex items-center gap-2.5 select-none ${onClick ? 'cursor-pointer' : ''} group shrink-0 ${className}`}
       title="TamPazar - Şehrin Açık Dijital AVM'si ve Hibrit Pazaryeri"
     >
       {/* Logo Image with Breakage Shield (onError fallback) */}
@@ -65,6 +60,6 @@ export default function BrandLogo({ className = '', size = 'md', onClick }: Bran
         <span className="text-[#0B132B] group-hover:text-indigo-950 transition-colors">Tam</span>
         <span className="text-[#FF6A00]">Pazar</span>
       </div>
-    </a>
+    </div>
   );
 }

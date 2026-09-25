@@ -166,111 +166,6 @@ function MainLayout() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-800 flex flex-col font-sans selection:bg-amber-100 selection:text-amber-950">
       
-      {/* Top Global Ecosystem Switcher Bar */}
-      <div className="bg-[#0B132B] text-white text-[11px] font-medium px-6 py-2 flex items-center justify-between border-b border-[#111B38]">
-        <div className="flex items-center gap-2">
-          <span className="bg-[#F59E0B] text-[#0B132B] px-2 py-0.5 rounded font-black text-[9px] uppercase tracking-wider shadow-2xs">
-            Açık Dijital AVM
-          </span>
-          <span className="hidden sm:inline text-slate-300">
-            tampazar.com — Açık Dijital AVM ve Entegre Ticaret İşletim Sistemi (%0 Komisyon · Doğrudan Esnaf Kasası · GİB e-Fatura)
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          <Link
-            to="/"
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname === '/' 
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            🏪 Pazaryeri Vitrini
-          </Link>
-          <Link
-            to="/sehir-avm"
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname === '/sehir-avm' 
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            🏛️ Şehrin Açık AVM'si
-          </Link>
-          <Link
-            to="/pazaryeri"
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
-              location.pathname.startsWith('/pazaryeri') 
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-amber-200 hover:text-white'
-            }`}
-          >
-            🔍 Keşif & Katalog
-          </Link>
-          <Link
-            to="/hesabim"
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname === '/hesabim' 
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            👤 Tüketici Hesabım
-          </Link>
-          <Link
-            to="/toptan"
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
-              location.pathname === '/toptan' 
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-amber-300 hover:text-white'
-            }`}
-          >
-            🏢 B2B Toptan & Esnaf Ağı
-          </Link>
-          <Link
-            to="/kuryeler"
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
-              location.pathname.startsWith('/kurye') 
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-amber-200 hover:text-white'
-            }`}
-          >
-            🛵 TamKurye
-          </Link>
-          <Link
-            to="/blog"
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-semibold ${
-              location.pathname.startsWith('/blog')
-                ? 'bg-[#F59E0B] text-[#0B132B] font-black shadow-xs' 
-                : 'text-slate-300 hover:text-white'
-            }`}
-          >
-            📚 Rehber & Blog
-          </Link>
-          <Link
-            to="/saticipaneli"
-            className={`px-2.5 py-1 rounded transition-colors flex items-center gap-1 font-extrabold ${
-              location.pathname.startsWith('/saticipaneli') 
-                ? 'bg-[#F59E0B] text-[#0B132B] shadow-xs' 
-                : 'bg-[#0F4C3A] text-amber-300 hover:bg-[#0B382B]'
-            }`}
-          >
-            🏪 Satıcı Ol / Giriş
-          </Link>
-          <Link
-            to="/saas-konsol/byopos"
-            className={`px-2.5 py-1 rounded transition-colors ${
-              location.pathname.startsWith('/saas-konsol')
-                ? 'bg-[#111B38] text-amber-300 font-semibold border border-slate-700' 
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            ⚙️ Mimari Konsol
-          </Link>
-        </div>
-      </div>
-
       {/* Header bar for non-home pages */}
       {location.pathname !== '/' && location.pathname !== '/sehir-avm' && (
         <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-6 py-3.5 flex items-center justify-between shadow-xs">
@@ -282,7 +177,9 @@ function MainLayout() {
               ← Vitrine Dön
             </Link>
             <span className="text-slate-300">|</span>
-            <BrandLogo size="md" />
+            <Link to="/" className="flex items-center">
+              <BrandLogo size="md" />
+            </Link>
           </div>
 
           <div className="flex items-center gap-3">
