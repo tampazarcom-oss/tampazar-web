@@ -42,7 +42,7 @@ export default function GoogleCallback() {
 
     hasExecutedRef.current = true;
 
-    // State içinden hedef rolü kontrol et ('buyer' veya 'seller')
+    // State içindeki role değerini kontrol et ('buyer' veya 'seller')
     let role = 'buyer';
     if (state) {
       try {
@@ -67,7 +67,8 @@ export default function GoogleCallback() {
     fetch('/api/auth/google/verify-code', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
       credentials: 'include',
       body: JSON.stringify({
@@ -77,10 +78,19 @@ export default function GoogleCallback() {
       })
     })
       .then(async (response) => {
-        const data = await response.json();
+        const contentType = response.headers.get('content-type') || '';
+        let data: any = null;
+
+        if (contentType.includes('application/json')) {
+          data = await response.json();
+        } else {
+          const text = await response.text();
+          console.error('Backend sunucusundan JSON yerine metin/HTML döndü:', text.slice(0, 300));
+          throw new Error('Sunucudan beklenen JSON yanıtı alınamadı. Lütfen tekrar deneyin.');
+        }
 
         if (!response.ok || !data.success) {
-          throw new Error(data.message || 'Giriş işlemi tamamlanamadı.');
+          throw new Error(data.error || data.message || 'Giriş işlemi tamamlanamadı.');
         }
 
         // Dönen token ve kullanıcı bilgisini localStorage'a kaydet
@@ -105,8 +115,9 @@ export default function GoogleCallback() {
           setAuthUser(data.user);
         }
 
-        // role === 'seller' ise '/satici-paneli', değilse '/' adresine yönlendir
-        const isSeller = role === 'seller' || data.user?.role === 'merchant' || data.user?.role === 'seller';
+        // role === 'seller' ise '/satici-paneli', değilse '/' (ana sayfa) adresine yönlendir
+        const targetRole = data.user?.role || role;
+        const isSeller = targetRole === 'seller' || targetRole === 'merchant' || role === 'seller';
         const targetUrl = isSeller ? '/satici-paneli' : '/';
 
         setTimeout(() => {

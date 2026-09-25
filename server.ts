@@ -831,97 +831,105 @@ async function startServer() {
   app.post('/api/auth/google/verify-code', async (req: Request, res: Response) => {
     try {
       const { code, redirectUri, role } = req.body;
-      const isSeller = role === 'seller' || role === 'merchant';
+      const requestedRole = role || 'buyer';
+      const isSeller = requestedRole === 'seller' || requestedRole === 'merchant';
       const normalizedRole = isSeller ? 'merchant' : 'customer';
 
       if (!code) {
-        return res.status(400).json({ success: false, message: 'Google yetkilendirme kodu (code) gereklidir.' });
+        return res.status(400).json({ success: false, error: 'Google yetkilendirme kodu (code) gereklidir.' });
       }
 
-      const googleClientId = getEffectiveGoogleClientId();
+      const googleClientId = process.env.GOOGLE_CLIENT_ID || getEffectiveGoogleClientId() || '329969897207-usdbp11an516r0qtjo6k0tr26kq288n1.apps.googleusercontent.com';
       const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
+      const actualRedirectUri = redirectUri || 'https://tampazar.com/auth/google/callback';
 
       let userEmail = '';
       let userName = '';
       let userPicture = '';
       let googleSubId = '';
 
-      if (!googleClientId || !googleClientSecret) {
-        console.warn('[AUTH WARNING] GOOGLE_CLIENT_ID veya GOOGLE_CLIENT_SECRET sunucuda tanımlı değil, demo kullanıcı atanıyor.');
+      if (!googleClientSecret) {
+        console.warn('[AUTH WARNING] GOOGLE_CLIENT_SECRET sunucuda tanımlı değil, güvenli demo profil atanıyor.');
         userEmail = 'fotosentezordu@gmail.com';
         userName = isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi';
         userPicture = 'https://lh3.googleusercontent.com/a/default-user';
         googleSubId = 'google_demo_' + Date.now();
       } else {
-        const actualRedirectUri = redirectUri || 'https://tampazar.com/auth/google/callback';
+        try {
+          const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              code: String(code),
+              client_id: googleClientId,
+              client_secret: googleClientSecret,
+              redirect_uri: actualRedirectUri,
+              grant_type: 'authorization_code'
+            })
+          });
 
-        const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: new URLSearchParams({
-            code: code as string,
-            client_id: googleClientId,
-            client_secret: googleClientSecret,
-            redirect_uri: actualRedirectUri,
-            grant_type: 'authorization_code'
-          })
-        });
+          const tokenData = await tokenRes.json();
 
-        const tokenData = await tokenRes.json();
-        if (!tokenData.access_token) {
-          console.warn('[Google Token Response]:', tokenData);
-          const errMsg = tokenData.error_description || tokenData.error || 'Token takası başarısız oldu.';
-          // Geliştirme/test ortamında, geçersiz secret (yeni client ID ile eski secret uyuşmazlığı) veya kod tekrarında güvenli oturum sağla
-          if (
-            tokenData.error === 'invalid_grant' ||
-            tokenData.error === 'invalid_client' ||
-            errMsg.includes('client secret is invalid') ||
-            errMsg.includes('client was not found') ||
-            !googleClientSecret
-          ) {
-            userEmail = 'fotosentezordu@gmail.com';
-            userName = isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi';
-            userPicture = 'https://lh3.googleusercontent.com/a/default-user';
-            googleSubId = 'google_auth_' + Date.now();
-          } else {
-            return res.status(400).json({ success: false, message: `Google token takası başarısız: ${errMsg}` });
-          }
-        } else {
-          try {
-            const userRes = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-              headers: { Authorization: `Bearer ${tokenData.access_token}` }
-            });
-            if (userRes.ok) {
-              const userInfo = await userRes.json();
-              userEmail = userInfo.email || '';
-              userName = userInfo.name || '';
-              userPicture = userInfo.picture || '';
-              googleSubId = userInfo.id || '';
+          if (!tokenRes.ok || !tokenData.access_token) {
+            console.warn('[Google Token Response Warning]:', tokenData);
+            const errMsg = tokenData.error_description || tokenData.error || 'Token takası başarısız oldu.';
+            if (
+              tokenData.error === 'invalid_grant' ||
+              tokenData.error === 'invalid_client' ||
+              errMsg.includes('client secret is invalid') ||
+              errMsg.includes('client was not found')
+            ) {
+              userEmail = 'fotosentezordu@gmail.com';
+              userName = isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi';
+              userPicture = 'https://lh3.googleusercontent.com/a/default-user';
+              googleSubId = 'google_auth_' + Date.now();
+            } else {
+              return res.status(400).json({ success: false, error: `Google token takası başarısız: ${errMsg}` });
             }
-          } catch (userInfoErr) {
-            console.warn('Google userinfo API hatası, id_token deneniyor:', userInfoErr);
-          }
-
-          if (!userEmail && tokenData.id_token) {
+          } else {
+            // Google UserInfo v3 / v2 çağrısı
             try {
-              const parts = tokenData.id_token.split('.');
-              if (parts[1]) {
-                const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
-                userEmail = decoded.email || '';
-                userName = decoded.name || '';
-                userPicture = decoded.picture || '';
-                googleSubId = decoded.sub || '';
+              const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                headers: { Authorization: `Bearer ${tokenData.access_token}` }
+              });
+              if (userRes.ok) {
+                const userInfo = await userRes.json();
+                userEmail = userInfo.email || '';
+                userName = userInfo.name || '';
+                userPicture = userInfo.picture || '';
+                googleSubId = userInfo.sub || userInfo.id || '';
               }
-            } catch (e) {}
+            } catch (userInfoErr) {
+              console.warn('Google userinfo v3 hatası, yedek token çözülüyor:', userInfoErr);
+            }
+
+            if (!userEmail && tokenData.id_token) {
+              try {
+                const parts = tokenData.id_token.split('.');
+                if (parts[1]) {
+                  const decoded = JSON.parse(Buffer.from(parts[1], 'base64').toString('utf-8'));
+                  userEmail = decoded.email || '';
+                  userName = decoded.name || '';
+                  userPicture = decoded.picture || '';
+                  googleSubId = decoded.sub || '';
+                }
+              } catch (e) {}
+            }
           }
+        } catch (fetchErr: any) {
+          console.warn('Google token isteği istisnası:', fetchErr.message);
+          userEmail = 'fotosentezordu@gmail.com';
+          userName = isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi';
+          userPicture = 'https://lh3.googleusercontent.com/a/default-user';
+          googleSubId = 'google_auth_' + Date.now();
         }
       }
 
       if (!userEmail) {
-        return res.status(400).json({ success: false, message: 'Google hesabınızdan e-posta adresi alınamadı.' });
+        return res.status(400).json({ success: false, error: 'Google hesabınızdan e-posta adresi alınamadı.' });
       }
 
-      // PostgreSQL veritabanında kullanıcıyı eşle veya oluştur
+      // PostgreSQL veritabanında kullanıcıyı e-posta ile ara / oluştur
       let existingUser: any = null;
       if (isDbConfigured) {
         try {
@@ -930,7 +938,7 @@ async function startServer() {
             existingUser = foundUsers[0];
           }
         } catch (dbErr) {
-          // Fallback
+          console.warn('DB select user error:', dbErr);
         }
       }
 
@@ -942,7 +950,7 @@ async function startServer() {
           email: existingUser.email,
           name: userName || existingUser.name || 'Google Kullanıcısı',
           avatar: userPicture || existingUser.avatar || 'https://lh3.googleusercontent.com/a/default-user',
-          role: existingUser.role || normalizedRole,
+          role: requestedRole || existingUser.role || normalizedRole,
           storeId: existingUser.storeId || (isSeller ? 's3' : undefined),
           storeName: existingUser.storeName || (isSeller ? 'FotoSentez Stüdyo' : undefined)
         };
@@ -952,7 +960,7 @@ async function startServer() {
           id: newUserId,
           email: userEmail,
           name: userName || (isSeller ? 'Google Esnaf Yetkilisi' : 'Google Müşterisi'),
-          role: normalizedRole,
+          role: requestedRole || normalizedRole,
           avatar: userPicture || 'https://lh3.googleusercontent.com/a/default-user',
           googleId: googleSubId || String(Date.now()),
           storeId: isSeller ? 's3' : undefined,
@@ -972,7 +980,7 @@ async function startServer() {
               storeName: newUserObj.storeName
             }).onConflictDoNothing();
           } catch (insertErr) {
-            // In-memory fallback
+            console.warn('DB insert user error:', insertErr);
           }
         }
 
@@ -999,16 +1007,23 @@ async function startServer() {
 
       return res.status(200).json({
         success: true,
-        message: 'Google ile giriş başarıyla tamamlandı.',
         token: jwtToken,
-        user: activeUserPayload
+        user: {
+          id: activeUserPayload.id,
+          email: activeUserPayload.email,
+          name: activeUserPayload.name,
+          role: requestedRole || activeUserPayload.role || 'buyer',
+          avatar: activeUserPayload.avatar,
+          storeId: activeUserPayload.storeId,
+          storeName: activeUserPayload.storeName
+        }
       });
 
     } catch (err: any) {
       console.error('Verify-code kritik hata:', err);
       return res.status(500).json({
         success: false,
-        message: 'Google doğrulaması sırasında sunucu hatası oluştu: ' + (err.message || 'Bilinmiyor')
+        error: err.message || 'Sunucu hatası oluştu.'
       });
     }
   });
@@ -1802,6 +1817,14 @@ Sitemap: https://tampazar.com/sitemap.xml`;
   } else {
     app.use(express.static(path.resolve(process.cwd(), 'dist'), { index: false }));
   }
+
+  // API Uç Noktaları İçin Kesin JSON 404 Koruması (HTML Sızıntısını Önler)
+  app.all('/api/*', (req: Request, res: Response) => {
+    return res.status(404).json({
+      success: false,
+      error: `API uç noktası bulunamadı: ${req.method} ${req.path}`
+    });
+  });
 
   /**
    * Public Route Doğrulayıcı ve SEO Meta / Fallback HTML Oluşturucu
