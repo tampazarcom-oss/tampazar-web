@@ -1,4 +1,4 @@
-import { pgTable, varchar, text, numeric, integer, boolean, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, varchar, text, numeric, integer, boolean, timestamp, jsonb } from 'drizzle-orm/pg-core';
 
 // 1. Tenants (Esnaf & Mağazalar)
 export const tenants = pgTable('tenants', {
@@ -48,5 +48,16 @@ export const orders = pgTable('orders', {
   paymentStatus: varchar('payment_status', { length: 32 }).default('PENDING'),
   orderStatus: varchar('order_status', { length: 32 }).default('draft'),
   idempotencyKey: varchar('idempotency_key', { length: 128 }).unique(),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
+
+// 4. Order Audit Logs (Sipariş Denetim & İzleme Logları)
+export const orderAuditLogs = pgTable('order_audit_logs', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  orderId: varchar('order_id', { length: 64 }).references(() => orders.id).notNull(),
+  previousStatus: varchar('previous_status', { length: 32 }),
+  newStatus: varchar('new_status', { length: 32 }).notNull(),
+  triggeredBy: varchar('triggered_by', { length: 64 }).notNull(), // 'SYSTEM', 'PAYMENT_WEBHOOK', 'MERCHANT', 'CUSTOMER'
+  details: jsonb('details'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });

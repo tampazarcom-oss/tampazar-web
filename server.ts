@@ -3,12 +3,13 @@ import cookieParser from 'cookie-parser';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { initialProducts, initialTenants, Product } from './src/data/mockData.js';
 import { staticBlogPosts } from './src/data/blogData.js';
 import { encryptSecret } from './src/utils/cryptoSecurity.js';
 import { eq, desc } from 'drizzle-orm';
 import { db } from './src/db/index.js';
-import { products, tenants, orders } from './src/db/schema.js';
+import { products, tenants, orders, orderAuditLogs } from './src/db/schema.js';
 
 const isProd = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3000;
@@ -436,6 +437,198 @@ async function startServer() {
       });
     } catch (err: any) {
       return res.status(500).json({ error: 'POS kaydı hatası: ' + err.message });
+    }
+  });
+
+  /**
+   * Sipariş Oluşturma API (Idempotency Key & Audit Log Korumalı)
+   */
+  app.post('/api/orders/create', async (req: Request, res: Response) => {
+    try {
+      const idempotencyKey = req.headers['x-idempotency-key'] as string;
+      if (!idempotencyKey) {
+        return res.status(400).json({ success: false, message: 'X-Idempotency-Key başlığı zorunludur.' });
+      }
+
+      // 1. Idempotency Kontrolü: Aynı anahtarla daha önce sipariş açılmış mı?
+      try {
+        const existingOrder = await db.select().from(orders).where(eq(orders.idempotencyKey, idempotencyKey)).limit(1);
+        if (existingOrder.length > 0) {
+          return res.status(200).json({
+            success: true,
+            message: 'Mevcut sipariş getirildi (Idempotent replay).',
+            order: existingOrder[0]
+          });
+        }
+      } catch (dbErr) {
+        console.warn('Idempotency sorgulama DB uyarısı:', dbErr);
+      }
+
+      const { items, deliveryType, tenantId, customerId } = req.body;
+      if (!items || !Array.isArray(items) || items.length === 0) {
+        return res.status(400).json({ success: false, message: 'Sepet boş olamaz.' });
+      }
+
+      // 2. Fiyatları veritabanından güvenli hesaplama
+      let subtotal = 0;
+      let vatTotal = 0;
+
+      for (const item of items) {
+        let prod: any = null;
+        try {
+          const dbProds = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+          if (dbProds && dbProds.length > 0) {
+            prod = dbProds[0];
+          }
+        } catch (err) {
+          // Fallback to initialProducts
+        }
+
+        if (!prod) {
+          prod = initialProducts.find(p => p.id === item.productId || p.slug === item.productId);
+        }
+
+        if (!prod) {
+          return res.status(404).json({ success: false, message: `Ürün bulunamadı: ${item.productId}` });
+        }
+
+        const qty = Math.max(1, Math.floor(item.qty || 1));
+        const price = typeof prod.price === 'number' ? prod.price : parseFloat(prod.price || '0');
+        const vatRate = prod.vatRate || 20;
+
+        const itemTotal = price * qty;
+        const base = itemTotal / (1 + vatRate / 100);
+        subtotal += base;
+        vatTotal += itemTotal - base;
+      }
+
+      const deliveryFee = deliveryType === 'EXPRESS_COURIER' ? 49.90 : 0;
+      const totalAmount = Number((subtotal + vatTotal + deliveryFee).toFixed(2));
+
+      const newOrderId = `ord_${crypto.randomUUID()}`;
+      const orderNumber = `TP-${Date.now().toString().slice(-6)}`;
+
+      let createdOrder: any = {
+        id: newOrderId,
+        orderNumber,
+        tenantId: tenantId || null,
+        customerId: customerId || null,
+        subtotal: subtotal.toFixed(2),
+        vatTotal: vatTotal.toFixed(2),
+        deliveryFee: deliveryFee.toFixed(2),
+        totalAmount: totalAmount.toFixed(2),
+        paymentStatus: 'PENDING',
+        orderStatus: 'draft',
+        idempotencyKey,
+        createdAt: new Date().toISOString()
+      };
+
+      // 3. Siparişi draft statüsünde oluşturma
+      try {
+        const [inserted] = await db.insert(orders).values({
+          id: newOrderId,
+          orderNumber,
+          tenantId: tenantId || null,
+          customerId: customerId || null,
+          subtotal: subtotal.toFixed(2),
+          vatTotal: vatTotal.toFixed(2),
+          deliveryFee: deliveryFee.toFixed(2),
+          totalAmount: totalAmount.toFixed(2),
+          paymentStatus: 'PENDING',
+          orderStatus: 'draft',
+          idempotencyKey
+        }).returning();
+
+        if (inserted) {
+          createdOrder = inserted;
+        }
+      } catch (dbErr) {
+        console.warn('Sipariş DB kayıt uyarısı:', dbErr);
+      }
+
+      // 4. Audit Log Kaydı
+      try {
+        await db.insert(orderAuditLogs).values({
+          id: `log_${crypto.randomUUID()}`,
+          orderId: newOrderId,
+          previousStatus: null,
+          newStatus: 'draft',
+          triggeredBy: 'CUSTOMER',
+          details: { totalAmount, deliveryType }
+        });
+      } catch (logErr) {
+        console.warn('Audit Log kayıt uyarısı:', logErr);
+      }
+
+      return res.status(201).json({
+        success: true,
+        order: createdOrder
+      });
+
+    } catch (error) {
+      console.error('Sipariş oluşturma hatası:', error);
+      return res.status(500).json({ success: false, message: 'Sipariş oluşturulamadı.' });
+    }
+  });
+
+  /**
+   * Sanal POS Ödeme Webhook API (Audit Log & Status Update)
+   */
+  app.post('/api/webhooks/payment', async (req: Request, res: Response) => {
+    try {
+      const { orderId, status, transactionId } = req.body;
+
+      if (!orderId) {
+        return res.status(400).send('Sipariş Kimliği (orderId) eksik.');
+      }
+
+      let order: any = null;
+      try {
+        const found = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+        if (found && found.length > 0) {
+          order = found[0];
+        }
+      } catch (dbErr) {
+        console.warn('Webhook order query DB uyarısı:', dbErr);
+      }
+
+      if (!order) {
+        return res.status(404).send('Sipariş bulunamadı.');
+      }
+
+      if (order.orderStatus === 'paid') {
+        return res.status(200).send('OK (Zaten işlendi)');
+      }
+
+      if (status === 'SUCCESS') {
+        // Siparişi paid yap ve ödeme durumunu güncelle
+        try {
+          await db.update(orders)
+            .set({ paymentStatus: 'SUCCESS', orderStatus: 'paid' })
+            .where(eq(orders.id, orderId));
+        } catch (updErr) {
+          console.warn('Order status update DB uyarısı:', updErr);
+        }
+
+        // Audit Log kaydet
+        try {
+          await db.insert(orderAuditLogs).values({
+            id: `log_${crypto.randomUUID()}`,
+            orderId: order.id,
+            previousStatus: order.orderStatus,
+            newStatus: 'paid',
+            triggeredBy: 'PAYMENT_WEBHOOK',
+            details: { transactionId }
+          });
+        } catch (logErr) {
+          console.warn('Webhook Audit Log DB uyarısı:', logErr);
+        }
+      }
+
+      return res.status(200).send('OK');
+    } catch (error) {
+      console.error('Webhook hatası:', error);
+      return res.status(500).send('Webhook işlenemedi.');
     }
   });
 
