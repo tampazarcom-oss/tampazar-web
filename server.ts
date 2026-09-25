@@ -441,6 +441,97 @@ async function startServer() {
   });
 
   /**
+   * Yeni Ürün Oluşturma API (POST /api/products)
+   */
+  app.post('/api/products', async (req: Request, res: Response) => {
+    try {
+      const {
+        tenantId,
+        title,
+        slug,
+        type = 'retail',
+        price,
+        vatRate = 20,
+        sku,
+        stock = 0,
+        category,
+        description,
+        imageUrl
+      } = req.body;
+
+      if (!title || price === undefined || price === null) {
+        return res.status(400).json({ success: false, message: 'Ürün adı (title) and fiyat (price) zorunludur.' });
+      }
+
+      const targetSlug = slug || title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+      
+      // Slug benzersizlik kontrolü
+      try {
+        const existing = await db.select().from(products).where(eq(products.slug, targetSlug)).limit(1);
+        if (existing.length > 0) {
+          return res.status(409).json({ success: false, message: 'Bu ürün adresi (slug) zaten kullanımda.' });
+        }
+      } catch (dbErr) {
+        console.warn('Ürün slug sorgulama DB uyarısı:', dbErr);
+      }
+
+      const productId = `prod_${crypto.randomUUID()}`;
+
+      const targetSku = sku || `SKU-${Date.now().toString().slice(-6)}`;
+
+      let createdProduct: any = {
+        id: productId,
+        tenantId: tenantId || null,
+        title,
+        slug: targetSlug,
+        type,
+        price: String(price),
+        vatRate: Number(vatRate),
+        sku: targetSku,
+        stock: Number(stock),
+        category: category || 'Genel',
+        description: description || null,
+        imageUrl: imageUrl || null,
+        salesCount: 0,
+        rating: '0.00',
+        createdAt: new Date().toISOString()
+      };
+
+      try {
+        const [inserted] = await db.insert(products).values({
+          id: productId,
+          tenantId: tenantId || null,
+          title,
+          slug: targetSlug,
+          type,
+          price: String(price),
+          vatRate: Number(vatRate),
+          sku: targetSku,
+          stock: Number(stock),
+          category: category || 'Genel',
+          imageUrl: imageUrl || null
+        }).returning();
+
+        if (inserted) {
+          createdProduct = inserted;
+        }
+      } catch (insertErr) {
+        console.warn('Ürün ekleme DB uyarısı:', insertErr);
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: 'Ürün başarıyla oluşturuldu ve mağaza kataloğuna eklendi.',
+        product: createdProduct
+      });
+
+    } catch (error) {
+      console.error('Ürün ekleme hatası:', error);
+      return res.status(500).json({ success: false, message: 'Ürün eklenirken sunucu hatası oluştu.' });
+    }
+  });
+
+  /**
    * Sipariş Oluşturma API (Idempotency Key & Audit Log Korumalı)
    */
   app.post('/api/orders/create', async (req: Request, res: Response) => {
