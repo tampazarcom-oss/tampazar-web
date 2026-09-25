@@ -17,18 +17,14 @@ jobs:
           script: |
             cd ${{ secrets.PROJECT_PATH }}
             git pull origin main
-            
-            # Otomatik Ortam Değişkeni (.env) Yapılandırması ve Secrets Senkronizasyonu
-            cat << 'EOF' > .env
-            PORT=3000
-            NODE_ENV=production
-            GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}
-            GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
-            VITE_GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}
-            GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
-            GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
-            EOF
 
+            # Google API ve OAuth ortam değişkenlerini güvenli ekleme/güncelleme
+            touch .env
+            grep -q '^GEMINI_API_KEY=' .env && sed -i 's/^GEMINI_API_KEY=.*/GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}/' .env || echo 'GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}' >> .env
+            grep -q '^GOOGLE_MAPS_API_KEY=' .env && sed -i 's/^GOOGLE_MAPS_API_KEY=.*/GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}/' .env || echo 'GOOGLE_MAPS_API_KEY=${{ secrets.GOOGLE_MAPS_API_KEY }}' >> .env
+            grep -q '^GOOGLE_CLIENT_ID=' .env && sed -i 's/^GOOGLE_CLIENT_ID=.*/GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}/' .env || echo 'GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}' >> .env
+            grep -q '^GOOGLE_CLIENT_SECRET=' .env && sed -i 's/^GOOGLE_CLIENT_SECRET=.*/GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}/' .env || echo 'GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}' >> .env
+
+            npm install
             npm run build
-            pm2 restart all || docker compose restart
+            pm2 reload all || pm2 restart all
