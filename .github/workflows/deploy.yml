@@ -15,7 +15,9 @@ jobs:
           username: ${{ secrets.VPS_USERNAME }}
           password: ${{ secrets.VPS_PASSWORD }}
           script: |
-            cd ${{ secrets.PROJECT_PATH }}
+            cd ${{ secrets.PROJECT_PATH }} 2>/dev/null || cd /var/www/tampazar-web 2>/dev/null || cd /var/www/tampazar 2>/dev/null || cd /root/tampazar-web 2>/dev/null || cd $(find / -name "package.json" -path "*/tampazar*/*" 2>/dev/null | head -n 1 | xargs dirname)
+
+            pwd
             git pull origin main
 
             # Google API ve OAuth ortam değişkenlerini güvenli ekleme/güncelleme
