@@ -600,7 +600,7 @@ async function startServer() {
    */
   app.get('/api/auth/google', (req: Request, res: Response) => {
     const role = (req.query.role as string) || 'buyer';
-    const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+    const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '329969897207-usdbp11an516r0qtjo6k0tr26kq288n1.apps.googleusercontent.com';
 
     // Hata Yönetimi: Client ID yoksa boş sayfa yerine anlaşılır hata mesajıyla yönlendir
     if (!googleClientId) {
@@ -627,7 +627,7 @@ async function startServer() {
    * Google OAuth Public Client ID Endpoint
    */
   app.get('/api/auth/google/client-id', (_req: Request, res: Response) => {
-    const googleClientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '';
+    const googleClientId = process.env.VITE_GOOGLE_CLIENT_ID || process.env.GOOGLE_CLIENT_ID || '329969897207-usdbp11an516r0qtjo6k0tr26kq288n1.apps.googleusercontent.com';
     return res.status(200).json({
       success: true,
       clientId: googleClientId
@@ -658,7 +658,7 @@ async function startServer() {
       const isSeller = role === 'seller' || role === 'merchant';
       const normalizedRole = isSeller ? 'merchant' : 'customer';
 
-      const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+      const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '329969897207-usdbp11an516r0qtjo6k0tr26kq288n1.apps.googleusercontent.com';
       const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
       
       const host = req.get('host') || 'tampazar.com';
@@ -835,7 +835,7 @@ async function startServer() {
         return res.status(400).json({ success: false, message: 'Google yetkilendirme kodu (code) gereklidir.' });
       }
 
-      const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID;
+      const googleClientId = process.env.GOOGLE_CLIENT_ID || process.env.VITE_GOOGLE_CLIENT_ID || '329969897207-usdbp11an516r0qtjo6k0tr26kq288n1.apps.googleusercontent.com';
       const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
       let userEmail = '';
