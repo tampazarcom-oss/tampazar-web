@@ -82,6 +82,7 @@ interface AuthContextType {
   getNormalizedRole: () => 'customer' | 'merchant' | 'courier' | 'admin';
   getRoleRedirectPath: (role?: UserRole) => string;
   updateCourierStatus: (status: 'available' | 'busy' | 'offline') => void;
+  setAuthUser: (user: AuthUser) => void;
 }
 
 const DEFAULT_BUYER: AuthUser = {
@@ -365,6 +366,11 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsAuthModalOpen(false);
   };
 
+  const setAuthUser = (incomingUser: AuthUser) => {
+    setUser(incomingUser);
+    setIsAuthModalOpen(false);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -388,7 +394,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         authModalInitialTab,
         getNormalizedRole,
         getRoleRedirectPath,
-        updateCourierStatus
+        updateCourierStatus,
+        setAuthUser
       }}
     >
       {children}

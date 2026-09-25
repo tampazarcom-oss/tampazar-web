@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from '../components/BrandLogo';
+import { handleGoogleLogin } from '../utils/googleAuth';
 
 export default function CustomerAuthPage() {
   const { loginAsCustomer, registerBuyer } = useAuth();
@@ -104,8 +105,9 @@ export default function CustomerAuthPage() {
         </div>
 
         {/* Google ile Devam Et / Giriş Yap */}
-        <a
-          href="/api/auth/google?role=buyer"
+        <button
+          type="button"
+          onClick={() => handleGoogleLogin('buyer')}
           className="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs rounded-xl border border-slate-300 shadow-sm transition flex items-center justify-center gap-3 cursor-pointer hover:border-slate-400 group"
         >
           <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -115,7 +117,7 @@ export default function CustomerAuthPage() {
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
           </svg>
           <span>Google Hesabı ile {isRegisterMode ? 'Hızlı Kaydol' : 'Giriş Yap'}</span>
-        </a>
+        </button>
 
         <div className="flex items-center gap-3 my-2">
           <div className="h-px bg-slate-200 flex-1" />

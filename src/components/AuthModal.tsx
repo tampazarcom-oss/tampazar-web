@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useAuth, SellerRegisterData, BuyerRegisterData } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { handleGoogleLogin } from '../utils/googleAuth';
 
 export default function AuthModal() {
   const { 
@@ -178,8 +179,9 @@ export default function AuthModal() {
           {activeTab === 'buyer' && (
             <div className="space-y-4">
               {/* Google ile Giriş / Kayıt Butonu */}
-              <a
-                href="/api/auth/google?role=buyer"
+              <button
+                type="button"
+                onClick={() => handleGoogleLogin('buyer')}
                 className="w-full py-3 px-4 bg-white hover:bg-slate-50 text-slate-800 font-extrabold text-xs rounded-2xl border border-slate-200 shadow-sm transition flex items-center justify-center gap-3 cursor-pointer group"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -189,7 +191,7 @@ export default function AuthModal() {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <span>Google Hesabı ile {authMode === 'login' ? 'Giriş Yap' : 'Hızlı Kaydol'}</span>
-              </a>
+              </button>
 
               <div className="flex items-center gap-3">
                 <div className="h-px bg-slate-200 flex-1" />
@@ -313,8 +315,9 @@ export default function AuthModal() {
           {activeTab === 'seller' && (
             <div className="space-y-4">
               {/* Google ile Esnaf / Mağaza Girişi */}
-              <a
-                href="/api/auth/google?role=seller"
+              <button
+                type="button"
+                onClick={() => handleGoogleLogin('seller')}
                 className="w-full py-3 px-4 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-2xl border border-slate-700 shadow-md transition flex items-center justify-center gap-3 cursor-pointer group"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
@@ -324,7 +327,7 @@ export default function AuthModal() {
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
                 </svg>
                 <span className="text-amber-400">Google İşletme Hesabı ile {authMode === 'login' ? 'Giriş Yap' : 'Mağaza Aç'}</span>
-              </a>
+              </button>
 
               <div className="flex items-center gap-3">
                 <div className="h-px bg-slate-200 flex-1" />
