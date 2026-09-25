@@ -1,15 +1,25 @@
-import { db } from './index';
+import { db, isDbConfigured, checkDatabaseConnection } from './index';
 import { tenants, products } from './schema';
 import { initialTenants, initialProducts } from '../data/mockData';
 
 /**
  * Otomatik Veritabanı Tohumlama (Auto-Seed / Migration)
  * Sunucu her başlatıldığında zorunlu test ve varsayılan verilerin veritabanında var olduğunu garanti eder.
+ * DATABASE_URL tanımlı değilse veya DB çevrimdışıysa hata basmadan in-memory/mock katmana geçer.
  */
 export async function autoSeedDatabase() {
-  try {
-    console.log('[SEED] Otomatik veritabanı kontrolü ve tohumlama başlatılıyor...');
+  // Eğer DATABASE_URL tanımlı değilse, gereksiz bağlantı denemesi yapma
+  if (!isDbConfigured) {
+    return { success: true, seeded: false, mode: 'mock' };
+  }
 
+  // Veritabanı bağlantısını test et
+  const isConnected = await checkDatabaseConnection();
+  if (!isConnected) {
+    return { success: true, seeded: false, mode: 'db_offline' };
+  }
+
+  try {
     // 1. Mağaza (Tenant) Kontrolü: 'atolye-zanaat'
     await db.insert(tenants).values({
       id: 'atolye-zanaat',
@@ -74,9 +84,10 @@ export async function autoSeedDatabase() {
       }).onConflictDoNothing();
     }
 
-    console.log('[SEED] Otomatik veritabanı tohumlama başarıyla tamamlandı!');
-  } catch (err) {
-    console.warn('[SEED] Tohumlama uyarısı (İsteğe bağlı DB bağlantısı olmadan çalışıyorsa atlanabilir):', err);
+    return { success: true, seeded: true, mode: 'database' };
+  } catch {
+    // Tohumlama sırasında olası geçici hata durumunda mock veri katmanına güvenli geçiş
+    return { success: false, seeded: false, mode: 'fallback' };
   }
 }
 

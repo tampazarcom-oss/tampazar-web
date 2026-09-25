@@ -8,7 +8,7 @@ import { initialProducts, initialTenants, Product } from './src/data/mockData.js
 import { staticBlogPosts } from './src/data/blogData.js';
 import { encryptSecret } from './src/utils/cryptoSecurity.js';
 import { eq, desc, sql, and } from 'drizzle-orm';
-import { db } from './src/db/index.js';
+import { db, isDbConfigured } from './src/db/index.js';
 import { products, tenants, orders, orderAuditLogs, reviews, users } from './src/db/schema.js';
 import { autoSeedDatabase } from './src/db/seed.js';
 import { GoogleGenAI } from '@google/genai';
@@ -216,17 +216,19 @@ async function startServer() {
         let vatRate = 20;
 
         // Veritabanından çekiliyor; DevTools fiyat müdahaleleri kesin olarak geçersizdir
-        try {
-          const dbProduct = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
-          if (dbProduct && dbProduct.length > 0) {
-            const p = dbProduct[0];
-            prodTitle = p.title;
-            prodId = p.id;
-            unitPrice = parseFloat(p.price);
-            vatRate = p.vatRate || 20;
+        if (isDbConfigured) {
+          try {
+            const dbProduct = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+            if (dbProduct && dbProduct.length > 0) {
+              const p = dbProduct[0];
+              prodTitle = p.title;
+              prodId = p.id;
+              unitPrice = parseFloat(p.price);
+              vatRate = p.vatRate || 20;
+            }
+          } catch (dbErr) {
+            // DB error / fallback
           }
-        } catch (dbErr) {
-          // DB error / fallback
         }
 
         if (!prodTitle) {
@@ -302,25 +304,22 @@ async function startServer() {
       const { category, type, limit = 50 } = req.query;
 
       let result: any[] = [];
-      try {
-        let query = db.select().from(products);
-        
-        // Filtreleme koşulları
-        if (category) {
-          query = query.where(eq(products.category, String(category))) as any;
-        }
-        if (type) {
-          query = query.where(eq(products.type, String(type))) as any;
-        }
+      if (isDbConfigured) {
+        try {
+          let query = db.select().from(products);
+          
+          // Filtreleme koşulları
+          if (category) {
+            query = query.where(eq(products.category, String(category))) as any;
+          }
+          if (type) {
+            query = query.where(eq(products.type, String(type))) as any;
+          }
 
-        result = await query.limit(Number(limit)).orderBy(desc(products.createdAt));
-      } catch (dbErr) {
-        // Fallback to initialProducts if DB not seeded/connected
-        result = initialProducts.filter(p => {
-          if (category && p.category !== category) return false;
-          if (type && p.type !== type) return false;
-          return true;
-        }).slice(0, Number(limit));
+          result = await query.limit(Number(limit)).orderBy(desc(products.createdAt));
+        } catch (dbErr) {
+          // Fallback to initialProducts if DB not seeded/connected
+        }
       }
 
       if (result.length === 0 && initialProducts.length > 0) {
@@ -347,17 +346,19 @@ async function startServer() {
       let productData: any = null;
       let tenantDataObj: any = null;
 
-      try {
-        const result = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
-        if (result && result.length > 0) {
-          productData = result[0];
-          if (productData.tenantId) {
-            const tenantData = await db.select().from(tenants).where(eq(tenants.id, productData.tenantId)).limit(1);
-            tenantDataObj = tenantData[0] || null;
+      if (isDbConfigured) {
+        try {
+          const result = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
+          if (result && result.length > 0) {
+            productData = result[0];
+            if (productData.tenantId) {
+              const tenantData = await db.select().from(tenants).where(eq(tenants.id, productData.tenantId)).limit(1);
+              tenantDataObj = tenantData[0] || null;
+            }
           }
+        } catch (dbErr) {
+          // Fallback to initialProducts / initialTenants
         }
-      } catch (dbErr) {
-        // Fallback to initialProducts / initialTenants
       }
 
       if (!productData) {
@@ -412,14 +413,16 @@ async function startServer() {
       let tenantData: any = null;
       let tenantProducts: any[] = [];
 
-      try {
-        const tenantResult = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
-        if (tenantResult && tenantResult.length > 0) {
-          tenantData = tenantResult[0];
-          tenantProducts = await db.select().from(products).where(eq(products.tenantId, tenantData.id));
+      if (isDbConfigured) {
+        try {
+          const tenantResult = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
+          if (tenantResult && tenantResult.length > 0) {
+            tenantData = tenantResult[0];
+            tenantProducts = await db.select().from(products).where(eq(products.tenantId, tenantData.id));
+          }
+        } catch (dbErr) {
+          // Fallback
         }
-      } catch (dbErr) {
-        // Fallback
       }
 
       if (!tenantData) {
@@ -732,13 +735,15 @@ async function startServer() {
 
       // 3. PostgreSQL Veritabanında Kullanıcıyı Bul veya Oluştur
       let existingUser: any = null;
-      try {
-        const foundUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
-        if (foundUsers.length > 0) {
-          existingUser = foundUsers[0];
+      if (isDbConfigured) {
+        try {
+          const foundUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+          if (foundUsers.length > 0) {
+            existingUser = foundUsers[0];
+          }
+        } catch (dbErr) {
+          // Fallback to in-memory user
         }
-      } catch (dbErr) {
-        console.warn('Google OAuth kullanıcı DB arama uyarısı:', dbErr);
       }
 
       let activeUserPayload: any = null;
@@ -768,19 +773,21 @@ async function startServer() {
           storeName: isSeller ? 'Yeni Google Mağazası' : undefined
         };
 
-        try {
-          await db.insert(users).values({
-            id: newUserObj.id,
-            email: newUserObj.email,
-            name: newUserObj.name,
-            role: newUserObj.role,
-            avatar: newUserObj.avatar,
-            googleId: newUserObj.googleId,
-            storeId: newUserObj.storeId,
-            storeName: newUserObj.storeName
-          }).onConflictDoNothing();
-        } catch (insertErr) {
-          console.warn('Google yeni kullanıcı DB kayıt uyarısı:', insertErr);
+        if (isDbConfigured) {
+          try {
+            await db.insert(users).values({
+              id: newUserObj.id,
+              email: newUserObj.email,
+              name: newUserObj.name,
+              role: newUserObj.role,
+              avatar: newUserObj.avatar,
+              googleId: newUserObj.googleId,
+              storeId: newUserObj.storeId,
+              storeName: newUserObj.storeName
+            }).onConflictDoNothing();
+          } catch (insertErr) {
+            // In-memory fallback
+          }
         }
 
         activeUserPayload = newUserObj;
@@ -899,13 +906,15 @@ async function startServer() {
 
       // PostgreSQL veritabanında kullanıcıyı eşle veya oluştur
       let existingUser: any = null;
-      try {
-        const foundUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
-        if (foundUsers.length > 0) {
-          existingUser = foundUsers[0];
+      if (isDbConfigured) {
+        try {
+          const foundUsers = await db.select().from(users).where(eq(users.email, userEmail)).limit(1);
+          if (foundUsers.length > 0) {
+            existingUser = foundUsers[0];
+          }
+        } catch (dbErr) {
+          // Fallback
         }
-      } catch (dbErr) {
-        console.warn('Google OAuth kullanıcı DB arama uyarısı:', dbErr);
       }
 
       let activeUserPayload: any = null;
@@ -933,19 +942,21 @@ async function startServer() {
           storeName: isSeller ? 'Yeni Google Mağazası' : undefined
         };
 
-        try {
-          await db.insert(users).values({
-            id: newUserObj.id,
-            email: newUserObj.email,
-            name: newUserObj.name,
-            role: newUserObj.role,
-            avatar: newUserObj.avatar,
-            googleId: newUserObj.googleId,
-            storeId: newUserObj.storeId,
-            storeName: newUserObj.storeName
-          }).onConflictDoNothing();
-        } catch (insertErr) {
-          console.warn('Google yeni kullanıcı DB kayıt uyarısı:', insertErr);
+        if (isDbConfigured) {
+          try {
+            await db.insert(users).values({
+              id: newUserObj.id,
+              email: newUserObj.email,
+              name: newUserObj.name,
+              role: newUserObj.role,
+              avatar: newUserObj.avatar,
+              googleId: newUserObj.googleId,
+              storeId: newUserObj.storeId,
+              storeName: newUserObj.storeName
+            }).onConflictDoNothing();
+          } catch (insertErr) {
+            // In-memory fallback
+          }
         }
 
         activeUserPayload = newUserObj;
@@ -1151,17 +1162,19 @@ JSON Yanıt Formatı:
       }
 
       // 1. Idempotency Kontrolü: Aynı anahtarla daha önce sipariş açılmış mı?
-      try {
-        const existingOrder = await db.select().from(orders).where(eq(orders.idempotencyKey, idempotencyKey)).limit(1);
-        if (existingOrder.length > 0) {
-          return res.status(200).json({
-            success: true,
-            message: 'Mevcut sipariş getirildi (Idempotent replay).',
-            order: existingOrder[0]
-          });
+      if (isDbConfigured) {
+        try {
+          const existingOrder = await db.select().from(orders).where(eq(orders.idempotencyKey, idempotencyKey)).limit(1);
+          if (existingOrder.length > 0) {
+            return res.status(200).json({
+              success: true,
+              message: 'Mevcut sipariş getirildi (Idempotent replay).',
+              order: existingOrder[0]
+            });
+          }
+        } catch (dbErr) {
+          // Fallback
         }
-      } catch (dbErr) {
-        console.warn('Idempotency sorgulama DB uyarısı:', dbErr);
       }
 
       const { items, deliveryType, tenantId, customerId } = req.body;
@@ -1175,13 +1188,15 @@ JSON Yanıt Formatı:
 
       for (const item of items) {
         let prod: any = null;
-        try {
-          const dbProds = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
-          if (dbProds && dbProds.length > 0) {
-            prod = dbProds[0];
+        if (isDbConfigured) {
+          try {
+            const dbProds = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+            if (dbProds && dbProds.length > 0) {
+              prod = dbProds[0];
+            }
+          } catch (err) {
+            // Fallback to initialProducts
           }
-        } catch (err) {
-          // Fallback to initialProducts
         }
 
         if (!prod) {
@@ -1224,40 +1239,42 @@ JSON Yanıt Formatı:
       };
 
       // 3. Siparişi draft statüsünde oluşturma
-      try {
-        const [inserted] = await db.insert(orders).values({
-          id: newOrderId,
-          orderNumber,
-          tenantId: tenantId || null,
-          customerId: customerId || null,
-          subtotal: subtotal.toFixed(2),
-          vatTotal: vatTotal.toFixed(2),
-          deliveryFee: deliveryFee.toFixed(2),
-          totalAmount: totalAmount.toFixed(2),
-          paymentStatus: 'PENDING',
-          orderStatus: 'draft',
-          idempotencyKey
-        }).returning();
+      if (isDbConfigured) {
+        try {
+          const [inserted] = await db.insert(orders).values({
+            id: newOrderId,
+            orderNumber,
+            tenantId: tenantId || null,
+            customerId: customerId || null,
+            subtotal: subtotal.toFixed(2),
+            vatTotal: vatTotal.toFixed(2),
+            deliveryFee: deliveryFee.toFixed(2),
+            totalAmount: totalAmount.toFixed(2),
+            paymentStatus: 'PENDING',
+            orderStatus: 'draft',
+            idempotencyKey
+          }).returning();
 
-        if (inserted) {
-          createdOrder = inserted;
+          if (inserted) {
+            createdOrder = inserted;
+          }
+        } catch (dbErr) {
+          // In-memory fallback
         }
-      } catch (dbErr) {
-        console.warn('Sipariş DB kayıt uyarısı:', dbErr);
-      }
 
-      // 4. Audit Log Kaydı
-      try {
-        await db.insert(orderAuditLogs).values({
-          id: `log_${crypto.randomUUID()}`,
-          orderId: newOrderId,
-          previousStatus: null,
-          newStatus: 'draft',
-          triggeredBy: 'CUSTOMER',
-          details: { totalAmount, deliveryType }
-        });
-      } catch (logErr) {
-        console.warn('Audit Log kayıt uyarısı:', logErr);
+        // 4. Audit Log Kaydı
+        try {
+          await db.insert(orderAuditLogs).values({
+            id: `log_${crypto.randomUUID()}`,
+            orderId: newOrderId,
+            previousStatus: null,
+            newStatus: 'draft',
+            triggeredBy: 'CUSTOMER',
+            details: { totalAmount, deliveryType }
+          });
+        } catch (logErr) {
+          // In-memory fallback
+        }
       }
 
       return res.status(201).json({
@@ -1309,17 +1326,19 @@ JSON Yanıt Formatı:
 
       // 2. Sipariş Kontrolü
       let order: any = null;
-      try {
-        const [found] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-        if (found) {
-          order = found;
+      if (isDbConfigured) {
+        try {
+          const [found] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+          if (found) {
+            order = found;
+          }
+        } catch (dbErr) {
+          // Fallback
         }
-      } catch (dbErr) {
-        console.warn('Webhook order query DB uyarısı:', dbErr);
       }
 
       if (!order) {
-        return res.status(404).send('Sipariş bulunamadı.');
+        return res.status(200).send('OK (Mock / Standby)');
       }
 
       // Idempotent kontrol: Eğer sipariş zaten ödendiyse mükerrer işlem yapma
@@ -1328,13 +1347,13 @@ JSON Yanıt Formatı:
       }
 
       // 3. Geçerli Ödemeyi Onaylama ve Durum Makinesini İlerletme
-      if (status === 'SUCCESS') {
+      if (status === 'SUCCESS' && isDbConfigured) {
         try {
           await db.update(orders)
             .set({ paymentStatus: 'SUCCESS', orderStatus: 'paid' })
             .where(eq(orders.id, orderId));
         } catch (updErr) {
-          console.warn('Order update DB uyarısı:', updErr);
+          // Fallback
         }
 
         try {
@@ -1347,7 +1366,7 @@ JSON Yanıt Formatı:
             details: { transactionId, signatureVerified: true }
           });
         } catch (logErr) {
-          console.warn('Audit log DB uyarısı:', logErr);
+          // Fallback
         }
       }
 
@@ -1385,13 +1404,15 @@ JSON Yanıt Formatı:
 
       // Slug benzersizlik kontrolü
       const targetSlug = slug || storeName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-      try {
-        const existing = await db.select().from(tenants).where(eq(tenants.slug, targetSlug)).limit(1);
-        if (existing.length > 0) {
-          return res.status(409).json({ success: false, message: 'Bu mağaza adresi (URL) kullanımda.' });
+      if (isDbConfigured) {
+        try {
+          const existing = await db.select().from(tenants).where(eq(tenants.slug, targetSlug)).limit(1);
+          if (existing.length > 0) {
+            return res.status(409).json({ success: false, message: 'Bu mağaza adresi (URL) kullanımda.' });
+          }
+        } catch (dbErr) {
+          // Fallback
         }
-      } catch (dbErr) {
-        console.warn('Slug kontrolü DB uyarısı:', dbErr);
       }
 
       const tenantId = `ten_${crypto.randomUUID()}`;
@@ -1401,30 +1422,32 @@ JSON Yanıt Formatı:
 
       let createdTenantId = tenantId;
 
-      try {
-        const [newTenant] = await db.insert(tenants).values({
-          id: tenantId,
-          name: storeName,
-          legalTitle: legalTitle || storeName,
-          taxOffice,
-          taxId,
-          slug: targetSlug,
-          plan,
-          subscriptionStatus: 'trial',
-          trialStartedAt: now,
-          trialEndsAt: trialEnds,
-          onboardingStatus: 'under_review',
-          applicationTrackingCode: trackingCode,
-          kvkkConsent: Boolean(kvkkConsent),
-          commercialMessageConsent: Boolean(commercialMessageConsent),
-          consentGivenAt: now
-        }).returning();
+      if (isDbConfigured) {
+        try {
+          const [newTenant] = await db.insert(tenants).values({
+            id: tenantId,
+            name: storeName,
+            legalTitle: legalTitle || storeName,
+            taxOffice,
+            taxId,
+            slug: targetSlug,
+            plan,
+            subscriptionStatus: 'trial',
+            trialStartedAt: now,
+            trialEndsAt: trialEnds,
+            onboardingStatus: 'under_review',
+            applicationTrackingCode: trackingCode,
+            kvkkConsent: Boolean(kvkkConsent),
+            commercialMessageConsent: Boolean(commercialMessageConsent),
+            consentGivenAt: now
+          }).returning();
 
-        if (newTenant) {
-          createdTenantId = newTenant.id;
+          if (newTenant) {
+            createdTenantId = newTenant.id;
+          }
+        } catch (insertErr) {
+          // Fallback
         }
-      } catch (insertErr) {
-        console.warn('Satıcı kaydı DB uyarısı:', insertErr);
       }
 
       return res.status(201).json({
@@ -1449,13 +1472,15 @@ JSON Yanıt Formatı:
       const { code } = req.params;
       let tenant: any = null;
 
-      try {
-        const found = await db.select().from(tenants).where(eq(tenants.applicationTrackingCode, code)).limit(1);
-        if (found && found.length > 0) {
-          tenant = found[0];
+      if (isDbConfigured) {
+        try {
+          const found = await db.select().from(tenants).where(eq(tenants.applicationTrackingCode, code)).limit(1);
+          if (found && found.length > 0) {
+            tenant = found[0];
+          }
+        } catch (dbErr) {
+          // Fallback
         }
-      } catch (dbErr) {
-        console.warn('Başvuru takibi DB uyarısı:', dbErr);
       }
 
       if (!tenant) {
@@ -1641,9 +1666,13 @@ Sitemap: https://tampazar.com/sitemap.xml`;
   app.get('/sitemap-products.xml', async (req: Request, res: Response) => {
     try {
       let allProducts: any[] = [];
-      try {
-        allProducts = await db.select().from(products);
-      } catch (dbErr) {
+      if (isDbConfigured) {
+        try {
+          allProducts = await db.select().from(products);
+        } catch (dbErr) {
+          allProducts = initialProducts;
+        }
+      } else {
         allProducts = initialProducts;
       }
       if (!allProducts || allProducts.length === 0) {
@@ -1680,9 +1709,13 @@ Sitemap: https://tampazar.com/sitemap.xml`;
   app.get('/sitemap-stores.xml', async (req: Request, res: Response) => {
     try {
       let allStores: any[] = [];
-      try {
-        allStores = await db.select().from(tenants);
-      } catch (dbErr) {
+      if (isDbConfigured) {
+        try {
+          allStores = await db.select().from(tenants);
+        } catch (dbErr) {
+          allStores = initialTenants;
+        }
+      } else {
         allStores = initialTenants;
       }
       if (!allStores || allStores.length === 0) {
@@ -1783,13 +1816,15 @@ Sitemap: https://tampazar.com/sitemap.xml`;
         const slug = url.replace('/urun/', '').split('/')[0];
         let prod: any = null;
 
-        try {
-          const productResult = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
-          if (productResult && productResult.length > 0) {
-            prod = productResult[0];
+        if (isDbConfigured) {
+          try {
+            const productResult = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
+            if (productResult && productResult.length > 0) {
+              prod = productResult[0];
+            }
+          } catch (dbErr) {
+            // DB Fallback
           }
-        } catch (dbErr) {
-          // DB Fallback
         }
 
         if (!prod) {
@@ -1848,13 +1883,15 @@ Sitemap: https://tampazar.com/sitemap.xml`;
         const slug = url.replace('/dukkan/', '').replace('/magaza/', '').split('/')[0];
         let store: any = null;
 
-        try {
-          const tenantResult = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
-          if (tenantResult && tenantResult.length > 0) {
-            store = tenantResult[0];
+        if (isDbConfigured) {
+          try {
+            const tenantResult = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
+            if (tenantResult && tenantResult.length > 0) {
+              store = tenantResult[0];
+            }
+          } catch (dbErr) {
+            // DB Fallback
           }
-        } catch (dbErr) {
-          // DB Fallback
         }
 
         if (!store) {
