@@ -10,11 +10,15 @@ import { encryptSecret } from './src/utils/cryptoSecurity.js';
 import { eq, desc, sql, and } from 'drizzle-orm';
 import { db } from './src/db/index.js';
 import { products, tenants, orders, orderAuditLogs, reviews } from './src/db/schema.js';
+import { autoSeedDatabase } from './src/db/seed.js';
 
 const isProd = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3000;
 
 async function startServer() {
+  // Veritabanı Otomatik Tohumlama / Migration Kontrolü (ON CONFLICT DO NOTHING)
+  await autoSeedDatabase();
+
   const app = express();
 
   app.use(express.json());
