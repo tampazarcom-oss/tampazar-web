@@ -168,78 +168,84 @@ async function startServer() {
    * Sunucuda Yeniden Fiyat, KDV ve Kargo Hesaplama API
    * İstemciden gelen fiyatlar asla güvenilir kabul edilmez!
    */
-  app.post('/api/orders/calculate', (req: Request, res: Response) => {
+  interface CartItemRequest {
+    productId: string;
+    qty: number;
+    variant?: string;
+  }
+
+  app.post('/api/orders/calculate', async (req: Request, res: Response) => {
     try {
-      const { items, deliveryType } = req.body;
+      const { items, deliveryType } = req.body as { items: CartItemRequest[]; deliveryType: string };
 
       if (!items || !Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: 'Geçersiz sipariş kalemi.' });
+        return res.status(400).json({ success: false, message: 'Sepet boş olamaz.' });
       }
 
       let subtotalClean = 0;
       let totalVatAmount = 0;
-      const verifiedItems = [];
+      const validatedItems = [];
 
       for (const item of items) {
-        // Sunucu veritabanındaki (mockData) orijinal ürünü bul
-        const product = initialProducts.find(p => p.id === item.productId || p.slug === item.productSlug);
+        // Ürün veritabanından/katalogdan çekilir; ASLA istemcinin yolladığı fiyat kullanılmaz!
+        const product = initialProducts.find((p) => p.id === item.productId || p.slug === item.productId);
         if (!product) {
-          return res.status(404).json({ error: `Ürün bulunamadı: ${item.productId || item.productSlug}` });
+          return res.status(404).json({ success: false, message: `Ürün bulunamadı: ${item.productId}` });
         }
 
-        const qty = Math.max(1, parseInt(item.qty, 10) || 1);
+        const qty = Math.max(1, Math.floor(Number(item.qty) || 1));
 
-        // Kademeli toptan fiyatlama kontrolü
-        let unitPrice = product.price;
+        // Kademeli toptan fiyatlama kontrolü (varsa)
+        let unitPrice = Number(product.price);
         if (product.type === 'wholesale' && product.tieredPrices && product.tieredPrices.length > 0) {
           const matchedTier = product.tieredPrices.find(t => qty >= t.minQty && (t.maxQty === null || qty <= t.maxQty));
           if (matchedTier) unitPrice = matchedTier.pricePerUnit;
         }
 
-        const lineTotal = unitPrice * qty;
-        const vatRate = product.vatRate || 20;
-        const lineVat = parseFloat(((lineTotal * vatRate) / (100 + vatRate)).toFixed(2));
-        const lineClean = parseFloat((lineTotal - lineVat).toFixed(2));
+        const vatRate = product.vatRate || 20; // Varsayılan %20 KDV
 
-        subtotalClean += lineClean;
-        totalVatAmount += lineVat;
+        // KDV matrah hesabı (Dahil fiyattan matrah ve vergi ayrıştırma)
+        const itemTotal = unitPrice * qty;
+        const basePrice = itemTotal / (1 + vatRate / 100);
+        const vatAmount = itemTotal - basePrice;
 
-        verifiedItems.push({
+        subtotalClean += basePrice;
+        totalVatAmount += vatAmount;
+
+        validatedItems.push({
           productId: product.id,
           title: product.title,
-          sku: product.sku,
-          unitPrice,
+          price: unitPrice,
           qty,
           vatRate,
-          lineVat,
-          lineTotal
+          total: itemTotal,
         });
       }
 
-      // Kargo / Teslimat Ücreti Hesaplama
+      // Teslimat ücreti kuralları (Sunucu tarafı kontrolü)
       let deliveryFee = 0;
-      if (deliveryType === 'LOCAL_EXPRESS') {
-        deliveryFee = 49.90; // Sabit kurye ücreti
-      } else if (deliveryType === 'CARGO' && subtotalClean < 1000) {
-        deliveryFee = 39.90; // 1000 TL altı kargo ücreti
+      if (deliveryType === 'EXPRESS_COURIER' || deliveryType === 'LOCAL_EXPRESS') {
+        deliveryFee = 49.90;
+      } else if (deliveryType === 'CARGO') {
+        deliveryFee = (subtotalClean + totalVatAmount) > 500 ? 0 : 39.90;
       }
 
-      const totalPayable = parseFloat((subtotalClean + totalVatAmount + deliveryFee).toFixed(2));
+      const totalPayable = Number((subtotalClean + totalVatAmount + deliveryFee).toFixed(2));
 
-      return res.status(200).json({
+      return res.json({
         success: true,
         summary: {
-          subtotalClean: parseFloat(subtotalClean.toFixed(2)),
-          totalVatAmount: parseFloat(totalVatAmount.toFixed(2)),
+          items: validatedItems,
+          subtotalClean: Number(subtotalClean.toFixed(2)),
+          totalVatAmount: Number(totalVatAmount.toFixed(2)),
           deliveryFee,
           totalPayable,
-          currency: 'TRY'
+          currency: 'TRY',
         },
-        items: verifiedItems,
-        timestamp: new Date().toISOString()
       });
-    } catch (err: any) {
-      return res.status(500).json({ error: 'Hesaplama hatası: ' + err.message });
+    } catch (error) {
+      console.error('Sipariş hesaplama hatası:', error);
+      return res.status(500).json({ success: false, message: 'Hesaplama sırasında sunucu hatası oluştu.' });
     }
   });
 

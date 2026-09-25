@@ -75,6 +75,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
   const [cart, setCart] = useState<{ product: Product; qty: number; variant?: string; slot?: string }[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [checkoutSuccess, setCheckoutSuccess] = useState(false);
+  const [isCalculating, setIsCalculating] = useState(false);
 
   // Active Product Modal (Detail & Quick Action)
   const { user } = useAuth();
@@ -207,113 +208,149 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
     }, 0);
   };
 
-  const handleExecuteCheckout = () => {
+  const handleExecuteCheckout = async () => {
     if (cart.length === 0) return;
 
-    const orderNumber = 'ORD-2026-' + Math.floor(100000 + Math.random() * 900000);
-    const totalOrderAmount = calculateCartTotal();
-
-    // 1. GİB e-Fatura Kayıtları
-    const savedInvoices = localStorage.getItem('tampazar_invoices');
-    const invoices = savedInvoices ? JSON.parse(savedInvoices) : [];
-
-    cart.forEach(item => {
-      const unit = getEffectiveUnitPrice(item.product, item.qty);
-      const lineTotal = unit * item.qty;
-      const vat = parseFloat(((lineTotal * (item.product.vatRate / 100))).toFixed(2));
-      const clean = parseFloat((lineTotal - vat).toFixed(2));
-
-      const newInv = {
-        id: 'inv-' + Math.floor(Math.random() * 1000000),
-        invoiceNumber: 'GIB2026000000' + Math.floor(100 + Math.random() * 899),
-        orderId: orderNumber,
-        tenantId: item.product.tenantId,
-        customerName: user?.name || 'Pazaryeri Müşterisi',
-        customerTaxOffice: 'Kadıköy VD',
-        customerTaxId: user?.taxId || '1049204910',
-        customerEmail: user?.email || 'musteri@tampazar.com',
-        date: new Date().toISOString().split('T')[0],
-        amount: clean,
-        vatAmount: vat,
-        withholdingTaxType: 'None',
-        withholdingAmount: 0.00,
-        totalPayable: lineTotal,
-        status: 'queued',
-        integrator: 'gib'
-      };
-      invoices.push(newInv);
-    });
-
-    // 2. Üçlü Hibrit Sipariş Kaydı (Ulusal Kargo, Yerel Express veya Saha Servisi)
-    const newHybridOrder: HybridOrder = {
-      id: 'hyb-' + Date.now(),
-      orderNumber,
-      tenantId: cart[0]?.product.tenantId || 's3',
-      storeName: cart[0]?.product.storeName || 'TamPazar Esnafı',
-      customerName: user?.name || 'Müşteri (Web)',
-      customerPhone: user?.phone || '0532 555 44 33',
-      customerAddress: deliveryAddress,
-      city: 'İstanbul',
-      district: 'Kadıköy',
-      deliveryType: selectedDeliveryType,
-      status: selectedDeliveryType === 'LOCAL_EXPRESS' ? 'RINGING' : selectedDeliveryType === 'FIELD_SERVICE' ? 'NEW' : 'DISPATCH_WAITING',
-      items: cart.map(c => ({
-        productId: c.product.id,
-        title: c.product.title,
-        qty: c.qty,
-        price: getEffectiveUnitPrice(c.product, c.qty),
-        sku: c.product.sku,
-        variant: c.variant
-      })),
-      totalAmount: totalOrderAmount,
-      paymentMethod: 'PAYTR_POS',
-      paymentStatus: 'PAID',
-      createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
-      cargoDetails: selectedDeliveryType === 'CARGO' ? {
-        carrier: 'Yurtiçi Kargo',
-        trackingNumber: '',
-        barcode: 'YK-' + Math.floor(100000000 + Math.random() * 900000000),
-        despatchNumber: 'IRS-2026-' + Math.floor(10000 + Math.random() * 90000)
-      } : undefined,
-      localDeliveryDetails: selectedDeliveryType === 'LOCAL_EXPRESS' ? {
-        deliverySubtype: 'COURIER_30MIN',
-        etaMinutes: 30,
-        courierName: 'Kurye Caner (TamPazar Express)',
-        courierPhone: '0533 111 22 33',
-        preparationStartedAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
-      } : undefined,
-      serviceDetails: selectedDeliveryType === 'FIELD_SERVICE' ? {
-        serviceCategory: 'Saha Servisi',
-        scheduledTime: 'Bugün 14:00 - 16:00',
-        technicianName: 'Saha Ustası Hasan Usta',
-        technicianPhone: '0535 777 88 99',
-        isEmergency: true,
-        issueDescription: 'Web üzerinden konum servis talebi oluşturuldu.'
-      } : undefined
-    };
-
     try {
-      const savedHybrid = localStorage.getItem('tampazar_hybrid_orders');
-      const hybridList: HybridOrder[] = savedHybrid ? JSON.parse(savedHybrid) : [];
-      hybridList.unshift(newHybridOrder);
-      localStorage.setItem('tampazar_hybrid_orders', JSON.stringify(hybridList));
-    } catch (e) {}
+      setIsCalculating(true);
 
-    // Yerel sipariş ise esnaf sesli zilini anında çal
-    if (selectedDeliveryType === 'LOCAL_EXPRESS') {
-      playOrderAlertChime();
+      // Yalnızca ID ve adet gönderiliyor; fiyatlar asla istemciden gitmiyor
+      const payload = {
+        items: cart.map(item => ({
+          productId: item.product.id,
+          qty: item.qty,
+          variant: item.variant
+        })),
+        deliveryType: selectedDeliveryType || 'CARGO'
+      };
+
+      const res = await fetch('/api/orders/calculate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+      if (!data.success) {
+        alert(data.message || 'Sipariş hesaplanırken hata oluştu.');
+        return;
+      }
+
+      // Sunucudan dönen mühürlü toplam tutar ve kalemler
+      const verifiedSummary = data.summary;
+      const orderNumber = 'ORD-2026-' + Math.floor(100000 + Math.random() * 900000);
+      const totalOrderAmount = verifiedSummary.totalPayable;
+
+      // 1. GİB e-Fatura Kayıtları
+      const savedInvoices = localStorage.getItem('tampazar_invoices');
+      const invoices = savedInvoices ? JSON.parse(savedInvoices) : [];
+
+      verifiedSummary.items.forEach((item: any) => {
+        const lineTotal = item.total;
+        const vatRate = item.vatRate || 20;
+        const vat = parseFloat(((lineTotal * vatRate) / (100 + vatRate)).toFixed(2));
+        const clean = parseFloat((lineTotal - vat).toFixed(2));
+
+        const originalProduct = cart.find(c => c.product.id === item.productId)?.product;
+
+        const newInv = {
+          id: 'inv-' + Math.floor(Math.random() * 1000000),
+          invoiceNumber: 'GIB2026000000' + Math.floor(100 + Math.random() * 899),
+          orderId: orderNumber,
+          tenantId: originalProduct?.tenantId || 's3',
+          customerName: user?.name || 'Pazaryeri Müşterisi',
+          customerTaxOffice: 'Kadıköy VD',
+          customerTaxId: user?.taxId || '1049204910',
+          customerEmail: user?.email || 'musteri@tampazar.com',
+          date: new Date().toISOString().split('T')[0],
+          amount: clean,
+          vatAmount: vat,
+          withholdingTaxType: 'None',
+          withholdingAmount: 0.00,
+          totalPayable: lineTotal,
+          status: 'queued',
+          integrator: 'gib'
+        };
+        invoices.push(newInv);
+      });
+
+      // 2. Üçlü Hibrit Sipariş Kaydı
+      const newHybridOrder: HybridOrder = {
+        id: 'hyb-' + Date.now(),
+        orderNumber,
+        tenantId: cart[0]?.product.tenantId || 's3',
+        storeName: cart[0]?.product.storeName || 'TamPazar Esnafı',
+        customerName: user?.name || 'Müşteri (Web)',
+        customerPhone: user?.phone || '0532 555 44 33',
+        customerAddress: deliveryAddress,
+        city: 'İstanbul',
+        district: 'Kadıköy',
+        deliveryType: selectedDeliveryType,
+        status: selectedDeliveryType === 'LOCAL_EXPRESS' ? 'RINGING' : selectedDeliveryType === 'FIELD_SERVICE' ? 'NEW' : 'DISPATCH_WAITING',
+        items: verifiedSummary.items.map((vItem: any) => ({
+          productId: vItem.productId,
+          title: vItem.title,
+          qty: vItem.qty,
+          price: vItem.price,
+          sku: cart.find(c => c.product.id === vItem.productId)?.product.sku || 'SKU-GENERIC'
+        })),
+        totalAmount: totalOrderAmount,
+        paymentMethod: 'PAYTR_POS',
+        paymentStatus: 'PAID',
+        createdAt: new Date().toISOString().replace('T', ' ').slice(0, 16),
+        cargoDetails: selectedDeliveryType === 'CARGO' ? {
+          carrier: 'Yurtiçi Kargo',
+          trackingNumber: '',
+          barcode: 'YK-' + Math.floor(100000000 + Math.random() * 900000000),
+          despatchNumber: 'IRS-2026-' + Math.floor(10000 + Math.random() * 90000)
+        } : undefined,
+        localDeliveryDetails: selectedDeliveryType === 'LOCAL_EXPRESS' ? {
+          deliverySubtype: 'COURIER_30MIN',
+          etaMinutes: 30,
+          courierName: 'Kurye Caner (TamPazar Express)',
+          courierPhone: '0533 111 22 33',
+          preparationStartedAt: new Date().toISOString().replace('T', ' ').slice(0, 16)
+        } : undefined,
+        serviceDetails: selectedDeliveryType === 'FIELD_SERVICE' ? {
+          serviceCategory: 'Saha Servisi',
+          scheduledTime: 'Bugün 14:00 - 16:00',
+          technicianName: 'Saha Ustası Hasan Usta',
+          technicianPhone: '0535 777 88 99',
+          isEmergency: true,
+          issueDescription: 'Web üzerinden konum servis talebi oluşturuldu.'
+        } : undefined
+      };
+
+      try {
+        const savedHybrid = localStorage.getItem('tampazar_hybrid_orders');
+        const hybridList: HybridOrder[] = savedHybrid ? JSON.parse(savedHybrid) : [];
+        hybridList.unshift(newHybridOrder);
+        localStorage.setItem('tampazar_hybrid_orders', JSON.stringify(hybridList));
+      } catch (e) {}
+
+      // Yerel sipariş ise esnaf sesli zilini anında çal
+      if (selectedDeliveryType === 'LOCAL_EXPRESS') {
+        playOrderAlertChime();
+      }
+
+      localStorage.setItem('tampazar_invoices', JSON.stringify(invoices));
+      window.dispatchEvent(new Event('tampazar_accounting_updated'));
+      window.dispatchEvent(new Event('tampazar_invoice_added'));
+
+      setCheckoutSuccess(true);
+      setTimeout(() => {
+        setCart([]);
+        setCheckoutSuccess(false);
+        setIsCartOpen(false);
+      }, 2500);
+
+    } catch (err) {
+      console.error('Checkout hatası:', err);
+      alert('İşlem başlatılamadı. Lütfen tekrar deneyin.');
+    } finally {
+      setIsCalculating(false);
     }
-
-    localStorage.setItem('tampazar_invoices', JSON.stringify(invoices));
-    window.dispatchEvent(new Event('tampazar_accounting_updated'));
-    window.dispatchEvent(new Event('tampazar_invoice_added'));
-
-    setCheckoutSuccess(true);
-    setTimeout(() => {
-      setCart([]);
-      setCheckoutSuccess(false);
-      setIsCartOpen(false);
-    }, 2500);
   };
 
   // 5 Hibrit Ticaret Modeli Ürün Çözümleyicisi
