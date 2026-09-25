@@ -17,6 +17,8 @@ export default function CustomerAuthPage() {
   const location = useLocation();
 
   const isRegisterMode = location.pathname === '/kayit';
+  const searchParams = new URLSearchParams(location.search);
+  const authError = searchParams.get('authError') || searchParams.get('error');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -80,6 +82,17 @@ export default function CustomerAuthPage() {
             Yeni Hesap Oluştur
           </Link>
         </div>
+
+        {/* Auth Error Banner */}
+        {authError && (
+          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs font-bold text-rose-800 flex items-start gap-2.5">
+            <span className="text-base shrink-0">⚠️</span>
+            <div className="space-y-0.5">
+              <p className="font-black text-rose-900">Kimlik Doğrulama Uyarısı</p>
+              <p className="text-[11px] text-rose-700 font-medium">{authError}</p>
+            </div>
+          </div>
+        )}
 
         <div>
           <h1 className="text-xl font-black text-slate-900">

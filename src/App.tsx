@@ -380,6 +380,14 @@ function MainLayout() {
               element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
             />
             <Route 
+              path="/satici-paneli" 
+              element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
+              path="/satici-paneli/*" 
+              element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
               path="/dukkan/:slug" 
               element={<StoreProfileRouteWrapper />} 
             />
