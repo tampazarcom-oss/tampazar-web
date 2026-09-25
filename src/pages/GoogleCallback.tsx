@@ -4,7 +4,7 @@
  */
 
 import React, { useEffect, useState, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Loader2, AlertCircle, ArrowLeft } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import BrandLogo from '../components/BrandLogo';
@@ -20,7 +20,7 @@ export default function GoogleCallback() {
   useEffect(() => {
     if (hasExecutedRef.current) return;
 
-    // URL arama parametrelerinden code ve state değerlerini al
+    // URL parametrelerini (window.location.search) ayrıştır: "code" ve "state"
     const urlParams = new URLSearchParams(window.location.search);
     const code = searchParams.get('code') || urlParams.get('code');
     const state = searchParams.get('state') || urlParams.get('state');
@@ -36,13 +36,13 @@ export default function GoogleCallback() {
     if (!code) {
       hasExecutedRef.current = true;
       setLoading(false);
-      setError('Yetkilendirme kodu (code) bulunamadı. Lütfen tekrar giriş yapmayı deneyin.');
+      setError('Yetkilendirme kodu bulunamadı. Lütfen tekrar giriş yapmayı deneyin.');
       return;
     }
 
     hasExecutedRef.current = true;
 
-    // State içinden hedef rolü çözümle (buyer / seller)
+    // State içinden hedef rolü kontrol et ('buyer' veya 'seller')
     let role = 'buyer';
     if (state) {
       try {
@@ -63,7 +63,7 @@ export default function GoogleCallback() {
 
     const redirectUri = `${window.location.origin}/auth/google/callback`;
 
-    // Backend doğrulama uç noktasına istek
+    // POST /api/auth/google/verify-code isteği
     fetch('/api/auth/google/verify-code', {
       method: 'POST',
       headers: {
@@ -80,12 +80,13 @@ export default function GoogleCallback() {
         const data = await response.json();
 
         if (!response.ok || !data.success) {
-          throw new Error(data.message || 'Google ile kimlik doğrulaması başarısız oldu.');
+          throw new Error(data.message || 'Giriş işlemi tamamlanamadı.');
         }
 
-        // Token ve kullanıcı bilgilerini depola
+        // Dönen token ve kullanıcı bilgisini localStorage'a kaydet
         if (data.token) {
           try {
+            localStorage.setItem('auth_token', data.token);
             localStorage.setItem('token', data.token);
             localStorage.setItem('tampazar_token', data.token);
             document.cookie = `tampazar_token=${encodeURIComponent(data.token)}; path=/; max-age=604800; SameSite=Lax`;
@@ -104,18 +105,18 @@ export default function GoogleCallback() {
           setAuthUser(data.user);
         }
 
-        // State içindeki rol buyer ise '/', 'seller' ise '/satici-paneli' sayfasına tam yönlendirme
+        // role === 'seller' ise '/satici-paneli', değilse '/' adresine yönlendir
         const isSeller = role === 'seller' || data.user?.role === 'merchant' || data.user?.role === 'seller';
         const targetUrl = isSeller ? '/satici-paneli' : '/';
 
         setTimeout(() => {
           window.location.href = targetUrl;
-        }, 400);
+        }, 300);
       })
       .catch((err: any) => {
         console.error('Google verify-code error:', err);
         setLoading(false);
-        setError(err.message || 'Giriş işlemi tamamlanırken beklenmeyen bir hata oluştu.');
+        setError(err.message || 'Giriş işlemi tamamlanamadı.');
       });
   }, [searchParams, setAuthUser]);
 
@@ -134,10 +135,10 @@ export default function GoogleCallback() {
             </div>
             <div className="space-y-2">
               <h2 className="text-lg font-black text-slate-900 tracking-tight">
-                TamPazar'a Giriş Yapılıyor...
+                TamPazar Girişi Doğrulanıyor...
               </h2>
               <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                Google hesabınız doğrulanıyor, lütfen bekleyin.
+                Lütfen bekleyin.
               </p>
             </div>
           </div>
@@ -150,7 +151,7 @@ export default function GoogleCallback() {
             </div>
             <div className="space-y-2">
               <h2 className="text-lg font-black text-slate-900">
-                Giriş başarısız oldu
+                Giriş işlemi tamamlanamadı.
               </h2>
               <p className="text-xs text-rose-600 bg-rose-50 p-3 rounded-xl border border-rose-200 text-left font-medium leading-relaxed">
                 {error}
