@@ -41,4 +41,5 @@ jobs:
 
             npm install --legacy-peer-deps
             npm run build
-            pm2 reload all || pm2 restart all
+            pm2 reload all || pm2 start npm --name "tampazar" -- run start || pm2 start dist/index.js --name "tampazar" || true
+            pm2 save || true
