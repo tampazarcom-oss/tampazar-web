@@ -6,6 +6,9 @@ import fs from 'fs';
 import { initialProducts, initialTenants, Product } from './src/data/mockData.js';
 import { staticBlogPosts } from './src/data/blogData.js';
 import { encryptSecret } from './src/utils/cryptoSecurity.js';
+import { eq, desc } from 'drizzle-orm';
+import { db } from './src/db/index.js';
+import { products, tenants, orders } from './src/db/schema.js';
 
 const isProd = process.env.NODE_ENV === 'production';
 const PORT = process.env.PORT || 3000;
@@ -176,7 +179,10 @@ async function startServer() {
 
   app.post('/api/orders/calculate', async (req: Request, res: Response) => {
     try {
-      const { items, deliveryType } = req.body as { items: CartItemRequest[]; deliveryType: string };
+      const { items, deliveryType } = req.body as { 
+        items: { productId: string; qty: number; variant?: string }[]; 
+        deliveryType: string 
+      };
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ success: false, message: 'Sepet boş olamaz.' });
@@ -187,24 +193,47 @@ async function startServer() {
       const validatedItems = [];
 
       for (const item of items) {
-        // Ürün veritabanından/katalogdan çekilir; ASLA istemcinin yolladığı fiyat kullanılmaz!
-        const product = initialProducts.find((p) => p.id === item.productId || p.slug === item.productId);
-        if (!product) {
+        let prodTitle = '';
+        let prodId = item.productId;
+        let unitPrice = 0;
+        let vatRate = 20;
+
+        // Veritabanından çekiliyor; DevTools fiyat müdahaleleri kesin olarak geçersizdir
+        try {
+          const dbProduct = await db.select().from(products).where(eq(products.id, item.productId)).limit(1);
+          if (dbProduct && dbProduct.length > 0) {
+            const p = dbProduct[0];
+            prodTitle = p.title;
+            prodId = p.id;
+            unitPrice = parseFloat(p.price);
+            vatRate = p.vatRate || 20;
+          }
+        } catch (dbErr) {
+          // DB error / fallback
+        }
+
+        if (!prodTitle) {
+          const mockProduct = initialProducts.find((p) => p.id === item.productId || p.slug === item.productId);
+          if (mockProduct) {
+            prodTitle = mockProduct.title;
+            prodId = mockProduct.id;
+            unitPrice = mockProduct.price;
+            vatRate = mockProduct.vatRate || 20;
+
+            const qty = Math.max(1, Math.floor(Number(item.qty) || 1));
+            if (mockProduct.type === 'wholesale' && mockProduct.tieredPrices && mockProduct.tieredPrices.length > 0) {
+              const matchedTier = mockProduct.tieredPrices.find(t => qty >= t.minQty && (t.maxQty === null || qty <= t.maxQty));
+              if (matchedTier) unitPrice = matchedTier.pricePerUnit;
+            }
+          }
+        }
+
+        if (!prodTitle) {
           return res.status(404).json({ success: false, message: `Ürün bulunamadı: ${item.productId}` });
         }
 
         const qty = Math.max(1, Math.floor(Number(item.qty) || 1));
 
-        // Kademeli toptan fiyatlama kontrolü (varsa)
-        let unitPrice = Number(product.price);
-        if (product.type === 'wholesale' && product.tieredPrices && product.tieredPrices.length > 0) {
-          const matchedTier = product.tieredPrices.find(t => qty >= t.minQty && (t.maxQty === null || qty <= t.maxQty));
-          if (matchedTier) unitPrice = matchedTier.pricePerUnit;
-        }
-
-        const vatRate = product.vatRate || 20; // Varsayılan %20 KDV
-
-        // KDV matrah hesabı (Dahil fiyattan matrah ve vergi ayrıştırma)
         const itemTotal = unitPrice * qty;
         const basePrice = itemTotal / (1 + vatRate / 100);
         const vatAmount = itemTotal - basePrice;
@@ -213,8 +242,8 @@ async function startServer() {
         totalVatAmount += vatAmount;
 
         validatedItems.push({
-          productId: product.id,
-          title: product.title,
+          productId: prodId,
+          title: prodTitle,
           price: unitPrice,
           qty,
           vatRate,
@@ -222,7 +251,6 @@ async function startServer() {
         });
       }
 
-      // Teslimat ücreti kuralları (Sunucu tarafı kontrolü)
       let deliveryFee = 0;
       if (deliveryType === 'EXPRESS_COURIER' || deliveryType === 'LOCAL_EXPRESS') {
         deliveryFee = 49.90;
@@ -245,7 +273,136 @@ async function startServer() {
       });
     } catch (error) {
       console.error('Sipariş hesaplama hatası:', error);
-      return res.status(500).json({ success: false, message: 'Hesaplama sırasında sunucu hatası oluştu.' });
+      return res.status(500).json({ success: false, message: 'Hesaplama hatası oluştu.' });
+    }
+  });
+
+  /**
+   * 1. Tüm Ürünleri / Vitrini Getir (Kategori ve Tip Filtreli)
+   */
+  app.get('/api/products', async (req: Request, res: Response) => {
+    try {
+      const { category, type, limit = 50 } = req.query;
+
+      let result: any[] = [];
+      try {
+        let query = db.select().from(products);
+        
+        // Filtreleme koşulları
+        if (category) {
+          query = query.where(eq(products.category, String(category))) as any;
+        }
+        if (type) {
+          query = query.where(eq(products.type, String(type))) as any;
+        }
+
+        result = await query.limit(Number(limit)).orderBy(desc(products.createdAt));
+      } catch (dbErr) {
+        // Fallback to initialProducts if DB not seeded/connected
+        result = initialProducts.filter(p => {
+          if (category && p.category !== category) return false;
+          if (type && p.type !== type) return false;
+          return true;
+        }).slice(0, Number(limit));
+      }
+
+      if (result.length === 0 && initialProducts.length > 0) {
+        result = initialProducts.filter(p => {
+          if (category && p.category !== category) return false;
+          if (type && p.type !== type) return false;
+          return true;
+        }).slice(0, Number(limit));
+      }
+
+      return res.json({ success: true, data: result });
+    } catch (error) {
+      console.error('Ürün listeleme hatası:', error);
+      return res.status(500).json({ success: false, message: 'Ürünler getirilemedi.' });
+    }
+  });
+
+  /**
+   * 2. Tekil Ürün Detayı (Slug ile)
+   */
+  app.get('/api/products/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      let productData: any = null;
+      let tenantDataObj: any = null;
+
+      try {
+        const result = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
+        if (result && result.length > 0) {
+          productData = result[0];
+          if (productData.tenantId) {
+            const tenantData = await db.select().from(tenants).where(eq(tenants.id, productData.tenantId)).limit(1);
+            tenantDataObj = tenantData[0] || null;
+          }
+        }
+      } catch (dbErr) {
+        // Fallback to initialProducts / initialTenants
+      }
+
+      if (!productData) {
+        const mockProduct = initialProducts.find(p => p.slug === slug || p.id === slug);
+        if (!mockProduct) {
+          return res.status(404).json({ success: false, message: 'Ürün bulunamadı.' });
+        }
+        productData = mockProduct;
+        tenantDataObj = initialTenants.find(t => t.id === mockProduct.tenantId) || null;
+      }
+
+      return res.json({ 
+        success: true, 
+        data: { 
+          ...productData, 
+          tenant: tenantDataObj 
+        } 
+      });
+    } catch (error) {
+      console.error('Ürün detay hatası:', error);
+      return res.status(500).json({ success: false, message: 'Ürün detayı alınamadı.' });
+    }
+  });
+
+  /**
+   * 3. Mağaza / Dükkân Detayı (Slug ile)
+   */
+  app.get('/api/tenants/:slug', async (req: Request, res: Response) => {
+    try {
+      const { slug } = req.params;
+      let tenantData: any = null;
+      let tenantProducts: any[] = [];
+
+      try {
+        const tenantResult = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
+        if (tenantResult && tenantResult.length > 0) {
+          tenantData = tenantResult[0];
+          tenantProducts = await db.select().from(products).where(eq(products.tenantId, tenantData.id));
+        }
+      } catch (dbErr) {
+        // Fallback
+      }
+
+      if (!tenantData) {
+        const mockTenant = initialTenants.find(t => t.slug === slug || t.id === slug);
+        if (!mockTenant) {
+          return res.status(404).json({ success: false, message: 'Mağaza bulunamadı.' });
+        }
+        tenantData = mockTenant;
+        tenantProducts = initialProducts.filter(p => p.tenantId === mockTenant.id);
+      }
+
+      return res.json({
+        success: true,
+        data: {
+          ...tenantData,
+          products: tenantProducts
+        }
+      });
+    } catch (error) {
+      console.error('Mağaza detay hatası:', error);
+      return res.status(500).json({ success: false, message: 'Mağaza bilgisi alınamadı.' });
     }
   });
 

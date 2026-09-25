@@ -35,7 +35,7 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
     return saved ? JSON.parse(saved) : initialTenants;
   });
 
-  const [products] = useState<Product[]>(() => {
+  const [products, setProducts] = useState<Product[]>(() => {
     try {
       const saved = localStorage.getItem('tampazar_products');
       if (saved) {
@@ -113,6 +113,23 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
       title: 'TamPazar | Komisyonsuz Hibrit Pazaryeri, Açık Dijital AVM & Ön Muhasebe',
       description: 'Aracı komisyonu yok, doğrudan esnaf fiyatı var! Perakende, toptan B2B, TamDijital dosya indirme, TamSeans canlı randevu ve yerel esnaf tek platformda.'
     });
+  }, []);
+
+  // Sunucudan Canlı Ürün Listesini Çekme
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('/api/products');
+        const json = await res.json();
+        if (json.success && Array.isArray(json.data) && json.data.length > 0) {
+          setProducts(json.data);
+        }
+      } catch (err) {
+        console.error('Ürünler yüklenirken hata:', err);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   // Body scroll lock when cart drawer or product modal is open
