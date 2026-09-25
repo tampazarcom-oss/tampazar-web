@@ -63,6 +63,7 @@ export interface CourierRegisterData {
 interface AuthContextType {
   user: AuthUser | null;
   isAuthenticated: boolean;
+  isLoading: boolean;
   loginAsBuyer: (email?: string) => void;
   loginAsCustomer: (email?: string) => void;
   loginAsSeller: (email?: string, storeName?: string) => void;
@@ -72,7 +73,7 @@ interface AuthContextType {
   registerBuyer: (data: BuyerRegisterData) => void;
   registerSeller: (data: SellerRegisterData) => void;
   registerCourier: (data: CourierRegisterData) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   switchRole: (newRole: UserRole) => void;
   openAuthModal: (initialTab?: 'buyer' | 'seller' | 'courier' | 'admin') => void;
   closeAuthModal: () => void;
@@ -148,8 +149,32 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   });
 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [authModalInitialTab, setAuthModalInitialTab] = useState<'buyer' | 'seller' | 'courier' | 'admin'>('buyer');
+
+  // AuthContext içindeki ilk yükleme useEffect'i:
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const res = await fetch('/api/auth/me', {
+          credentials: 'include' // Çerezlerin gitmesi için zorunlu
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.authenticated && data.user) {
+            setUser(data.user);
+          }
+        }
+      } catch (error) {
+        // Fallback to local storage state if server unavailable
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    checkSession();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -309,9 +334,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('tampazar_auth_user');
+  // Logout fonksiyonu:
+  const logout = async () => {
+    try {
+      await fetch('/api/auth/logout', { 
+        method: 'POST', 
+        credentials: 'include' 
+      });
+    } catch (e) {
+      // ignore network errors
+    } finally {
+      setUser(null);
+      localStorage.removeItem('tampazar_auth_user');
+    }
   };
 
   const switchRole = (newRole: UserRole) => {
@@ -335,6 +370,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       value={{
         user,
         isAuthenticated: Boolean(user),
+        isLoading,
         loginAsBuyer,
         loginAsCustomer,
         loginAsSeller,

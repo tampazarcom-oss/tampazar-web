@@ -1,4 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
+import cookieParser from 'cookie-parser';
 import { createServer as createViteServer } from 'vite';
 import path from 'path';
 import fs from 'fs';
@@ -14,6 +15,7 @@ async function startServer() {
 
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
+  app.use(cookieParser('tampazar_secure_cookie_secret'));
 
   // =========================================================================
   // 1. GÜVENLİK VE BAŞLIK MİDDEWARE'LERİ (Security Headers)
@@ -70,6 +72,97 @@ async function startServer() {
   // =========================================================================
   // 3. SUNUCU TARAFLI HESAPLAMA & GÜVENLİ API ENDPOINT'LERİ
   // =========================================================================
+
+  // Helper JWT Simulator
+  const JWT_SECRET = 'tampazar_jwt_secret_key_2026_prod';
+
+  function generateJwtToken(userData: any): string {
+    const payload = {
+      ...userData,
+      iat: Math.floor(Date.now() / 1000),
+      exp: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 Gün
+    };
+    return Buffer.from(JSON.stringify(payload)).toString('base64');
+  }
+
+  function verifyJwtToken(token: string): any {
+    try {
+      const decodedStr = Buffer.from(token, 'base64').toString('utf-8');
+      const payload = JSON.parse(decodedStr);
+      if (payload.exp && payload.exp < Math.floor(Date.now() / 1000)) {
+        throw new Error('Token süresi doldu.');
+      }
+      return payload;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * HttpOnly Çerez Tabanlı Oturum Başlatma (Login) API
+   */
+  app.post('/api/auth/login', (req: Request, res: Response) => {
+    try {
+      const { email, role, user, storeId } = req.body;
+      if (!email && (!user || !user.email)) {
+        return res.status(400).json({ error: 'E-posta adresi gereklidir.' });
+      }
+
+      const userInfo = user || {
+        id: 'usr_' + Date.now(),
+        name: email ? email.split('@')[0] : 'Kullanıcı',
+        email: email || user?.email,
+        role: role || user?.role || 'customer',
+        storeId: storeId || user?.storeId || 's3'
+      };
+
+      const token = generateJwtToken(userInfo);
+
+      res.cookie('tampazar_token', token, {
+        httpOnly: true,
+        secure: isProd,
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 gün
+        path: '/'
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: 'Güvenli HttpOnly çerez oturumu başlatıldı.',
+        user: userInfo
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: 'Oturum açma hatası: ' + err.message });
+    }
+  });
+
+  /**
+   * HttpOnly Oturum Kapatma (Logout) API
+   */
+  app.post('/api/auth/logout', (req: Request, res: Response) => {
+    res.clearCookie('tampazar_token', { path: '/', httpOnly: true, secure: isProd, sameSite: 'lax' });
+    res.clearCookie('tampazar_session', { path: '/', httpOnly: true, secure: isProd, sameSite: 'lax' });
+    return res.status(200).json({ success: true, message: 'Oturum kapatıldı' });
+  });
+
+  /**
+   * Oturum Durumu Kontrolü (Sayfa yenilendiğinde istemcinin kimliği sorması için)
+   */
+  app.get('/api/auth/me', (req: Request, res: Response) => {
+    const token = req.cookies.tampazar_token || req.cookies.tampazar_session;
+    if (!token) {
+      return res.status(401).json({ authenticated: false });
+    }
+
+    const decoded = verifyJwtToken(token);
+    if (!decoded) {
+      res.clearCookie('tampazar_token', { path: '/' });
+      res.clearCookie('tampazar_session', { path: '/' });
+      return res.status(401).json({ authenticated: false });
+    }
+
+    return res.status(200).json({ authenticated: true, user: decoded });
+  });
 
   /**
    * Sunucuda Yeniden Fiyat, KDV ve Kargo Hesaplama API
