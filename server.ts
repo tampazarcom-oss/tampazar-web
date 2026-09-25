@@ -457,147 +457,150 @@ async function startServer() {
   app.use('*', async (req: Request, res: Response) => {
     const url = req.originalUrl.split('?')[0];
 
-    // Bilinen Route Tanımları
-    const isKnownRoute = 
-      url === '/' ||
-      url === '/pazaryeri' ||
-      url === '/sehir-avm' ||
-      url === '/toptan' ||
-      url === '/kuryeler' ||
-      url === '/blog' ||
-      url === '/blog/sitemap' ||
-      url === '/saticipaneli' ||
-      url.startsWith('/saas-konsol') ||
-      url.startsWith('/hesabim') ||
-      url.startsWith('/yonetim') ||
-      ['/mesafeli-satis', '/gizlilik', '/kvkk', '/cerez-politikasi', '/iade-ve-degisim'].includes(url);
-
-    // Dinamik Parametrik Route Kontrolleri
-    const isProductRoute = url.startsWith('/urun/');
-    const isStoreRoute = url.startsWith('/dukkan/') || url.startsWith('/magaza/');
-    const isBlogArticleRoute = url.startsWith('/blog/') && url !== '/blog/sitemap';
-
-    let productData: Product | undefined;
-    let storeData: any;
-    let blogData: any;
-
-    if (isProductRoute) {
-      const slug = url.replace('/urun/', '');
-      productData = initialProducts.find(p => p.slug === slug || p.id === slug);
-    } else if (isStoreRoute) {
-      const slug = url.replace('/dukkan/', '').replace('/magaza/', '');
-      storeData = initialTenants.find(t => t.id === slug || t.name.toLowerCase().replace(/[^a-z0-9]/g, '-') === slug);
-    } else if (isBlogArticleRoute) {
-      const slug = url.replace('/blog/', '');
-      blogData = staticBlogPosts.find(b => b.slug === slug);
-    }
-
-    const isValidRoute = isKnownRoute || Boolean(productData) || Boolean(storeData) || Boolean(blogData);
-
-    // -----------------------------------------------------------------------
-    // BİLİNMEYEN ROUTE -> GERÇEK HTTP 404 NOT FOUND
-    // -----------------------------------------------------------------------
-    if (!isValidRoute) {
-      res.status(404);
-      let html = `<!doctype html>
-<html lang="tr">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>404 - Sayfa Bulunamadı | TamPazar</title>
-    <meta name="robots" content="noindex, nofollow" />
-    <style>
-      body { font-family: system-ui, sans-serif; background: #0B132B; color: white; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; text-align: center; }
-      .card { background: #111B38; padding: 2.5rem; border-radius: 1.5rem; border: 1px solid #1f2d5a; max-width: 480px; }
-      h1 { color: #F59E0B; margin-top: 0; font-size: 2rem; }
-      a { display: inline-block; margin-top: 1.5rem; background: #0F4C3A; color: white; padding: 0.75rem 1.5rem; border-radius: 0.75rem; text-decoration: none; font-weight: bold; }
-      a:hover { background: #0B382B; }
-    </style>
-  </head>
-  <body>
-    <div class="card">
-      <h1>404 Sayfa Bulunamadı</h1>
-      <p>Aradığınız sayfa veya ürün kaldırılmış veya adresi değişmiş olabilir.</p>
-      <a href="/">TamPazar Ana Sayfaya Dön →</a>
-    </div>
-  </body>
-</html>`;
-      return res.send(html);
-    }
-
-    // -----------------------------------------------------------------------
-    // GEÇERLİ ROUTE -> SERVER-SIDE METADATA VE PRERENDER ENJEKSİYONU (HTTP 200)
-    // -----------------------------------------------------------------------
+    let indexHtmlTemplate = '';
     try {
-      let template = fs.readFileSync(
+      indexHtmlTemplate = fs.readFileSync(
         path.resolve(process.cwd(), isProd ? 'dist/index.html' : 'index.html'),
         'utf-8'
       );
-
       if (!isProd && vite) {
-        template = await vite.transformIndexHtml(url, template);
+        indexHtmlTemplate = await vite.transformIndexHtml(url, indexHtmlTemplate);
+      }
+    } catch {
+      indexHtmlTemplate = '<!doctype html><html lang="tr"><head><title>TamPazar</title></head><body><div id="root"></div></body></html>';
+    }
+
+    try {
+      let title = 'TamPazar | Komisyonsuz Yeni Nesil Pazaryeri';
+      let description = 'Türkiye genelinde esnafı, müşterileri ve yerel kuryeleri buluşturan komisyonsuz pazar yeri.';
+      let canonical = `https://tampazar.com${url}`;
+      let schemaJson = '';
+      let isNotFound = false;
+
+      // 1. Dinamik Ürün Sayfası Kontrolü (/urun/:slug)
+      if (url.startsWith('/urun/')) {
+        const slug = url.replace('/urun/', '').split('/')[0];
+        let prod: any = null;
+
+        try {
+          const productResult = await db.select().from(products).where(eq(products.slug, slug)).limit(1);
+          if (productResult && productResult.length > 0) {
+            prod = productResult[0];
+          }
+        } catch (dbErr) {
+          // DB Fallback
+        }
+
+        if (!prod) {
+          prod = initialProducts.find(p => p.slug === slug || p.id === slug);
+        }
+
+        if (!prod) {
+          // Ürün bulunamadıysa KESİNLİKLE gerçek 404 dönüyoruz:
+          return res.status(404).setHeader('Content-Type', 'text/html; charset=utf-8').send(
+            indexHtmlTemplate
+              .replace(/<title>.*?<\/title>/, '<title>404 - Ürün Bulunamadı | TamPazar</title>')
+              .replace('</head>', '<meta name="robots" content="noindex, follow" /></head>')
+          );
+        }
+
+        title = `${prod.title} | TamPazar`;
+        description = prod.description || `${prod.title} en uygun fiyat ve yerel esnaf güvencesiyle TamPazar'da.`;
+        
+        // Product JSON-LD Schema
+        schemaJson = JSON.stringify({
+          '@context': 'https://schema.org/',
+          '@type': 'Product',
+          name: prod.title,
+          image: prod.imageUrl ? [prod.imageUrl] : [],
+          description: description,
+          sku: prod.sku,
+          offers: {
+            '@type': 'Offer',
+            url: canonical,
+            priceCurrency: 'TRY',
+            price: prod.price,
+            availability: (prod.stock ?? 0) > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+          }
+        });
       }
 
-      // Dinamik Başlık ve Açıklama Çözümleyici
-      let pageTitle = 'TamPazar | Komisyonsuz Hibrit Pazaryeri & Açık Dijital AVM';
-      let pageDesc = 'tampazar.com hibrit pazaryeri: %0 komisyon, BYO POS, GİB e-Fatura ve yerel esnaf ağı.';
-      let jsonLdScript = '';
-      let semanticPrerenderHtml = '';
+      // 2. Dinamik Mağaza Sayfası Kontrolü (/dukkan/ veya /magaza/)
+      else if (url.startsWith('/dukkan/') || url.startsWith('/magaza/')) {
+        const slug = url.replace('/dukkan/', '').replace('/magaza/', '').split('/')[0];
+        let store: any = null;
 
-      if (productData) {
-        pageTitle = `${productData.title} - ₺${productData.price} | TamPazar`;
-        pageDesc = productData.description || `${productData.title} en avantajlı esnaf fiyatıyla TamPazar'da.`;
-        jsonLdScript = `<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Product",
-  "name": ${JSON.stringify(productData.title)},
-  "description": ${JSON.stringify(pageDesc)},
-  "offers": {
-    "@type": "Offer",
-    "priceCurrency": "TRY",
-    "price": ${productData.price},
-    "availability": "https://schema.org/InStock"
-  }
-}
-</script>`;
-        semanticPrerenderHtml = `<article><h1>${productData.title}</h1><p>${pageDesc}</p><div>Fiyat: ₺${productData.price}</div><div>Kategori: ${productData.category}</div></article>`;
-      } else if (storeData) {
-        pageTitle = `${storeData.name} - Dijital Dükkanı | TamPazar`;
-        pageDesc = `${storeData.name} (${storeData.city}) doğrudan esnaf dükkanı. %0 komisyonlu alışveriş.`;
-        jsonLdScript = `<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": ${JSON.stringify(storeData.name)},
-  "description": ${JSON.stringify(pageDesc)}
-}
-</script>`;
-        semanticPrerenderHtml = `<section><h1>${storeData.name}</h1><p>${pageDesc}</p></section>`;
-      } else if (blogData) {
-        pageTitle = `${blogData.title} | TamPazar Rehber`;
-        pageDesc = blogData.excerpt;
-        semanticPrerenderHtml = `<article><h1>${blogData.title}</h1><p>${blogData.excerpt}</p></article>`;
+        try {
+          const tenantResult = await db.select().from(tenants).where(eq(tenants.slug, slug)).limit(1);
+          if (tenantResult && tenantResult.length > 0) {
+            store = tenantResult[0];
+          }
+        } catch (dbErr) {
+          // DB Fallback
+        }
+
+        if (!store) {
+          store = initialTenants.find(t => t.slug === slug || t.id === slug || t.name.toLowerCase().replace(/[^a-z0-9]/g, '-') === slug);
+        }
+
+        if (!store) {
+          return res.status(404).setHeader('Content-Type', 'text/html; charset=utf-8').send(
+            indexHtmlTemplate
+              .replace(/<title>.*?<\/title>/, '<title>404 - Mağaza Bulunamadı | TamPazar</title>')
+              .replace('</head>', '<meta name="robots" content="noindex, follow" /></head>')
+          );
+        }
+
+        title = `${store.name} | Yerel Esnaf Mağazası | TamPazar`;
+        description = `${store.name} mağazasının tüm ürün ve hizmetleri TamPazar güvencesiyle yayında.`;
+
+        // LocalBusiness JSON-LD Schema
+        schemaJson = JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'LocalBusiness',
+          name: store.name,
+          url: canonical,
+        });
       }
 
-      // Meta etiketlerini HTML şablonuna yerleştir
-      let renderedHtml = template
-        .replace(/<title>.*?<\/title>/, `<title>${pageTitle}</title>`)
-        .replace(/<meta name="description" content=".*?" \/>/, `<meta name="description" content="${pageDesc}" />`);
-
-      if (jsonLdScript) {
-        renderedHtml = renderedHtml.replace('</head>', `${jsonLdScript}\n</head>`);
+      // 3. Blog Yazıları
+      else if (url.startsWith('/blog/') && url !== '/blog/sitemap') {
+        const slug = url.replace('/blog/', '');
+        const blogPost = staticBlogPosts.find(b => b.slug === slug);
+        if (blogPost) {
+          title = `${blogPost.title} | TamPazar Rehber`;
+          description = blogPost.excerpt;
+          schemaJson = JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: blogPost.title,
+            description: blogPost.excerpt,
+            url: canonical
+          });
+        }
       }
 
-      if (semanticPrerenderHtml) {
-        renderedHtml = renderedHtml.replace('<div id="root"></div>', `<div id="root">${semanticPrerenderHtml}</div>`);
-      }
+      // 4. Özel / Korumalı Alanlar İçin Noindex Denetimi
+      const isPrivateArea = ['/yonetim', '/saas-konsol', '/kurye/panel', '/hesabim', '/sistem-admin', '/saticipaneli'].some(route => url.startsWith(route));
+      const robotsTag = isPrivateArea 
+        ? '<meta name="robots" content="noindex, nofollow" />' 
+        : '<meta name="robots" content="index, follow" />';
 
-      res.status(200).setHeader('Content-Type', 'text/html; charset=utf-8');
-      return res.send(renderedHtml);
-    } catch (err: any) {
-      if (!isProd && vite) vite.ssrFixStacktrace(err);
-      return res.status(500).send('Sunucu hatası: ' + err.message);
+      // HTML içine dinamik meta etiketlerini ve Schema'yı enjekte etme
+      let finalHtml = indexHtmlTemplate
+        .replace(/<title>.*?<\/title>/, `<title>${title}</title>`)
+        .replace('</head>', `
+          <meta name="description" content="${description}" />
+          <link rel="canonical" href="${canonical}" />
+          ${robotsTag}
+          ${schemaJson ? `<script type="application/ld+json">${schemaJson}</script>` : ''}
+        </head>`);
+
+      return res.status(200).setHeader('Content-Type', 'text/html; charset=utf-8').send(finalHtml);
+
+    } catch (error) {
+      console.error('SSR/HTML render hatası:', error);
+      return res.status(500).send('Sunucu hatası');
     }
   });
 
