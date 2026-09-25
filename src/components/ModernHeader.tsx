@@ -402,7 +402,8 @@ export default function ModernHeader({
   const [isB2BDropdownOpen, setIsB2BDropdownOpen] = useState(false);
   const b2bRef = useRef<HTMLDivElement>(null);
 
-  // Kategori Durum Yönetimi (State)
+  // Kategori Durum Yönetimi (State & Dropdown Panel)
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [selectedFilter, setSelectedFilter] = useState<string>(selectedCategory || 'all');
   const [mobileExpandedCat, setMobileExpandedCat] = useState<string | null>(null);
@@ -425,9 +426,9 @@ export default function ModernHeader({
     }
   }, [selectedCategory]);
 
-  // Click outside listener
+  // Click outside and ESC key listeners
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleDocumentClick = (e: MouseEvent) => {
       if (locationRef.current && !locationRef.current.contains(e.target as Node)) {
         setIsLocationOpen(false);
       }
@@ -435,14 +436,31 @@ export default function ModernHeader({
         setIsB2BDropdownOpen(false);
       }
       if (megaMenuContainerRef.current && !megaMenuContainerRef.current.contains(e.target as Node)) {
+        setOpenCategory(null);
         setActiveCategory(null);
       }
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
         setIsSearchFocused(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setOpenCategory(null);
+        setActiveCategory(null);
+        setIsLocationOpen(false);
+        setIsB2BDropdownOpen(false);
+        setIsSearchFocused(false);
+        setMobileExpandedCat(null);
+      }
+    };
+
+    document.addEventListener('click', handleDocumentClick);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('click', handleDocumentClick);
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
 
   const handleSelectLocation = (loc: { city: string; district: string }) => {
@@ -462,16 +480,36 @@ export default function ModernHeader({
     }
   };
 
-  const handleCategorySelect = (slug: string) => {
+  const handleCategorySelect = (slug: string, closeMenu = true) => {
     setSelectedFilter(slug);
-    setActiveCategory(null);
-    setMobileExpandedCat(null);
+    if (closeMenu) {
+      setOpenCategory(null);
+      setActiveCategory(null);
+      setMobileExpandedCat(null);
+    }
     if (onSelectCategory) {
       onSelectCategory(slug);
     }
     if (location.pathname !== '/' && location.pathname !== '/pazaryeri') {
-      navigate('/pazaryeri');
+      navigate(`/pazaryeri?kategori=${encodeURIComponent(slug)}`);
+    } else {
+      const prodEl = document.getElementById('all-products-section');
+      if (prodEl && closeMenu) {
+        prodEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     }
+  };
+
+  const handleCategoryToggle = (catId: string, catSlug: string) => {
+    if (openCategory === catId) {
+      setOpenCategory(null);
+      setActiveCategory(null);
+    } else {
+      setOpenCategory(catId);
+      setActiveCategory(catId);
+      handleCategorySelect(catSlug, false);
+    }
+    setMobileExpandedCat(mobileExpandedCat === catId ? null : catId);
   };
 
   const handleMouseEnterCategory = (catId: string) => {
@@ -483,7 +521,10 @@ export default function ModernHeader({
 
   const handleMouseLeaveCategory = () => {
     megaMenuTimeoutRef.current = setTimeout(() => {
-      setActiveCategory(null);
+      // If user hasn't explicitly locked it open via click, close hover
+      if (!openCategory) {
+        setActiveCategory(null);
+      }
     }, 250);
   };
 
@@ -495,7 +536,9 @@ export default function ModernHeader({
 
   const handleMouseLeaveMenu = () => {
     megaMenuTimeoutRef.current = setTimeout(() => {
-      setActiveCategory(null);
+      if (!openCategory) {
+        setActiveCategory(null);
+      }
     }, 250);
   };
 
@@ -505,7 +548,8 @@ export default function ModernHeader({
     ? products.filter(p => p.title.toLowerCase().includes(searchTrimmed) || p.category.toLowerCase().includes(searchTrimmed)).slice(0, 5)
     : [];
 
-  const activeCategoryObject = HEADER_CATEGORIES.find(c => c.id === activeCategory);
+  const currentActiveId = openCategory || activeCategory;
+  const activeCategoryObject = HEADER_CATEGORIES.find(c => c.id === currentActiveId);
 
   return (
     <header className="sticky top-0 z-40 bg-white shadow-xs border-b border-slate-200">
@@ -758,50 +802,63 @@ export default function ModernHeader({
         </div>
       </div>
 
-      {/* 2. KATMAN (BEYAZ / MİNİMALİST KATEGORİ BAR & MEGA MENÜ ÇUBUĞU) */}
+      {/* 2. KATMAN (BEYAZ / MİNİMALİST KATEGORİ BAR & MEGA MENÜ FLYOUT) */}
       <div 
-        className="bg-white px-4 lg:px-8 border-b border-slate-200/90 relative"
+        className="bg-white px-4 lg:px-8 border-b border-slate-200/90 relative z-40 pointer-events-auto"
         ref={megaMenuContainerRef}
       >
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-2 text-xs font-semibold overflow-x-auto scrollbar-none py-1.5">
           
-          {/* Dinamik Kategori Butonları (Hover + Click + Active Underline Highlight) */}
+          {/* Direct Category Link Buttons with Hover & Click Subcategory Flyout */}
           <div className="flex items-center gap-1 md:gap-2 shrink-0 overflow-x-auto scrollbar-none py-1">
             {HEADER_CATEGORIES.map((cat) => {
-              const isSelected = selectedFilter === cat.slug;
-              const isHovered = activeCategory === cat.id;
+              const isActive = location.pathname === `/kategori/${cat.slug}` || selectedCategory === cat.slug;
+              const isOpen = (openCategory === cat.id) || (activeCategory === cat.id);
 
               return (
-                <div 
+                <div
                   key={cat.id}
-                  className="relative shrink-0"
+                  className="relative shrink-0 select-none group"
                   onMouseEnter={() => handleMouseEnterCategory(cat.id)}
                   onMouseLeave={handleMouseLeaveCategory}
                 >
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleCategorySelect(cat.slug);
-                      // Toggle mobile accordion on small screens
-                      setMobileExpandedCat(mobileExpandedCat === cat.id ? null : cat.id);
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer whitespace-nowrap border-b-2 ${
-                      isSelected
-                        ? 'border-[#0F4C3A] text-[#0F4C3A] bg-emerald-50/70 font-extrabold shadow-2xs'
-                        : isHovered
-                        ? 'border-emerald-600 text-emerald-900 bg-slate-100/90 font-extrabold'
-                        : 'border-transparent text-slate-700 hover:text-slate-950 hover:bg-slate-100/70'
+                  <div
+                    className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs transition cursor-pointer whitespace-nowrap border-b-2 ${
+                      isOpen || isActive
+                        ? 'border-[#0F4C3A] text-[#0F4C3A] bg-emerald-50 font-black shadow-xs'
+                        : 'border-transparent text-slate-700 hover:text-slate-950 hover:bg-slate-100/80 font-bold'
                     }`}
                   >
-                    <span>{cat.icon}</span>
-                    <span>{cat.name}</span>
+                    <Link
+                      to={`/kategori/${cat.slug}`}
+                      className="flex items-center gap-1.5 cursor-pointer"
+                      onClick={() => {
+                        setActiveCategory(null);
+                        setOpenCategory(null);
+                      }}
+                    >
+                      <span>{cat.icon}</span>
+                      <span>{cat.name}</span>
+                    </Link>
+
                     {cat.badge && (
                       <span className={`hidden lg:inline-block text-[9px] font-black px-1.5 py-0.2 rounded-full uppercase ${cat.badgeBg || 'bg-slate-200 text-slate-800'}`}>
                         {cat.badge}
                       </span>
                     )}
-                    <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${isHovered || mobileExpandedCat === cat.id ? 'rotate-180 text-emerald-700' : ''}`} />
-                  </button>
+
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleCategoryToggle(cat.id, cat.slug);
+                      }}
+                      className="p-0.5 hover:bg-emerald-100/60 rounded-md transition text-slate-400 hover:text-[#0F4C3A]"
+                      title={`${cat.name} Alt Kategorilerini Aç`}
+                    >
+                      <ChevronDown className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180 text-[#0F4C3A]' : ''}`} />
+                    </button>
+                  </div>
                 </div>
               );
             })}
@@ -809,7 +866,7 @@ export default function ModernHeader({
             {/* Dış Bağlantılar */}
             <Link
               to="/toptan"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-amber-800 hover:text-amber-950 hover:bg-amber-50/80 transition whitespace-nowrap font-bold text-xs shrink-0"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-amber-800 hover:text-amber-950 hover:bg-amber-50/80 transition whitespace-nowrap font-bold text-xs shrink-0 cursor-pointer select-none"
             >
               <span>🏢</span>
               <span>B2B Toptan</span>
@@ -817,7 +874,7 @@ export default function ModernHeader({
 
             <Link
               to="/kuryeler"
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50/80 transition whitespace-nowrap font-bold text-xs shrink-0"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-emerald-800 hover:text-emerald-950 hover:bg-emerald-50/80 transition whitespace-nowrap font-bold text-xs shrink-0 cursor-pointer select-none"
             >
               <span>🛵</span>
               <span>TamKurye (30 Dk)</span>
@@ -826,156 +883,121 @@ export default function ModernHeader({
 
         </div>
 
-        {/* MASAÜSTÜ FLYOUT MEGA MENÜ (Hover veya Tıklama ile Açılan Modern Panel) */}
+        {/* ALT KATEGORİLER MEGA MENÜ FLYOUT (Hover / Click ile Açılan Panel) */}
         {activeCategoryObject && (
           <div 
-            className="hidden md:block absolute top-full left-0 right-0 bg-white border-b border-slate-200 shadow-2xl z-50 animate-fade-in"
+            className="block absolute top-full left-0 right-0 bg-white border-b border-gray-200 shadow-2xl z-50 animate-fade-in pointer-events-auto max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
             onMouseEnter={handleMouseEnterMenu}
             onMouseLeave={handleMouseLeaveMenu}
           >
-            <div className="max-w-7xl mx-auto p-6 grid grid-cols-12 gap-6 text-left">
-              
-              {/* Sol: Alt Kategoriler Listesi Matrisi (8 Sütun) */}
-              <div className="col-span-8 grid grid-cols-2 lg:grid-cols-4 gap-6 border-r border-slate-100 pr-6">
-                {activeCategoryObject.subCategories.map((group, groupIdx) => (
-                  <div key={groupIdx} className="space-y-2.5">
-                    <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      <span className="truncate">{group.title}</span>
-                    </h4>
-                    <ul className="space-y-1.5">
-                      {group.items.map((item, itemIdx) => (
-                        <li key={itemIdx}>
-                          <button
-                            type="button"
-                            onClick={() => handleCategorySelect(item.slug)}
-                            className="w-full text-left text-xs font-semibold text-slate-600 hover:text-[#0F4C3A] hover:font-bold hover:translate-x-0.5 transition-all flex items-center justify-between group cursor-pointer py-0.5"
-                          >
-                            <span className="truncate">{item.name}</span>
-                            {item.badge && (
-                              <span className="text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded-full shrink-0 ml-1">
-                                {item.badge}
-                              </span>
-                            )}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-
-              {/* Sağ: Öne Çıkan Hızlı Etiketler & Kampanya Rozetleri (4 Sütun) */}
-              <div className="col-span-4 space-y-4 flex flex-col justify-between pl-2">
-                
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 uppercase tracking-wide">
-                    <Tag className="w-3.5 h-3.5 text-amber-500" />
-                    <span>Öne Çıkan Etiketler & Rozetler</span>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {activeCategoryObject.quickTags.map((tag, tagIdx) => (
-                      <button
-                        key={tagIdx}
-                        type="button"
-                        onClick={() => handleCategorySelect(activeCategoryObject.slug)}
-                        className="text-[11px] font-bold bg-slate-100 hover:bg-emerald-100 hover:text-[#0F4C3A] text-slate-700 px-2.5 py-1 rounded-xl transition cursor-pointer border border-slate-200/70"
-                      >
-                        {tag}
-                      </button>
-                    ))}
-                  </div>
+            {(!activeCategoryObject.subCategories || activeCategoryObject.subCategories.length === 0) ? (
+              <div className="max-w-xl mx-auto py-10 px-6 text-center space-y-4">
+                <div className="w-14 h-14 mx-auto bg-emerald-50 rounded-2xl flex items-center justify-center text-2xl shadow-xs border border-emerald-100 text-emerald-800">
+                  {activeCategoryObject.icon || '🛍️'}
                 </div>
-
-                {/* Alt Kampanya Banner Kartı */}
-                {activeCategoryObject.banner && (
-                  <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-[#0F4C3A] to-slate-900 text-white shadow-md space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/30">
-                        {activeCategoryObject.badge || 'Öne Çıkan'}
-                      </span>
-                      <Zap className="w-4 h-4 text-amber-400" />
-                    </div>
-                    <div>
-                      <h4 className="text-xs font-black text-white">{activeCategoryObject.banner.title}</h4>
-                      <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">{activeCategoryObject.banner.description}</p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => handleCategorySelect(activeCategoryObject.banner!.actionSlug)}
-                      className="w-full py-1.5 bg-[#F59E0B] hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center gap-1 mt-1"
-                    >
-                      <span>{activeCategoryObject.banner.btnText}</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                )}
-
+                <div className="space-y-1">
+                  <h4 className="text-base font-black text-slate-900">
+                    {activeCategoryObject.name} Vitrini
+                  </h4>
+                  <p className="text-xs text-slate-500 max-w-md mx-auto leading-relaxed">
+                    Tüm ürün ve esnafları görmek için kategori sayfasına gidin veya dükkanınızı açarak ilk satıcı olun.
+                  </p>
+                </div>
+                <div className="flex items-center justify-center gap-3 pt-2">
+                  <Link
+                    to={`/kategori/${activeCategoryObject.slug}`}
+                    onClick={() => { setActiveCategory(null); setOpenCategory(null); }}
+                    className="px-5 py-2.5 bg-[#0F4C3A] hover:bg-[#0B382B] text-white rounded-xl text-xs font-black shadow-xs transition flex items-center gap-2 cursor-pointer"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    <span>{activeCategoryObject.name} Sayfasına Git</span>
+                  </Link>
+                </div>
               </div>
-
-            </div>
-          </div>
-        )}
-
-        {/* MOBİL AKORDEON AÇILIR MENÜ (Mobile View Accordion Dropdown) */}
-        {mobileExpandedCat && (
-          <div className="md:hidden bg-slate-50 border-t border-slate-200 p-4 space-y-4 text-left animate-fade-in">
-            {(() => {
-              const mobileCatObj = HEADER_CATEGORIES.find(c => c.id === mobileExpandedCat);
-              if (!mobileCatObj) return null;
-
-              return (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-                    <h3 className="font-black text-slate-900 text-sm flex items-center gap-2">
-                      <span>{mobileCatObj.icon}</span>
-                      <span>{mobileCatObj.name}</span>
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setMobileExpandedCat(null)}
-                      className="text-slate-400 p-1 hover:text-slate-600"
-                    >
-                      <ChevronUp className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {mobileCatObj.subCategories.map((group, idx) => (
-                      <div key={idx} className="bg-white p-3 rounded-xl border border-slate-200 space-y-1">
-                        <div className="text-[11px] font-black text-slate-800 uppercase tracking-wide">{group.title}</div>
-                        <div className="space-y-1 pt-1">
-                          {group.items.map((it, itIdx) => (
-                            <button
-                              key={itIdx}
-                              type="button"
-                              onClick={() => handleCategorySelect(it.slug)}
-                              className="w-full text-left text-xs text-slate-600 hover:text-[#0F4C3A] font-medium py-1 border-b border-slate-50 last:border-0 flex items-center justify-between"
+            ) : (
+              <div className="max-w-7xl mx-auto p-4 md:p-6 grid grid-cols-1 md:grid-cols-12 gap-6 text-left">
+                
+                {/* Alt Kategoriler Matrisi */}
+                <div className="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:border-r md:border-slate-100 md:pr-6">
+                  {activeCategoryObject.subCategories.map((group, groupIdx) => (
+                    <div key={groupIdx} className="space-y-2.5">
+                      <h4 className="text-xs font-black text-slate-900 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        <span className="truncate">{group.title}</span>
+                      </h4>
+                      <ul className="space-y-1.5">
+                        {group.items.map((item, itemIdx) => (
+                          <li key={itemIdx}>
+                            <Link
+                              to={`/kategori/${activeCategoryObject.slug}?sub=${encodeURIComponent(item.name)}`}
+                              onClick={() => {
+                                setActiveCategory(null);
+                                setOpenCategory(null);
+                              }}
+                              className="w-full text-left text-xs font-semibold text-slate-600 hover:text-[#0F4C3A] hover:font-bold hover:translate-x-0.5 transition-all flex items-center justify-between group cursor-pointer py-1"
                             >
-                              <span>{it.name}</span>
-                              {it.badge && (
-                                <span className="text-[9px] font-bold bg-emerald-50 text-emerald-700 px-1.5 py-0.2 rounded">
-                                  {it.badge}
+                              <span className="truncate">{item.name}</span>
+                              {item.badge && (
+                                <span className="text-[9px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.2 rounded-full shrink-0 ml-1">
+                                  {item.badge}
                                 </span>
                               )}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Öne Çıkan Etiketler & Kampanya Kartı */}
+                <div className="md:col-span-4 space-y-4 flex flex-col justify-between md:pl-2 pt-4 md:pt-0 border-t md:border-t-0 border-slate-100">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs font-black text-slate-900 uppercase tracking-wide">
+                      <Tag className="w-3.5 h-3.5 text-amber-500" />
+                      <span>Hızlı Filtre Etiketleri</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {activeCategoryObject.quickTags.map((tag, tagIdx) => (
+                        <Link
+                          key={tagIdx}
+                          to={`/kategori/${activeCategoryObject.slug}`}
+                          onClick={() => { setActiveCategory(null); setOpenCategory(null); }}
+                          className="text-[11px] font-bold bg-slate-100 hover:bg-emerald-100 hover:text-[#0F4C3A] text-slate-700 px-2.5 py-1 rounded-xl transition cursor-pointer border border-slate-200/70"
+                        >
+                          {tag}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleCategorySelect(mobileCatObj.slug)}
-                    className="w-full py-2 bg-[#0F4C3A] text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 cursor-pointer"
-                  >
-                    <span>Tüm {mobileCatObj.name} Ürünlerini Listele</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  {activeCategoryObject.banner && (
+                    <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-[#0F4C3A] to-slate-900 text-white shadow-md space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-300 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-500/30">
+                          {activeCategoryObject.badge || 'Komisyonsuz Reyon'}
+                        </span>
+                        <Zap className="w-4 h-4 text-amber-400" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-black text-white">{activeCategoryObject.banner.title}</h4>
+                        <p className="text-[11px] text-slate-300 mt-0.5 leading-snug">{activeCategoryObject.banner.description}</p>
+                      </div>
+                      <Link
+                        to={`/kategori/${activeCategoryObject.banner.actionSlug}`}
+                        onClick={() => { setActiveCategory(null); setOpenCategory(null); }}
+                        className="w-full py-1.5 bg-[#F59E0B] hover:bg-amber-400 text-slate-950 font-black text-xs rounded-xl shadow-xs transition cursor-pointer flex items-center justify-center gap-1 mt-1"
+                      >
+                        <span>{activeCategoryObject.banner.btnText}</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
+                  )}
                 </div>
-              );
-            })()}
+
+              </div>
+            )}
           </div>
         )}
 

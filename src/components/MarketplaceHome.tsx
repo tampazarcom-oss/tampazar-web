@@ -1139,10 +1139,25 @@ export default function MarketplaceHome({ onNavigateToStore, onOpenSellerDashboa
         </section>
 
         {/* 8. TÜM ÜRÜNLER / SONSUZ LİSTE (TRENDYOL ÜRÜN GRID) */}
-        <div className="space-y-6 pt-6">
+        <div id="all-products-section" className="space-y-6 pt-6 scroll-mt-24">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-4">
             <div>
-              <h2 className="text-xl font-black text-slate-900">Tüm Ürünler & Esnaf Vitrini</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-black text-slate-900">Tüm Ürünler & Esnaf Vitrini</h2>
+                {selectedCategory !== 'all' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-black bg-emerald-100 text-[#0F4C3A] border border-emerald-300">
+                    <span>Kategori: {selectedCategory}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCategory('all')}
+                      className="hover:text-red-700 text-slate-500 font-bold ml-1 cursor-pointer"
+                      title="Filtreyi Temizle"
+                    >
+                      ✕
+                    </button>
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500">Toplam {filteredProducts.length} ürün ve hizmet listeleniyor</p>
             </div>
 

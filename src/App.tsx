@@ -30,6 +30,7 @@ const BlogPage = lazy(() => import('./pages/Blog'));
 const BlogSitemap = lazy(() => import('./pages/BlogSitemap'));
 const PazaryeriDiscoveryPage = lazy(() => import('./components/PazaryeriDiscoveryPage'));
 const SellerPortalPage = lazy(() => import('./components/SellerPortalPage'));
+const CategoryPage = lazy(() => import('./pages/CategoryPage'));
 
 // Role & Auth & Admin Panel Pages
 const ProtectedRoute = lazy(() => import('./components/auth/ProtectedRoute'));
@@ -268,6 +269,14 @@ function MainLayout() {
             <Route 
               path="/pazaryeri/:categorySlug" 
               element={<PazaryeriDiscoveryPage />} 
+            />
+            <Route 
+              path="/kategori" 
+              element={<CategoryPage />} 
+            />
+            <Route 
+              path="/kategori/:slug" 
+              element={<CategoryPage />} 
             />
             <Route 
               path="/saticipaneli" 
