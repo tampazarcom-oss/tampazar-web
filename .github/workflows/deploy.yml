@@ -39,6 +39,6 @@ jobs:
             grep -q '^GOOGLE_CLIENT_ID=' .env && sed -i 's/^GOOGLE_CLIENT_ID=.*/GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}/' .env || echo 'GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}' >> .env
             grep -q '^GOOGLE_CLIENT_SECRET=' .env && sed -i 's/^GOOGLE_CLIENT_SECRET=.*/GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}/' .env || echo 'GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}' >> .env
 
-            npm install
+            npm install --legacy-peer-deps
             npm run build
             pm2 reload all || pm2 restart all
