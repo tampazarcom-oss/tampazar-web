@@ -438,7 +438,197 @@ async function startServer() {
   });
 
   // =========================================================================
-  // 4. VITE MIDDLEWARE VE SSR / PRERENDER / 404 ORKESTRASYONU
+  // 4. DINAMIK ROBOTS.TXT, LLMS.TXT VE XML SITEMAP ROTALARI
+  // =========================================================================
+
+  app.get('/llms.txt', (req: Request, res: Response) => {
+    res.header('Content-Type', 'text/plain; charset=utf-8');
+    const txt = `# TamPazar
+
+> TamPazar, Türkiye'de yerel esnafı, bağımsız kuryeleri ve müşterileri komisyonsuz (%0 komisyonlu) bir modelle buluşturan açık pazar yeri ve SaaS platformudur.
+
+## Genel Bilgiler
+- Web Sitesi: https://tampazar.com
+- Model: Komisyonsuz (%0 platform komisyonu), esnafın kendi sanal POS'unu (BYO POS) doğrudan kasasına bağlayabildiği e-ticaret altyapısı.
+- Hizmet Kapsamı: Perakende ürünler, yerel hizmetler, B2B toptan tedarik ve bağımsız kurye lojistiği.
+
+## Önemli Bağlantılar
+- Pazaryeri Kataloğu: https://tampazar.com/pazaryeri
+- Şehir AVM Vitrini: https://tampazar.com/sehir-avm
+- Satıcı Katılımı: https://tampazar.com/saticipaneli
+- Kurye Ağı: https://tampazar.com/kuryeler
+- Blog & Rehberler: https://tampazar.com/blog
+
+## Geliştirici ve LLM Keşif Kaynakları
+- XML Site Haritası: https://tampazar.com/sitemap.xml`;
+    return res.send(txt);
+  });
+
+  app.get('/robots.txt', (req: Request, res: Response) => {
+    res.header('Content-Type', 'text/plain; charset=utf-8');
+    const txt = `User-agent: *
+Allow: /
+Allow: /pazaryeri
+Allow: /sehir-avm
+Allow: /dukkan/
+Allow: /urun/
+Allow: /blog
+Allow: /toptan
+Allow: /kuryeler
+
+# Korumalı ve Özel Alanlar
+Disallow: /api/
+Disallow: /yonetim/
+Disallow: /sistem-admin/
+Disallow: /saas-konsol/
+Disallow: /kurye/panel
+Disallow: /hesabim/
+
+# Explicit Permissions for AI Search Engines & LLM Bots
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+# Sitemap Dizini
+Sitemap: https://tampazar.com/sitemap.xml`;
+    return res.send(txt);
+  });
+
+  // 1. Ana Sitemap Dizini (/sitemap.xml)
+  app.get('/sitemap.xml', (req: Request, res: Response) => {
+    res.header('Content-Type', 'application/xml; charset=utf-8');
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <sitemap>
+    <loc>https://tampazar.com/sitemap-products.xml</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://tampazar.com/sitemap-stores.xml</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+  </sitemap>
+  <sitemap>
+    <loc>https://tampazar.com/sitemap-blog.xml</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+  </sitemap>
+</sitemapindex>`;
+    return res.send(xml);
+  });
+
+  // 2. Ürünler Sitemap'i (/sitemap-products.xml)
+  app.get('/sitemap-products.xml', async (req: Request, res: Response) => {
+    try {
+      let allProducts: any[] = [];
+      try {
+        allProducts = await db.select().from(products);
+      } catch (dbErr) {
+        allProducts = initialProducts;
+      }
+      if (!allProducts || allProducts.length === 0) {
+        allProducts = initialProducts;
+      }
+
+      res.header('Content-Type', 'application/xml; charset=utf-8');
+
+      let urlsXml = allProducts.map(p => `
+  <url>
+    <loc>https://tampazar.com/urun/${p.slug || p.id}</loc>
+    <lastmod>${p.createdAt ? new Date(p.createdAt).toISOString() : new Date().toISOString()}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('');
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tampazar.com/pazaryeri</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>${urlsXml}
+</urlset>`;
+
+      return res.send(xml);
+    } catch (error) {
+      console.error('Sitemap products hatası:', error);
+      return res.status(500).send('Sitemap üretilemedi');
+    }
+  });
+
+  // 3. Mağazalar Sitemap'i (/sitemap-stores.xml)
+  app.get('/sitemap-stores.xml', async (req: Request, res: Response) => {
+    try {
+      let allStores: any[] = [];
+      try {
+        allStores = await db.select().from(tenants);
+      } catch (dbErr) {
+        allStores = initialTenants;
+      }
+      if (!allStores || allStores.length === 0) {
+        allStores = initialTenants;
+      }
+
+      res.header('Content-Type', 'application/xml; charset=utf-8');
+
+      let urlsXml = allStores.map(s => `
+  <url>
+    <loc>https://tampazar.com/dukkan/${s.slug || s.id}</loc>
+    <lastmod>${s.createdAt ? new Date(s.createdAt).toISOString() : new Date().toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`).join('');
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tampazar.com/sehir-avm</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>${urlsXml}
+</urlset>`;
+
+      return res.send(xml);
+    } catch (error) {
+      console.error('Sitemap stores hatası:', error);
+      return res.status(500).send('Sitemap üretilemedi');
+    }
+  });
+
+  // 4. Blog Sitemap'i (/sitemap-blog.xml) - HTML değil saf XML dönüşü
+  app.get('/sitemap-blog.xml', (req: Request, res: Response) => {
+    res.header('Content-Type', 'application/xml; charset=utf-8');
+
+    let blogUrls = staticBlogPosts.map(b => `
+  <url>
+    <loc>https://tampazar.com/blog/${b.slug}</loc>
+    <lastmod>${new Date().toISOString()}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`).join('');
+
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://tampazar.com/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>${blogUrls}
+</urlset>`;
+    return res.send(xml);
+  });
+
+  // =========================================================================
+  // 5. VITE MIDDLEWARE VE SSR / PRERENDER / 404 ORKESTRASYONU
   // =========================================================================
   let vite: any;
   if (!isProd) {

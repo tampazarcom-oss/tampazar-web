@@ -1,12 +1,20 @@
-# TamPazar Robots.txt Configuration
-# Full Indexing Permission for Web Crawlers & AI Search Engines (GEO - Generative Engine Optimization)
-
 User-agent: *
 Allow: /
+Allow: /pazaryeri
+Allow: /sehir-avm
+Allow: /dukkan/
+Allow: /urun/
+Allow: /blog
+Allow: /toptan
+Allow: /kuryeler
+
+# Korumalı ve Özel Alanlar
+Disallow: /api/
 Disallow: /yonetim/
 Disallow: /sistem-admin/
-Disallow: /kurye/panel
 Disallow: /saas-konsol/
+Disallow: /kurye/panel
+Disallow: /hesabim/
 
 # Explicit Permissions for AI Search Engines & LLM Bots
 User-agent: GPTBot
@@ -24,23 +32,5 @@ Allow: /
 User-agent: Google-Extended
 Allow: /
 
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: YandexBot
-Allow: /
-
-# LLM Manifests
-Allow: /llms.txt
-Allow: /llms-full.txt
-
-# Dynamic Multi-Sitemap Index
+# Sitemap Dizini
 Sitemap: https://tampazar.com/sitemap.xml
-Sitemap: https://tampazar.com/sitemap-products.xml
-Sitemap: https://tampazar.com/sitemap-stores.xml
-Sitemap: https://tampazar.com/sitemap-categories.xml
-Sitemap: https://tampazar.com/sitemap-blog.xml
-Sitemap: https://tampazar.com/sitemap-locations.xml

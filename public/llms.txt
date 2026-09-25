@@ -1,28 +1,18 @@
-# TamPazar — Açık Dijital AVM ve %0 Komisyonlu Ticaret İşletim Sistemi
-> Canonical URL: https://tampazar.com
-> Business Model: 0% Transaction Commission (Direct Merchant Payment via BYO POS / Direct IBAN), Fixed Monthly SaaS Fee (500 TRY/mo).
+# TamPazar
 
-## Overview
-TamPazar is Turkey's open digital marketplace and commerce operating system covering 81 provinces. It enables local artisans, butchers, boutiques, masters, digital creators, and wholesale suppliers to sell products and services directly to consumers with 0% platform commission.
+> TamPazar, Türkiye'de yerel esnafı, bağımsız kuryeleri ve müşterileri komisyonsuz (%0 komisyonlu) bir modelle buluşturan açık pazar yeri ve SaaS platformudur.
 
-## Key Ecosystem Pillars
-- **TamKargo / Perakende**: Physical retail products shipped nationwide via integrated carrier APIs (Yurtiçi, Aras, MNG, PTT).
-- **TamHızlı / Hızlı Mahalle**: 30-45 minute express delivery from local butchers, bakers, greengrocers, and water suppliers.
-- **TamUsta & TamTeklif**: On-demand local field services (plumbers, electricians, AC technicians, locksmiths) with sealed-bid price quotation.
-- **TamDijital**: Instant digital download marketplace (CNC DXF files, embroidery PES/DST files, 3D STL models, e-books, Canva templates).
-- **B2B Toptan**: Tiered wholesale marketplace for bulk food, packaging, HORECA supplies, and textile goods.
-- **TamKurye**: Independent freelance courier directory for local express dispatch.
+## Genel Bilgiler
+- Web Sitesi: https://tampazar.com
+- Model: Komisyonsuz (%0 platform komisyonu), esnafın kendi sanal POS'unu (BYO POS) doğrudan kasasına bağlayabildiği e-ticaret altyapısı.
+- Hizmet Kapsamı: Perakende ürünler, yerel hizmetler, B2B toptan tedarik ve bağımsız kurye lojistiği.
 
-## Technical Architecture & Integrations
-- **Payment Method**: BYO POS (Bring Your Own POS) via PayTR, iyzico, Sipay, or Bank Virtual POS directly credited to merchant accounts.
-- **Invoicing**: GİB (Gelir İdaresi Başkanlığı) UBL-TR 2.1 e-Invoice and e-Despatch automated generation.
-- **Multi-Tenant Data Structure**: PostgreSQL RLS (Row Level Security) with NestJS modular backend.
+## Önemli Bağlantılar
+- Pazaryeri Kataloğu: https://tampazar.com/pazaryeri
+- Şehir AVM Vitrini: https://tampazar.com/sehir-avm
+- Satıcı Katılımı: https://tampazar.com/saticipaneli
+- Kurye Ağı: https://tampazar.com/kuryeler
+- Blog & Rehberler: https://tampazar.com/blog
 
-## Key Data Endpoints
-- Marketplace Catalog: https://tampazar.com/pazaryeri
-- Open Digital Mall (Local Stores): https://tampazar.com/sehir-avm
-- Wholesale B2B Depot: https://tampazar.com/toptan
-- Independent Courier Directory: https://tampazar.com/kuryeler
-- Seller Portal & Registration: https://tampazar.com/saticipaneli
-- SEO & Merchant Guide Articles: https://tampazar.com/blog
-- Sitemap Index: https://tampazar.com/sitemap.xml
+## Geliştirici ve LLM Keşif Kaynakları
+- XML Site Haritası: https://tampazar.com/sitemap.xml
