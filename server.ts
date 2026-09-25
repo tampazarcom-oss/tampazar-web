@@ -572,21 +572,47 @@ async function startServer() {
   });
 
   /**
-   * Sanal POS Ödeme Webhook API (Audit Log & Status Update)
+   * Sanal POS Ödeme Webhook API (HMAC-SHA256 İmza Doğrulamalı & Audit Log)
    */
+  const WEBHOOK_SECRET = process.env.PAYMENT_WEBHOOK_SECRET || 'tampazar_sandbox_secret_key_2026';
+
   app.post('/api/webhooks/payment', async (req: Request, res: Response) => {
     try {
-      const { orderId, status, transactionId } = req.body;
+      const { orderId, status, transactionId, hash } = req.body;
+      const incomingSignature = (req.headers['x-paytr-token'] || req.headers['x-signature'] || hash) as string;
 
-      if (!orderId) {
-        return res.status(400).send('Sipariş Kimliği (orderId) eksik.');
+      // 1. BLOCKER ÇÖZÜMÜ: HMAC-SHA256 İmza Doğrulaması
+      if (!incomingSignature) {
+        return res.status(403).json({ success: false, message: 'İmza başlığı (signature/token) eksik.' });
       }
 
+      // POS sağlayıcısının algoritmasına uygun hash üretimi (orderId + status + transactionId)
+      const payloadToSign = `${orderId}|${status}|${transactionId}`;
+      const calculatedSignature = crypto
+        .createHmac('sha256', WEBHOOK_SECRET)
+        .update(payloadToSign)
+        .digest('base64');
+
+      // Sabit zamanlı karşılaştırma (Timing Attack zafiyetini engeller)
+      const sigBuf = Buffer.from(incomingSignature);
+      const calcBuf = Buffer.from(calculatedSignature);
+
+      let isSignatureValid = false;
+      if (sigBuf.length === calcBuf.length) {
+        isSignatureValid = crypto.timingSafeEqual(sigBuf, calcBuf);
+      }
+
+      if (!isSignatureValid) {
+        console.warn(`[GÜVENLİK İHLALİ] Geçersiz webhook imzası! Sipariş ID: ${orderId}`);
+        return res.status(403).json({ success: false, message: 'Geçersiz webhook imzası! İstek reddedildi.' });
+      }
+
+      // 2. Sipariş Kontrolü
       let order: any = null;
       try {
-        const found = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-        if (found && found.length > 0) {
-          order = found[0];
+        const [found] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+        if (found) {
+          order = found;
         }
       } catch (dbErr) {
         console.warn('Webhook order query DB uyarısı:', dbErr);
@@ -596,21 +622,21 @@ async function startServer() {
         return res.status(404).send('Sipariş bulunamadı.');
       }
 
+      // Idempotent kontrol: Eğer sipariş zaten ödendiyse mükerrer işlem yapma
       if (order.orderStatus === 'paid') {
         return res.status(200).send('OK (Zaten işlendi)');
       }
 
+      // 3. Geçerli Ödemeyi Onaylama ve Durum Makinesini İlerletme
       if (status === 'SUCCESS') {
-        // Siparişi paid yap ve ödeme durumunu güncelle
         try {
           await db.update(orders)
             .set({ paymentStatus: 'SUCCESS', orderStatus: 'paid' })
             .where(eq(orders.id, orderId));
         } catch (updErr) {
-          console.warn('Order status update DB uyarısı:', updErr);
+          console.warn('Order update DB uyarısı:', updErr);
         }
 
-        // Audit Log kaydet
         try {
           await db.insert(orderAuditLogs).values({
             id: `log_${crypto.randomUUID()}`,
@@ -618,17 +644,18 @@ async function startServer() {
             previousStatus: order.orderStatus,
             newStatus: 'paid',
             triggeredBy: 'PAYMENT_WEBHOOK',
-            details: { transactionId }
+            details: { transactionId, signatureVerified: true }
           });
         } catch (logErr) {
-          console.warn('Webhook Audit Log DB uyarısı:', logErr);
+          console.warn('Audit log DB uyarısı:', logErr);
         }
       }
 
       return res.status(200).send('OK');
+
     } catch (error) {
-      console.error('Webhook hatası:', error);
-      return res.status(500).send('Webhook işlenemedi.');
+      console.error('Webhook işleme hatası:', error);
+      return res.status(500).send('Webhook sunucu hatası.');
     }
   });
 
