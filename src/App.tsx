@@ -34,7 +34,7 @@ const SellerPortalPage = lazy(() => import('./components/SellerPortalPage'));
 // Role & Auth & Admin Panel Pages
 const ProtectedRoute = lazy(() => import('./components/auth/ProtectedRoute'));
 const CustomerAuthPage = lazy(() => import('./pages/CustomerAuthPage'));
-const GoogleAuthCallbackPage = lazy(() => import('./pages/GoogleAuthCallbackPage'));
+import GoogleCallback from './pages/GoogleCallback';
 const CourierAuthPage = lazy(() => import('./pages/CourierAuthPage'));
 const CourierDashboardPage = lazy(() => import('./pages/CourierDashboardPage'));
 const AdminLoginPage = lazy(() => import('./pages/AdminLoginPage'));
@@ -443,7 +443,7 @@ function MainLayout() {
             {/* Müşteri Giriş / Kayıt & Google OAuth Callback */}
             <Route path="/giris" element={<CustomerAuthPage />} />
             <Route path="/kayit" element={<CustomerAuthPage />} />
-            <Route path="/auth/google/callback" element={<GoogleAuthCallbackPage />} />
+            <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
             {/* Müşteri Hesabı (Protected) */}
             <Route 

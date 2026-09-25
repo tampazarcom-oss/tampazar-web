@@ -643,15 +643,9 @@ async function startServer() {
   });
 
   /**
-   * 2. Google OAuth Callback
-   * Frontend React route'u olan /auth/google/callback çağrılarını Vite SPA'ya devreder.
+   * 2. Google OAuth Server Callback
    */
-  app.get(['/api/auth/google/callback', '/auth/google/callback'], async (req: Request, res: Response, next: NextFunction) => {
-    // /auth/google/callback isteklerini doğrudan React SPA'ya yönlendir
-    if (req.path === '/auth/google/callback' || req.path.startsWith('/auth/google/callback')) {
-      return next();
-    }
-
+  app.get('/api/auth/google/callback', async (req: Request, res: Response) => {
     try {
       const { code, state, error: oauthError } = req.query;
 
