@@ -1965,12 +1965,12 @@ Sitemap: https://tampazar.com/sitemap.xml`;
         const blogPost = staticBlogPosts.find(b => b.slug === slug);
         if (blogPost) {
           title = `${blogPost.title} | TamPazar Rehber`;
-          description = blogPost.excerpt;
+          description = blogPost.excerpt || blogPost.summary || 'TamPazar Esnaf ve Tüketici Rehberi';
           schemaJson = JSON.stringify({
             '@context': 'https://schema.org',
             '@type': 'BlogPosting',
             headline: blogPost.title,
-            description: blogPost.excerpt,
+            description: blogPost.excerpt || blogPost.summary || 'TamPazar Esnaf ve Tüketici Rehberi',
             url: canonical
           });
         }

@@ -13,9 +13,14 @@ import {
   BlogAudience, BlogSubCategory, SEASONAL_CALENDAR_DATA,
   getOrGenerateBlogPost, SECTORS, CITIES_DATA, PROGRAMMATIC_TOPICS,
   ALL_81_CITIES, buildProgrammaticSlug, getPopularProgrammaticCombinations,
-  SectorItem, LocationCity
+  SectorItem, LocationCity, BLOG_CATEGORIES, BLOG_POSTS
 } from '../data/blogData';
 import { applyPageSEO, injectStructuredData } from '../utils/seo';
+
+import { EsnafProfitCalculator } from '../components/blog/EsnafProfitCalculator';
+import { SeasonalCalendar } from '../components/blog/SeasonalCalendar';
+import { DigitalReadinessQuiz } from '../components/blog/DigitalReadinessQuiz';
+import { SavedArticlesDrawer } from '../components/blog/SavedArticlesDrawer';
 
 interface BlogPageProps {
   onBackToMarketplace?: () => void;
@@ -31,6 +36,24 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+
+  // Saved Blog States
+  const [savedPostIds, setSavedPostIds] = useState<string[]>(() => {
+    const saved = localStorage.getItem('tampazar_saved_blogs');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [isSavedDrawerOpen, setIsSavedDrawerOpen] = useState<boolean>(false);
+  const [activeTool, setActiveTool] = useState<'calculator' | 'calendar' | 'quiz'>('calculator');
+
+  useEffect(() => {
+    localStorage.setItem('tampazar_saved_blogs', JSON.stringify(savedPostIds));
+  }, [savedPostIds]);
+
+  const toggleSavePost = (id: string) => {
+    setSavedPostIds(prev =>
+      prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
+    );
+  };
 
   // Accordion FAQ State
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
@@ -66,19 +89,20 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
       // Audience Filter
       let matchesAudience = true;
       if (selectedAudience === 'esnaf') matchesAudience = post.audience === 'esnaf';
-      if (selectedAudience === 'tuketici') matchesAudience = post.audience === 'tuketici';
+      if (selectedAudience === 'consumer' || selectedAudience === 'tuketici') matchesAudience = post.audience === 'consumer' || post.audience === 'tuketici';
       
       // Sub-category Filter
-      const matchesSubCategory = selectedSubCategory === 'all' || post.subCategory === selectedSubCategory;
+      const matchesSubCategory = selectedSubCategory === 'all' || post.subCategory === selectedSubCategory || post.category === selectedSubCategory;
 
       // Tag Filter
       const matchesTag = !selectedTag || post.tags.includes(selectedTag);
 
       // Search Query
       const q = searchQuery.toLowerCase().trim();
+      const excerptText = post.excerpt || post.summary || '';
       const matchesSearch = !q || 
         post.title.toLowerCase().includes(q) ||
-        post.excerpt.toLowerCase().includes(q) ||
+        excerptText.toLowerCase().includes(q) ||
         post.tags.some(t => t.toLowerCase().includes(q));
 
       return matchesAudience && matchesSubCategory && matchesTag && matchesSearch;
@@ -141,22 +165,26 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
 
     if (slug && currentPost) {
       const cityText = currentPost.city ? ` (${currentPost.district ? currentPost.district + '/' : ''}${currentPost.city})` : '';
+      const catLabel = currentPost.categoryLabel || currentPost.category || 'Rehber';
       const fullTitle = `${currentPost.title}${cityText} | TamPazar Rehber`;
+      const excerpt = currentPost.excerpt || currentPost.summary || '';
+      const cover = currentPost.coverImage || currentPost.imageUrl || 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80';
+      const postDate = currentPost.publishedAt || currentPost.date || '2026-09-24';
 
       applyPageSEO({
         pathname: `/blog/${currentPost.slug}`,
         title: fullTitle,
-        description: currentPost.excerpt,
+        description: excerpt,
         ogType: 'article',
-        ogImage: currentPost.coverImage,
+        ogImage: cover,
         keywords: currentPost.tags.map(t => t.replace('#', '')),
         article: {
           title: currentPost.title,
           slug: currentPost.slug,
-          excerpt: currentPost.excerpt,
-          category: currentPost.categoryLabel,
-          coverImage: currentPost.coverImage,
-          datePublished: currentPost.date,
+          excerpt: excerpt,
+          category: catLabel,
+          coverImage: cover,
+          datePublished: postDate,
           dateModified: '2026-09-24T03:30:00+03:00',
           authorName: currentPost.author.name,
           authorRole: currentPost.author.role,
@@ -164,7 +192,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
           city: currentPost.city,
           district: currentPost.district,
           sectorName: currentPost.sectorName,
-          audience: currentPost.audience,
+          audience: currentPost.audience === 'consumer' ? 'tuketici' : currentPost.audience,
           tags: currentPost.tags,
           faqs: currentPost.faqs,
           checklist: currentPost.checklist,
@@ -173,7 +201,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
         breadcrumbs: [
           { name: 'Ana Sayfa', url: '/' },
           { name: 'Rehber & Blog', url: '/blog' },
-          { name: currentPost.categoryLabel, url: '/blog' },
+          { name: catLabel, url: '/blog' },
           { name: currentPost.title, url: `/blog/${currentPost.slug}` }
         ]
       });
@@ -327,7 +355,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                   ? 'bg-amber-100 text-amber-900 border border-amber-300' 
                   : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
               }`}>
-                {currentPost.categoryLabel}
+                {currentPost.categoryLabel || currentPost.category || 'Rehber'}
               </span>
 
               {currentPost.city && (
@@ -350,11 +378,11 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
               </span>
               <span className="text-slate-400 text-xs flex items-center gap-1 font-semibold">
                 <Eye className="w-3.5 h-3.5 text-slate-500" />
-                {currentPost.readCount} Okunma
+                {currentPost.readCount || '1.2k'} Okunma
               </span>
               <span className="text-slate-400 text-xs flex items-center gap-1 font-semibold">
                 <ThumbsUp className="w-3.5 h-3.5 text-emerald-600" />
-                %{currentPost.likePercentage} Faydalı
+                %{currentPost.likePercentage || 98} Faydalı
               </span>
             </div>
 
@@ -363,15 +391,19 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
             </h1>
 
             <p className="text-base sm:text-lg text-slate-600 leading-relaxed font-medium">
-              {currentPost.excerpt}
+              {currentPost.excerpt || currentPost.summary}
             </p>
 
             {/* Author Profile Card */}
             <div className="flex items-center gap-3 pt-3 pb-4 border-b border-slate-200">
-              <span className="text-2xl p-2 bg-slate-100 rounded-2xl border border-slate-200">{currentPost.author.avatar}</span>
+              {currentPost.author.avatar.startsWith('http') ? (
+                <img src={currentPost.author.avatar} alt={currentPost.author.name} className="w-10 h-10 rounded-full object-cover border border-slate-200 shadow-2xs" />
+              ) : (
+                <span className="text-2xl p-2 bg-slate-100 rounded-2xl border border-slate-200">{currentPost.author.avatar}</span>
+              )}
               <div>
                 <p className="text-xs font-black text-slate-900">{currentPost.author.name}</p>
-                <p className="text-[11px] text-slate-500">{currentPost.author.role} · {new Date(currentPost.date).toLocaleDateString('tr-TR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                <p className="text-[11px] text-slate-500">{currentPost.author.role} · {currentPost.publishedAt || currentPost.date}</p>
               </div>
             </div>
           </header>
@@ -379,7 +411,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
           {/* Featured Cover Image */}
           <div className="rounded-3xl overflow-hidden border border-slate-200 shadow-md bg-slate-100 max-h-[420px] relative">
             <img 
-              src={currentPost.coverImage} 
+              src={currentPost.coverImage || currentPost.imageUrl} 
               alt={currentPost.title} 
               className="w-full h-full object-cover"
               onError={(e) => {
@@ -439,101 +471,133 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
 
           {/* Article Content */}
           <div className="space-y-8 bg-white p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-2xs">
-            {/* Lead */}
-            <p className="text-base sm:text-lg text-slate-800 font-semibold leading-relaxed border-l-4 border-amber-500 pl-4 py-2 bg-amber-50/50 rounded-r-2xl">
-              {currentPost.content.lead}
-            </p>
-
-            {/* Sections */}
-            {currentPost.content.sections.map((section, idx) => (
-              <section key={idx} className="space-y-4 pt-6 border-t border-slate-100 first:border-0 first:pt-0">
-                <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  {section.heading}
-                </h2>
-
-                {section.subheading && (
-                  <h3 className="text-sm sm:text-base font-bold text-slate-700 font-sans tracking-wide">
-                    {section.subheading}
-                  </h3>
+            {typeof currentPost.content === 'string' ? (
+              <div className="prose prose-slate max-w-none space-y-4">
+                {currentPost.content.split('\n\n').map((paragraph, pIdx) => {
+                  const trimmed = paragraph.trim();
+                  if (!trimmed) return null;
+                  if (trimmed.startsWith('###')) {
+                    return (
+                      <h3 key={pIdx} className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight pt-4 border-t border-slate-100 first:border-0 first:pt-0">
+                        {trimmed.replace(/^###\s*/, '')}
+                      </h3>
+                    );
+                  }
+                  return (
+                    <p key={pIdx} className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+                      {trimmed}
+                    </p>
+                  );
+                })}
+              </div>
+            ) : (
+              <>
+                {/* Lead */}
+                {currentPost.content.lead && (
+                  <p className="text-base sm:text-lg text-slate-800 font-semibold leading-relaxed border-l-4 border-amber-500 pl-4 py-2 bg-amber-50/50 rounded-r-2xl">
+                    {currentPost.content.lead}
+                  </p>
                 )}
 
-                {section.paragraphs.map((p, pIdx) => (
-                  <p key={pIdx} className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
-                    {p}
-                  </p>
+                {/* Sections */}
+                {currentPost.content.sections?.map((section, idx) => (
+                  <section key={idx} className="space-y-4 pt-6 border-t border-slate-100 first:border-0 first:pt-0">
+                    <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                      {section.heading}
+                    </h2>
+
+                    {section.subheading && (
+                      <h3 className="text-sm sm:text-base font-bold text-slate-700 font-sans tracking-wide">
+                        {section.subheading}
+                      </h3>
+                    )}
+
+                    {section.paragraphs.map((p, pIdx) => (
+                      <p key={pIdx} className="text-sm sm:text-base text-slate-700 leading-relaxed font-normal">
+                        {p}
+                      </p>
+                    ))}
+
+                    {/* Inline Detail Image with Caption */}
+                    {section.inlineImage && (
+                      <figure className="my-6 rounded-3xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
+                        <img 
+                          src={section.inlineImage.url} 
+                          alt={section.inlineImage.caption} 
+                          className="w-full h-64 sm:h-80 object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80';
+                          }}
+                        />
+                        <figcaption className="p-3.5 text-center text-xs font-semibold text-slate-600 italic bg-slate-100/90 border-t border-slate-200 flex items-center justify-center gap-1.5">
+                          <span>📸</span>
+                          <span>{section.inlineImage.caption}</span>
+                        </figcaption>
+                      </figure>
+                    )}
+
+                    {/* Step Guide Items */}
+                    {section.stepGuide && section.stepGuide.length > 0 && (
+                      <div className="space-y-3 pt-2">
+                        <h4 className="text-xs font-black uppercase text-indigo-900 tracking-wider">Adım Adım Uygulama Kılavuzu:</h4>
+                        <div className="grid grid-cols-1 gap-3">
+                          {section.stepGuide.map((step, sIdx) => (
+                            <div key={sIdx} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-3 shadow-2xs">
+                              <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
+                                {step.stepNumber}
+                              </span>
+                              <div className="space-y-1">
+                                <h5 className="text-xs font-black text-slate-900">{step.title}</h5>
+                                <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Highlight Box */}
+                    {section.highlightBox && (
+                      <div className="bg-indigo-50/80 border border-indigo-200 p-4 sm:p-5 rounded-2xl space-y-1.5 mt-3">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                            {section.highlightBox.title}
+                          </h4>
+                          {section.highlightBox.badge && (
+                            <span className="text-[10px] bg-indigo-200 text-indigo-900 font-black px-2 py-0.5 rounded-md">
+                              {section.highlightBox.badge}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-indigo-900/90 leading-relaxed font-medium">
+                          {section.highlightBox.text}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Bullet Points */}
+                    {section.bulletPoints && section.bulletPoints.length > 0 && (
+                      <ul className="space-y-2 pt-2">
+                        {section.bulletPoints.map((item, bIdx) => (
+                          <li key={bIdx} className="flex items-start gap-2.5 text-xs font-bold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </section>
                 ))}
 
-                {/* Inline Detail Image with Caption */}
-                {section.inlineImage && (
-                  <figure className="my-6 rounded-3xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
-                    <img 
-                      src={section.inlineImage.url} 
-                      alt={section.inlineImage.caption} 
-                      className="w-full h-64 sm:h-80 object-cover"
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1556742049-0a67c5574f73?auto=format&fit=crop&w=1200&q=80';
-                      }}
-                    />
-                    <figcaption className="p-3.5 text-center text-xs font-semibold text-slate-600 italic bg-slate-100/90 border-t border-slate-200 flex items-center justify-center gap-1.5">
-                      <span>📸</span>
-                      <span>{section.inlineImage.caption}</span>
-                    </figcaption>
-                  </figure>
-                )}
-
-                {/* Step Guide Items */}
-                {section.stepGuide && section.stepGuide.length > 0 && (
-                  <div className="space-y-3 pt-2">
-                    <h4 className="text-xs font-black uppercase text-indigo-900 tracking-wider">Adım Adım Uygulama Kılavuzu:</h4>
-                    <div className="grid grid-cols-1 gap-3">
-                      {section.stepGuide.map((step, sIdx) => (
-                        <div key={sIdx} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-start gap-3 shadow-2xs">
-                          <span className="w-7 h-7 rounded-full bg-amber-500 text-slate-950 font-black text-xs flex items-center justify-center shrink-0 shadow-2xs">
-                            {step.stepNumber}
-                          </span>
-                          <div className="space-y-1">
-                            <h5 className="text-xs font-black text-slate-900">{step.title}</h5>
-                            <p className="text-xs text-slate-600 leading-relaxed">{step.description}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                {/* Conclusion */}
+                {currentPost.content.conclusion && (
+                  <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-950 text-sm font-semibold leading-relaxed">
+                    {currentPost.content.conclusion}
                   </div>
                 )}
-
-                {/* Highlight Box */}
-                {section.highlightBox && (
-                  <div className="bg-indigo-50/80 border border-indigo-200 p-4 sm:p-5 rounded-2xl space-y-1.5 mt-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
-                        {section.highlightBox.title}
-                      </h4>
-                      {section.highlightBox.badge && (
-                        <span className="text-[10px] bg-indigo-200 text-indigo-900 font-black px-2 py-0.5 rounded-md">
-                          {section.highlightBox.badge}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-indigo-900/90 leading-relaxed font-medium">
-                      {section.highlightBox.text}
-                    </p>
-                  </div>
-                )}
-
-                {/* Bullet Points */}
-                {section.bulletPoints && section.bulletPoints.length > 0 && (
-                  <ul className="space-y-2 pt-2">
-                    {section.bulletPoints.map((item, bIdx) => (
-                      <li key={bIdx} className="flex items-start gap-2.5 text-xs font-bold text-slate-800 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                        <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
-            ))}
+              </>
+            )}
 
             {/* COMPARISON TABLE (Karşılaştırma Tablosu) */}
             {currentPost.comparisonTable && (
@@ -659,12 +723,14 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
             </div>
 
             {/* Conclusion */}
-            <div className="pt-6 border-t border-slate-200 space-y-2">
-              <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">Sonuç & Değerlendirme</h3>
-              <p className="text-sm text-slate-800 leading-relaxed font-medium italic bg-slate-50 p-4 rounded-2xl border border-slate-200">
-                "{currentPost.content.conclusion}"
-              </p>
-            </div>
+            {typeof currentPost.content === 'object' && currentPost.content.conclusion && (
+              <div className="pt-6 border-t border-slate-200 space-y-2">
+                <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">Sonuç & Değerlendirme</h3>
+                <p className="text-sm text-slate-800 leading-relaxed font-medium italic bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                  "{currentPost.content.conclusion}"
+                </p>
+              </div>
+            )}
 
             {/* Tags */}
             <div className="flex flex-wrap items-center gap-1.5 pt-4 border-t border-slate-100">
@@ -836,6 +902,25 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
   return (
     <main className="min-h-screen bg-[#FDFDFD] text-slate-800 pb-28 font-sans selection:bg-amber-100 selection:text-amber-950">
       
+      {/* Header Bar */}
+      <div className="bg-[#0B132B] text-white py-3 px-4 shadow-sm border-b border-[#111B38]">
+        <div className="max-w-6xl mx-auto flex justify-between items-center text-xs">
+          <div className="flex items-center gap-2">
+            <span className="bg-emerald-500 text-emerald-950 font-black px-2 py-0.5 rounded text-[10px] uppercase">
+              TamPazar Rehber
+            </span>
+            <span className="font-medium text-slate-300">Esnaf & Tüketici Bilgi ve Dayanışma Portalı</span>
+          </div>
+          <button
+            onClick={() => setIsSavedDrawerOpen(true)}
+            className="flex items-center gap-1.5 bg-emerald-800/80 hover:bg-emerald-700 text-emerald-100 font-bold px-3 py-1.5 rounded-xl transition cursor-pointer shadow-2xs"
+          >
+            <Bookmark className="w-3.5 h-3.5 text-emerald-300 fill-emerald-300" />
+            <span>Kaydedilenler ({savedPostIds.length})</span>
+          </button>
+        </div>
+      </div>
+
       {/* 1. SAYFA TEPESİ & HERO BAŞLIK ALANI */}
       <section className="bg-white border-b border-slate-200 py-10 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto space-y-4 text-center">
@@ -1030,19 +1115,23 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
         {/* Alt Kategori Kartları (Yatay Pill Menü) */}
         {selectedAudience !== 'tools' && (
           <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-            {SUB_CATEGORIES_LIST.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedSubCategory(cat.id as BlogSubCategory)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer ${
-                  selectedSubCategory === cat.id
-                    ? 'bg-amber-500 text-slate-950 font-black shadow-2xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
+            {SUB_CATEGORIES_LIST.map(cat => {
+              const isCustomCat = BLOG_CATEGORIES.some(bc => bc.id === cat.id);
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedSubCategory(cat.id as BlogSubCategory)}
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer flex items-center gap-1.5 ${
+                    selectedSubCategory === cat.id
+                      ? 'bg-amber-500 text-slate-950 font-black shadow-2xs'
+                      : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  }`}
+                >
+                  {isCustomCat && <span className="text-amber-700">★</span>}
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
           </div>
         )}
 
@@ -1051,184 +1140,46 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
         {/* ========================================================================= */}
         {selectedAudience === 'tools' ? (
           <div className="space-y-8 animate-fade-in">
-            
-            {/* 1. Araç: Komisyon & Kâr Tasarruf Simülatörü */}
-            <div className="bg-white rounded-3xl border-2 border-indigo-100 p-6 sm:p-8 shadow-sm space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-amber-500 text-slate-950 flex items-center justify-center font-black">
-                  <Calculator className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900">
-                    Esnaf Komisyon & Kâr Tasarrufu Hesaplayıcı
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Aylık cironuzu girin; tekel pazaryerlerine ödediğiniz %22 ortalama komisyona karşı TamPazar ile ne kadar tasarruf edeceğinizi görün.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2">
-                
-                {/* Sol: Giriş Alanı */}
-                <div className="space-y-3 md:col-span-1 bg-slate-50 p-5 rounded-2xl border border-slate-200">
-                  <label className="text-xs font-black text-slate-800 block">
-                    Aylık Tahmini E-Ticaret Cironuz:
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3.5 top-3 font-bold text-slate-400">₺</span>
-                    <input
-                      type="number"
-                      step={10000}
-                      min={10000}
-                      max={2000000}
-                      value={monthlyRevenue}
-                      onChange={(e) => setMonthlyRevenue(Math.max(0, parseInt(e.target.value) || 0))}
-                      className="w-full pl-8 pr-3 py-2.5 bg-white border border-slate-300 rounded-xl text-sm font-black text-slate-900 outline-none"
-                    />
-                  </div>
-                  <input 
-                    type="range" 
-                    min={20000} 
-                    max={1000000} 
-                    step={10000}
-                    value={monthlyRevenue} 
-                    onChange={(e) => setMonthlyRevenue(parseInt(e.target.value))}
-                    className="w-full accent-amber-500 cursor-pointer"
-                  />
-                  <div className="flex justify-between text-[10px] text-slate-400 font-mono">
-                    <span>20.000 ₺</span>
-                    <span>1.000.000 ₺</span>
-                  </div>
-                </div>
-
-                {/* Orta: Geleneksel vs TamPazar */}
-                <div className="space-y-3 md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  
-                  {/* Tekel Pazaryeri */}
-                  <div className="bg-rose-50/70 border border-rose-200 p-5 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-rose-800 bg-rose-200/60 px-2 py-0.5 rounded">
-                      Geleneksel Pazaryeri (%22 Komisyon)
-                    </span>
-                    <div className="text-2xl font-black text-rose-700">
-                      -₺{traditionalCommissionAmount.toLocaleString('tr-TR')}
-                    </div>
-                    <p className="text-xs text-rose-900/80 leading-relaxed font-medium">
-                      Her ay aracı şirkete kesilen komisyon. 30 gün para blokesi ve ek hizmet bedelleri hariçtir.
-                    </p>
-                  </div>
-
-                  {/* TamPazar */}
-                  <div className="bg-emerald-50/80 border-2 border-emerald-300 p-5 rounded-2xl space-y-2">
-                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-900 bg-emerald-200 px-2 py-0.5 rounded">
-                      TamPazar (%0 Komisyon · Sabit Aidat)
-                    </span>
-                    <div className="text-2xl font-black text-emerald-700">
-                      +₺{monthlySavings.toLocaleString('tr-TR')} / Ay Net Kazanç
-                    </div>
-                    <p className="text-xs text-emerald-900/90 leading-relaxed font-bold">
-                      Yıllık Toplam Tasarrufunuz: <span className="text-emerald-950 font-black underline">₺{yearlySavings.toLocaleString('tr-TR')}</span>
-                    </p>
-                  </div>
-
-                </div>
-              </div>
+            {/* Tool Selection Tabs */}
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl gap-2 w-fit border border-slate-200">
+              <button
+                onClick={() => setActiveTool('calculator')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+                  activeTool === 'calculator'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/55'
+                }`}
+              >
+                <Calculator className="w-4 h-4" />
+                <span>Kârlılık Hesaplayıcı</span>
+              </button>
+              <button
+                onClick={() => setActiveTool('calendar')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+                  activeTool === 'calendar'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/55'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Mevsim Takvimi</span>
+              </button>
+              <button
+                onClick={() => setActiveTool('quiz')}
+                className={`px-4 py-2.5 rounded-xl text-xs font-black flex items-center gap-2 transition cursor-pointer ${
+                  activeTool === 'quiz'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-950 hover:bg-slate-200/55'
+                }`}
+              >
+                <HelpCircle className="w-4 h-4" />
+                <span>Dijitalleşme Testi</span>
+              </button>
             </div>
 
-            {/* 2. Araç: İnteraktif Mevsiminde Tüketim Takvimi */}
-            <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm space-y-6">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-600 text-white flex items-center justify-center font-black">
-                  <Apple className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-slate-900">
-                    12 Aylık İnteraktif Mevsim Takvimi
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Ay seçin; doğanın sunduğu en taze, ilaçsız ve ekonomik sebze, meyve ve balık listesini görüntüleyin.
-                  </p>
-                </div>
-              </div>
-
-              {/* Ay Seçici */}
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-2 scrollbar-none">
-                {SEASONAL_CALENDAR_DATA.map(item => (
-                  <button
-                    key={item.month}
-                    onClick={() => setSelectedCalendarMonth(item.month)}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
-                      selectedCalendarMonth === item.month
-                        ? 'bg-slate-900 text-white shadow-xs'
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                    }`}
-                  >
-                    {item.month}
-                  </button>
-                ))}
-              </div>
-
-              {/* Seçili Ayın Kartı */}
-              <div className="bg-slate-50 border border-slate-200 p-5 rounded-2xl space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                  <h4 className="text-base font-black text-slate-900 flex items-center gap-2">
-                    <span>📅 {activeMonthData.month} Ayı ({activeMonthData.season})</span>
-                  </h4>
-                  <span className="text-xs text-emerald-700 font-bold bg-emerald-100 px-2.5 py-0.5 rounded-full">
-                    Mevsiminde Taze & %40 Daha Ucuz
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  {/* Sebzeler */}
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-                    <span className="text-xs font-black text-emerald-800 flex items-center gap-1.5">
-                      🥦 Mevsim Sebzeleri
-                    </span>
-                    <ul className="text-xs text-slate-700 space-y-1 font-medium">
-                      {activeMonthData.vegetables.map(v => (
-                        <li key={v} className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-                          <span>{v}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Meyveler */}
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-                    <span className="text-xs font-black text-amber-800 flex items-center gap-1.5">
-                      🍎 Mevsim Meyveleri
-                    </span>
-                    <ul className="text-xs text-slate-700 space-y-1 font-medium">
-                      {activeMonthData.fruits.map(f => (
-                        <li key={f} className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"></span>
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* Balıklar */}
-                  <div className="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
-                    <span className="text-xs font-black text-sky-800 flex items-center gap-1.5">
-                      🐟 Taze Deniz Balıkları
-                    </span>
-                    <ul className="text-xs text-slate-700 space-y-1 font-medium">
-                      {activeMonthData.fish.map(f => (
-                        <li key={f} className="flex items-center gap-1.5">
-                          <span className="w-1.5 h-1.5 bg-sky-500 rounded-full"></span>
-                          <span>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-
+            {activeTool === 'calculator' && <EsnafProfitCalculator />}
+            {activeTool === 'calendar' && <SeasonalCalendar />}
+            {activeTool === 'quiz' && <DigitalReadinessQuiz />}
           </div>
         ) : (
           <>
@@ -1248,7 +1199,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                       <span>⭐ Öne Çıkan Başvuru Rehberi</span>
                     </span>
                     <span className="bg-[#F59E0B]/20 text-[#F59E0B] border border-[#F59E0B]/40 px-3 py-1 rounded-full text-xs font-black">
-                      {featuredPost.categoryLabel}
+                      {featuredPost.categoryLabel || featuredPost.category || 'Rehber'}
                     </span>
                   </div>
 
@@ -1257,7 +1208,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                   </h2>
 
                   <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed font-normal">
-                    {featuredPost.excerpt}
+                    {featuredPost.excerpt || featuredPost.summary}
                   </p>
 
                   {/* Kontrol Listesi */}
@@ -1280,10 +1231,14 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                   {/* Yazar, Tarih & Yeşil Aksiyon Butonu */}
                   <div className="flex flex-wrap items-center justify-between gap-4 pt-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-2xl p-1.5 bg-white/10 rounded-xl">{featuredPost.author.avatar}</span>
+                      {featuredPost.author.avatar.startsWith('http') ? (
+                        <img src={featuredPost.author.avatar} alt={featuredPost.author.name} className="w-10 h-10 rounded-full object-cover border border-white/20" />
+                      ) : (
+                        <span className="text-2xl p-1.5 bg-white/10 rounded-xl">{featuredPost.author.avatar}</span>
+                      )}
                       <div>
                         <p className="text-xs font-bold text-white">{featuredPost.author.name}</p>
-                        <p className="text-[10px] text-emerald-200">{featuredPost.readTime} · {featuredPost.readCount} Okunma</p>
+                        <p className="text-[10px] text-emerald-200">{featuredPost.readTime} · {featuredPost.readCount || '15.4k'} Okunma</p>
                       </div>
                     </div>
 
@@ -1304,7 +1259,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                 <div className="lg:col-span-5 relative">
                   <div className="rounded-3xl overflow-hidden border-2 border-slate-800 shadow-2xl h-64 sm:h-80 bg-slate-900">
                     <img 
-                      src={featuredPost.coverImage} 
+                      src={featuredPost.coverImage || featuredPost.imageUrl} 
                       alt={featuredPost.title} 
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     />
@@ -1313,12 +1268,12 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                   {/* Floating Stat Badges */}
                   <div className="absolute top-4 right-4 bg-slate-950/80 backdrop-blur-md text-white px-3 py-1.5 rounded-xl border border-slate-700 text-xs font-bold flex items-center gap-1.5 shadow-md">
                     <Eye className="w-3.5 h-3.5 text-amber-400" />
-                    <span>{featuredPost.readCount} Okunma</span>
+                    <span>{featuredPost.readCount || '15.4k'} Okunma</span>
                   </div>
 
                   <div className="absolute bottom-4 left-4 bg-emerald-950/90 backdrop-blur-md text-emerald-300 px-3 py-1.5 rounded-xl border border-emerald-700 text-xs font-bold flex items-center gap-1.5 shadow-md">
                     <ThumbsUp className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>%{featuredPost.likePercentage} Faydalı Bulundu</span>
+                    <span>%{featuredPost.likePercentage || 99} Faydalı Bulundu</span>
                   </div>
                 </div>
               </div>
@@ -1357,7 +1312,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                       {/* Görsel & Kategori Rozeti */}
                       <div className="h-48 overflow-hidden bg-slate-100 relative">
                         <img
-                          src={post.coverImage}
+                          src={post.coverImage || post.imageUrl}
                           alt={post.title}
                           className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
                           onError={(e) => {
@@ -1370,12 +1325,28 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                               ? 'bg-amber-500 text-slate-950'
                               : 'bg-emerald-600 text-white'
                           }`}>
-                            {post.categoryLabel}
+                            {post.categoryLabel || post.category || 'Rehber'}
                           </span>
                         </div>
-                        <div className="absolute top-3 right-3 bg-slate-950/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md flex items-center gap-1">
-                          <Eye className="w-3 h-3 text-amber-400" />
-                          <span>{post.readCount}</span>
+                        <div className="absolute top-3 right-3 flex items-center gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSavePost(post.id);
+                            }}
+                            className={`p-1.5 rounded-lg backdrop-blur-xs border transition cursor-pointer ${
+                              savedPostIds.includes(post.id)
+                                ? 'bg-amber-500 border-amber-600 text-slate-950'
+                                : 'bg-slate-950/60 border-white/10 text-white hover:bg-slate-950/80'
+                            }`}
+                            title={savedPostIds.includes(post.id) ? "Kaydedilenlerden Çıkar" : "Kaydet"}
+                          >
+                            <Bookmark className={`w-3.5 h-3.5 ${savedPostIds.includes(post.id) ? 'fill-slate-950' : ''}`} />
+                          </button>
+                          <div className="bg-slate-950/70 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-1.5 rounded-lg flex items-center gap-1">
+                            <Eye className="w-3 h-3 text-amber-400" />
+                            <span>{post.readCount || '1.2k'}</span>
+                          </div>
                         </div>
                       </div>
 
@@ -1387,7 +1358,7 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                               <Clock className="w-3 h-3" /> {post.readTime}
                             </span>
                             <span>·</span>
-                            <span className="text-emerald-700 font-bold">%{post.likePercentage} Faydalı</span>
+                            <span className="text-emerald-700 font-bold">%{post.likePercentage || 98} Faydalı</span>
                           </div>
 
                           <h2 className="text-sm font-black text-slate-900 group-hover:text-indigo-900 transition leading-snug line-clamp-2">
@@ -1395,14 +1366,18 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
                           </h2>
 
                           <p className="text-xs text-slate-600 line-clamp-3 leading-relaxed font-normal">
-                            {post.excerpt}
+                            {post.excerpt || post.summary}
                           </p>
                         </div>
 
                         {/* Yazar & Oku Butonu */}
                         <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <span className="text-base">{post.author.avatar}</span>
+                            {post.author.avatar.startsWith('http') ? (
+                              <img src={post.author.avatar} alt={post.author.name} className="w-6 h-6 rounded-full object-cover" />
+                            ) : (
+                              <span className="text-base">{post.author.avatar}</span>
+                            )}
                             <span className="text-[11px] font-bold text-slate-700 truncate max-w-[120px]">{post.author.name}</span>
                           </div>
 
@@ -1530,6 +1505,18 @@ export default function Blog({ onBackToMarketplace }: BlogPageProps) {
 
         </div>
       </aside>
+
+      {/* Saved Articles Drawer */}
+      <SavedArticlesDrawer
+        isOpen={isSavedDrawerOpen}
+        onClose={() => setIsSavedDrawerOpen(false)}
+        savedPosts={staticBlogPosts.filter(p => savedPostIds.includes(p.id))}
+        onSelectPost={post => {
+          navigate(`/blog/${post.slug}`);
+          setIsSavedDrawerOpen(false);
+        }}
+        onRemoveSave={toggleSavePost}
+      />
 
     </main>
   );

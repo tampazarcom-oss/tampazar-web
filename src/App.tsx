@@ -295,6 +295,14 @@ function MainLayout() {
               element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
             />
             <Route 
+              path="/satici/giris" 
+              element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
+              path="/satici/basvuru" 
+              element={<SellerPortalPage onBackToMarketplace={() => navigate('/')} />} 
+            />
+            <Route 
               path="/dukkan/:slug" 
               element={<StoreProfileRouteWrapper />} 
             />
@@ -349,9 +357,11 @@ function MainLayout() {
             {/* Müşteri Giriş / Kayıt & Google OAuth Callback */}
             <Route path="/giris" element={<CustomerAuthPage />} />
             <Route path="/kayit" element={<CustomerAuthPage />} />
+            <Route path="/musteri/giris" element={<CustomerAuthPage />} />
+            <Route path="/musteri/kayit" element={<CustomerAuthPage />} />
             <Route path="/auth/google/callback" element={<GoogleCallback />} />
 
-            {/* Müşteri Hesabı (Protected) */}
+            {/* Müşteri Hesabı / Müşteri Paneli (Protected) */}
             <Route 
               path="/hesabim" 
               element={
@@ -362,6 +372,30 @@ function MainLayout() {
             />
             <Route 
               path="/hesabim/*" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+                  <CustomerAccountPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/musteri-paneli" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+                  <CustomerAccountPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/musteri-paneli/*" 
+              element={
+                <ProtectedRoute allowedRoles={['customer', 'buyer']}>
+                  <CustomerAccountPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/profil" 
               element={
                 <ProtectedRoute allowedRoles={['customer', 'buyer']}>
                   <CustomerAccountPage />
@@ -381,10 +415,27 @@ function MainLayout() {
               } 
             />
 
-            {/* Süper Admin Giriş ve Paneli (Izole) */}
+            {/* Süper Admin Giriş ve Paneli (Sistem Admin Paneli) */}
             <Route path="/sistem-admin/login" element={<AdminLoginPage />} />
+            <Route path="/admin/login" element={<AdminLoginPage />} />
             <Route 
               path="/sistem-admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin/*" 
               element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminDashboardPage />

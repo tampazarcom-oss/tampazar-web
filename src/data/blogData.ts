@@ -1,4 +1,5 @@
-export type BlogAudience = 'all' | 'esnaf' | 'tuketici' | 'tools';
+export type TargetAudience = 'all' | 'esnaf' | 'consumer' | 'tuketici' | 'tools';
+export type BlogAudience = TargetAudience;
 
 export type BlogSubCategory = 
   | 'all'
@@ -7,7 +8,12 @@ export type BlogSubCategory =
   | 'finans'
   | 'mevsimsel'
   | 'seo'
-  | 'dayanisma';
+  | 'dayanisma'
+  | 'esnaf-dijital'
+  | 'tuketici-tasarruf'
+  | 'hal-ve-tedarik'
+  | 'mevzuat-ve-vergi'
+  | 'mevsimsel-gida';
 
 export interface BlogFAQ {
   question: string;
@@ -63,14 +69,17 @@ export interface BlogPost {
   id: string;
   slug: string;
   title: string;
-  excerpt: string;
-  audience: 'esnaf' | 'tuketici';
-  subCategory: BlogSubCategory;
-  categoryLabel: string;
+  excerpt?: string;
+  summary?: string;
+  audience: 'esnaf' | 'consumer' | 'tuketici';
+  subCategory?: BlogSubCategory | string;
+  categoryLabel?: string;
+  category?: string;
   readTime: string;
-  date: string;
-  readCount: string;
-  likePercentage: number;
+  date?: string;
+  publishedAt?: string;
+  readCount?: string;
+  likePercentage?: number;
   featured?: boolean;
   city?: string;
   district?: string;
@@ -81,23 +90,99 @@ export interface BlogPost {
     role: string;
     avatar: string;
   };
-  coverImage: string;
+  coverImage?: string;
+  imageUrl?: string;
   tags: string[];
-  ctaType: 'merchant' | 'consumer';
+  ctaType?: 'merchant' | 'consumer';
   checklist?: string[];
   calloutBox?: CalloutBox;
   comparisonTable?: ComparisonTable;
   customCta?: CustomCTA;
   faqs?: BlogFAQ[];
-  content: {
+  content: string | {
     lead: string;
     sections: BlogPostSection[];
     conclusion: string;
   };
 }
 
+export const BLOG_CATEGORIES = [
+  { id: 'all', name: 'Tüm Konular', icon: 'Sparkles' },
+  { id: 'esnaf-dijital', name: 'Esnaf Dijitalleşme', icon: 'Store' },
+  { id: 'tuketici-tasarruf', name: 'Tüketici Tasarruf & Kalite', icon: 'ShoppingBag' },
+  { id: 'hal-ve-tedarik', name: 'Hal & Hal B2B Tedarik', icon: 'Truck' },
+  { id: 'mevzuat-ve-vergi', name: 'Mevzuat & Veresiye Hukuku', icon: 'FileText' },
+  { id: 'mevsimsel-gida', name: 'Mevsimsel Gıda Rehberi', icon: 'Calendar' }
+];
+
+export const BLOG_POSTS: BlogPost[] = [
+  {
+    id: '1',
+    title: 'Komisyonsuz Yerel Satış Yaparak Aylık %22 Kâr Marjı Nasıl Korunur?',
+    slug: 'komisyonsuz-yerel-satis-rehberi',
+    summary: 'Büyük pazaryeri komisyonları esnafın belini büküyor. Sıfır komisyonlu TamPazar modeli ile cironuzu nasıl koruyacağınızı adım adım anlatıyoruz.',
+    excerpt: 'Büyük pazaryeri komisyonları esnafın belini büküyor. Sıfır komisyonlu TamPazar modeli ile cironuzu nasıl koruyacağınızı adım adım anlatıyoruz.',
+    content: `
+### 1. Komisyon Yükünün Esnafa Etkisi
+Geleneksel e-ticaret platformlarında %15 ile %30 arasında değişen komisyon oranları, küçük esnafın kâr marjını neredeyse tamamen bitirmektedir. TamPazar dayanışma modelinde, esnaftan komisyon alınmaz.
+
+### 2. Yerel Müşteriye Doğrudan Erişim
+Müşterilerinize doğrudan ulaşarak kargo masraflarını azaltın. TamHızlı ve TamKargo entegrasyonları sayesinde aynı gün teslimat olanağı sunun.
+
+### 3. Dijital Veresiye Defteri Kullanımı
+Geleneksel veresiye defterini dijitalleştirerek tahsilat sürenizi ortalama 12 gün öne çekin.
+    `,
+    category: 'esnaf-dijital',
+    categoryLabel: 'Esnaf Dijitalleşme',
+    audience: 'esnaf',
+    author: {
+      name: 'Ahmet Usta',
+      role: 'TamPazar Esnaf Danışmanı',
+      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: '24 Eylül 2026',
+    date: '2026-09-24',
+    readTime: '4 dk',
+    imageUrl: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=800&auto=format&fit=crop&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?w=800&auto=format&fit=crop&q=80',
+    featured: true,
+    tags: ['Esnaf', 'Komisyonsuz Satış', 'Kârlılık', 'Yerel Ticaret']
+  },
+  {
+    id: '2',
+    title: 'Mevsiminde Taze Gıda Alarak Aile Bütçesini %35 Koruma Rehberi',
+    slug: 'mevsiminde-taze-gida-tasarruf-rehberi',
+    summary: 'Semt pazarlarından ve yerel üreticiden doğrudan mevsiminde alışveriş yapmanın hem sağlığa hem de cebe faydaları.',
+    excerpt: 'Semt pazarlarından ve yerel üreticiden doğrudan mevsiminde alışveriş yapmanın hem sağlığa hem de cebe faydaları.',
+    content: `
+### Mevsimsel Alışverişin Gücü
+Sera ve uzun mesafe nakliye maliyetleri gıda fiyatlarını yükseltir. Doğrudan yerel üreticiden mevsiminde ürün almak hem tazelik hem de %35'e varan tasarruf sağlar.
+    `,
+    category: 'tuketici-tasarruf',
+    categoryLabel: 'Tüketici Tasarruf & Kalite',
+    audience: 'consumer',
+    author: {
+      name: 'Ayşe Yılmaz',
+      role: 'Gıda ve Tüketici Araştırmacısı',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
+    },
+    publishedAt: '22 Eylül 2026',
+    date: '2026-09-22',
+    readTime: '3 dk',
+    imageUrl: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=80',
+    coverImage: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&auto=format&fit=crop&q=80',
+    featured: false,
+    tags: ['Tüketici', 'Tasarruf', 'Taze Gıda', 'Pazaryeri']
+  }
+];
+
 export const SUB_CATEGORIES_LIST = [
   { id: 'all', label: 'Tümü' },
+  { id: 'esnaf-dijital', label: 'Esnaf Dijitalleşme' },
+  { id: 'tuketici-tasarruf', label: 'Tüketici Tasarruf & Kalite' },
+  { id: 'hal-ve-tedarik', label: 'Hal & Hal B2B Tedarik' },
+  { id: 'mevzuat-ve-vergi', label: 'Mevzuat & Veresiye Hukuku' },
+  { id: 'mevsimsel-gida', label: 'Mevsimsel Gıda Rehberi' },
   { id: 'esnaf', label: 'Esnaf Rehberi' },
   { id: 'tuketici', label: 'Tüketici Rehberi' },
   { id: 'finans', label: 'Finans & Maliyet' },
@@ -502,6 +587,7 @@ export function buildProgrammaticSlug(city: string, district: string, sectorId: 
  * Manuel Temel Rehber Makaleleri (Görsel Zenginlik, Detaylı İçerik ve SEO Uyumlu Yapı)
  */
 export const staticBlogPosts: BlogPost[] = [
+  ...BLOG_POSTS,
   {
     id: 'post-1',
     slug: 'sifir-komisyon-ile-e-ticaret-devrimi-tampazar-nasil-calisir',

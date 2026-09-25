@@ -99,7 +99,7 @@ const DEFAULT_BUYER: AuthUser = {
 const DEFAULT_SELLER: AuthUser = {
   id: 'seller-1',
   name: 'Serkan Koç (Foto Sentez)',
-  email: 'serkan@fotosentez.com',
+  email: 'tampazarcom@gmail.com',
   phone: '+90 530 777 88 99',
   role: 'merchant',
   storeId: 's3',

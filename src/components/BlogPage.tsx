@@ -1,1 +1,3 @@
-export { default } from '../pages/Blog';
+import { BlogPortal } from './blog/BlogPortal';
+
+export default BlogPortal;

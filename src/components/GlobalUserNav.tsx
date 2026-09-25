@@ -227,6 +227,48 @@ export default function GlobalUserNav() {
             )}
           </div>
 
+          {/* 3 FARKLI YÖNETİM PANELİ GEÇİŞ KÖPRÜSÜ */}
+          <div className="py-2 px-3 bg-slate-50 space-y-1.5 border-t border-slate-100">
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 block px-1">
+              Yönetim Panelleri (3 Ayrı Portal):
+            </span>
+            <div className="grid grid-cols-3 gap-1 text-[10px]">
+              <Link
+                to="/sistem-admin"
+                onClick={() => { switchRole('admin'); setDropdownOpen(false); }}
+                className={`p-1.5 rounded-lg text-center font-bold transition flex flex-col items-center gap-0.5 ${
+                  currentRole === 'admin' ? 'bg-amber-500 text-slate-950 font-black' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+                title="Sistem Admin Paneli"
+              >
+                <span>🛡️</span>
+                <span className="truncate w-full font-black">1. Admin</span>
+              </Link>
+              <Link
+                to="/saticipaneli"
+                onClick={() => { switchRole('merchant'); setDropdownOpen(false); }}
+                className={`p-1.5 rounded-lg text-center font-bold transition flex flex-col items-center gap-0.5 ${
+                  currentRole === 'merchant' ? 'bg-[#0F4C3A] text-white font-black' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+                title="Satıcı / Esnaf Paneli"
+              >
+                <span>🏪</span>
+                <span className="truncate w-full font-black">2. Satıcı</span>
+              </Link>
+              <Link
+                to="/musteri-paneli"
+                onClick={() => { switchRole('customer'); setDropdownOpen(false); }}
+                className={`p-1.5 rounded-lg text-center font-bold transition flex flex-col items-center gap-0.5 ${
+                  currentRole === 'customer' ? 'bg-indigo-600 text-white font-black' : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                }`}
+                title="Müşteri / Kullanıcı Paneli"
+              >
+                <span>👤</span>
+                <span className="truncate w-full font-black">3. Müşteri</span>
+              </Link>
+            </div>
+          </div>
+
           {/* Logout */}
           <div className="py-1">
             <button

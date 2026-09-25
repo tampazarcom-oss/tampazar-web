@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import SellerOnboardingWizardModal from './SellerOnboardingWizardModal';
 import { handleGoogleLogin } from '../utils/googleAuth';
+import { useAuth } from '../context/AuthContext';
 
 interface SellerPortalPageProps {
   onBackToMarketplace?: () => void;
@@ -19,11 +20,12 @@ interface SellerPortalPageProps {
 
 export default function SellerPortalPage({ onBackToMarketplace }: SellerPortalPageProps) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('register');
+  const { loginAsMerchant } = useAuth();
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
 
   // Login Form State
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState('tampazarcom@gmail.com');
+  const [loginPassword, setLoginPassword] = useState('Merka0045.');
 
   // Register Form State
   const [regShopName, setRegShopName] = useState('');
@@ -43,7 +45,7 @@ export default function SellerPortalPage({ onBackToMarketplace }: SellerPortalPa
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate seller login -> navigate to seller dashboard
+    loginAsMerchant(loginEmail.trim() || 'tampazarcom@gmail.com', 'TamPazar Esnaf Mağazası');
     navigate('/yonetim');
   };
 
