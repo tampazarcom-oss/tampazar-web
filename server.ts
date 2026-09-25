@@ -442,7 +442,7 @@ async function startServer() {
   // =========================================================================
 
   app.get('/llms.txt', (req: Request, res: Response) => {
-    res.header('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     const txt = `# TamPazar
 
 > TamPazar, Türkiye'de yerel esnafı, bağımsız kuryeleri ve müşterileri komisyonsuz (%0 komisyonlu) bir modelle buluşturan açık pazar yeri ve SaaS platformudur.
@@ -461,11 +461,11 @@ async function startServer() {
 
 ## Geliştirici ve LLM Keşif Kaynakları
 - XML Site Haritası: https://tampazar.com/sitemap.xml`;
-    return res.send(txt);
+    return res.status(200).send(txt);
   });
 
   app.get('/robots.txt', (req: Request, res: Response) => {
-    res.header('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
     const txt = `User-agent: *
 Allow: /
 Allow: /pazaryeri
@@ -502,12 +502,12 @@ Allow: /
 
 # Sitemap Dizini
 Sitemap: https://tampazar.com/sitemap.xml`;
-    return res.send(txt);
+    return res.status(200).send(txt);
   });
 
   // 1. Ana Sitemap Dizini (/sitemap.xml)
   app.get('/sitemap.xml', (req: Request, res: Response) => {
-    res.header('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <sitemap>
@@ -523,7 +523,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
     <lastmod>${new Date().toISOString()}</lastmod>
   </sitemap>
 </sitemapindex>`;
-    return res.send(xml);
+    return res.status(200).send(xml);
   });
 
   // 2. Ürünler Sitemap'i (/sitemap-products.xml)
@@ -539,7 +539,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
         allProducts = initialProducts;
       }
 
-      res.header('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
 
       let urlsXml = allProducts.map(p => `
   <url>
@@ -558,7 +558,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
   </url>${urlsXml}
 </urlset>`;
 
-      return res.send(xml);
+      return res.status(200).send(xml);
     } catch (error) {
       console.error('Sitemap products hatası:', error);
       return res.status(500).send('Sitemap üretilemedi');
@@ -578,7 +578,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
         allStores = initialTenants;
       }
 
-      res.header('Content-Type', 'application/xml; charset=utf-8');
+      res.setHeader('Content-Type', 'application/xml; charset=utf-8');
 
       let urlsXml = allStores.map(s => `
   <url>
@@ -597,7 +597,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
   </url>${urlsXml}
 </urlset>`;
 
-      return res.send(xml);
+      return res.status(200).send(xml);
     } catch (error) {
       console.error('Sitemap stores hatası:', error);
       return res.status(500).send('Sitemap üretilemedi');
@@ -606,7 +606,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
 
   // 4. Blog Sitemap'i (/sitemap-blog.xml) - HTML değil saf XML dönüşü
   app.get('/sitemap-blog.xml', (req: Request, res: Response) => {
-    res.header('Content-Type', 'application/xml; charset=utf-8');
+    res.setHeader('Content-Type', 'application/xml; charset=utf-8');
 
     let blogUrls = staticBlogPosts.map(b => `
   <url>
@@ -624,7 +624,7 @@ Sitemap: https://tampazar.com/sitemap.xml`;
     <priority>0.7</priority>
   </url>${blogUrls}
 </urlset>`;
-    return res.send(xml);
+    return res.status(200).send(xml);
   });
 
   // =========================================================================
