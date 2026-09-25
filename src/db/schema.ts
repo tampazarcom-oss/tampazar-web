@@ -75,3 +75,15 @@ export const orderAuditLogs = pgTable('order_audit_logs', {
   details: jsonb('details'),
   createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
 });
+
+// 5. Reviews (Ürün & Hizmet Değerlendirmeleri)
+export const reviews = pgTable('reviews', {
+  id: varchar('id', { length: 64 }).primaryKey(),
+  productId: varchar('product_id', { length: 64 }).references(() => products.id).notNull(),
+  tenantId: varchar('tenant_id', { length: 64 }).references(() => tenants.id).notNull(),
+  orderId: varchar('order_id', { length: 64 }).references(() => orders.id), // Doğrulanmış alışveriş kontrolü
+  rating: integer('rating').notNull(), // 1 - 5 arası
+  comment: text('comment'),
+  isVerifiedPurchase: boolean('is_verified_purchase').default(false),
+  createdAt: timestamp('created_at', { withTimezone: true }).defaultNow()
+});
