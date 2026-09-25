@@ -445,53 +445,39 @@ async function startServer() {
    */
   app.post('/api/products', async (req: Request, res: Response) => {
     try {
-      const {
-        tenantId,
-        title,
-        slug,
-        type = 'retail',
-        price,
-        vatRate = 20,
-        sku,
-        stock = 0,
-        category,
-        description,
-        imageUrl
+      const { 
+        tenantId, 
+        title, 
+        slug, 
+        type = 'retail', 
+        price, 
+        vatRate = 20, 
+        sku, 
+        stock = 10, 
+        category = 'Genel',
+        imageUrl 
       } = req.body;
 
-      if (!title || price === undefined || price === null) {
-        return res.status(400).json({ success: false, message: 'Ürün adı (title) and fiyat (price) zorunludur.' });
-      }
-
-      const targetSlug = slug || title.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-      
-      // Slug benzersizlik kontrolü
-      try {
-        const existing = await db.select().from(products).where(eq(products.slug, targetSlug)).limit(1);
-        if (existing.length > 0) {
-          return res.status(409).json({ success: false, message: 'Bu ürün adresi (slug) zaten kullanımda.' });
-        }
-      } catch (dbErr) {
-        console.warn('Ürün slug sorgulama DB uyarısı:', dbErr);
+      if (!title || !price || !slug) {
+        return res.status(400).json({ success: false, message: 'Başlık, fiyat ve slug zorunludur.' });
       }
 
       const productId = `prod_${crypto.randomUUID()}`;
-
-      const targetSku = sku || `SKU-${Date.now().toString().slice(-6)}`;
+      const defaultImage = 'https://images.unsplash.com/photo-1513519245088-0e12902e5a38?w=800&auto=format&fit=crop&q=80';
+      const targetSku = sku || `SKU-${Date.now().toString().slice(-4)}`;
 
       let createdProduct: any = {
         id: productId,
         tenantId: tenantId || null,
         title,
-        slug: targetSlug,
+        slug,
         type,
-        price: String(price),
+        price: price.toString(),
         vatRate: Number(vatRate),
         sku: targetSku,
         stock: Number(stock),
-        category: category || 'Genel',
-        description: description || null,
-        imageUrl: imageUrl || null,
+        category,
+        imageUrl: imageUrl || defaultImage,
         salesCount: 0,
         rating: '0.00',
         createdAt: new Date().toISOString()
@@ -502,14 +488,16 @@ async function startServer() {
           id: productId,
           tenantId: tenantId || null,
           title,
-          slug: targetSlug,
+          slug,
           type,
-          price: String(price),
+          price: price.toString(),
           vatRate: Number(vatRate),
           sku: targetSku,
           stock: Number(stock),
-          category: category || 'Genel',
-          imageUrl: imageUrl || null
+          category,
+          imageUrl: imageUrl || defaultImage,
+          salesCount: 0,
+          rating: '0.00'
         }).returning();
 
         if (inserted) {
@@ -519,15 +507,10 @@ async function startServer() {
         console.warn('Ürün ekleme DB uyarısı:', insertErr);
       }
 
-      return res.status(201).json({
-        success: true,
-        message: 'Ürün başarıyla oluşturuldu ve mağaza kataloğuna eklendi.',
-        product: createdProduct
-      });
-
+      return res.status(201).json({ success: true, product: createdProduct });
     } catch (error) {
       console.error('Ürün ekleme hatası:', error);
-      return res.status(500).json({ success: false, message: 'Ürün eklenirken sunucu hatası oluştu.' });
+      return res.status(500).json({ success: false, message: 'Ürün eklenemedi.' });
     }
   });
 
